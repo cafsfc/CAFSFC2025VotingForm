@@ -28,16 +28,10 @@
             z-index: 10;
         }
 
+        /* Black filled circle for the selected state */
         .vote-button.active {
-            background-color: #4F46E5; /* Indigo fill */
-            border-color: #4F46E5;
-        }
-
-        .vote-button.active::after {
-            content: '✓';
-            color: white;
-            font-size: 1.5rem;
-            line-height: 1;
+            background-color: #000000;
+            border-color: #000000;
         }
     </style>
 </head>
@@ -226,9 +220,12 @@
                 if (position === 'Google Account ID') continue;
 
                 const candidates = selectedCandidates[position] || [];
-                const candidateString = candidates.length > 0 ? candidates.join(' + ') : 'No selection';
                 
-                // Store data for submission
+                // Use a different separator for the display vs. the submission
+                const displaySeparator = (position === 'Councilor') ? '<br>' : ' + ';
+                const candidateString = candidates.length > 0 ? candidates.join(displaySeparator) : 'No selection';
+                
+                // Store data for submission, always using '+' for councilors
                 const entryId = entryMap[position];
                 voteDataToSubmit[entryId] = candidates.length > 0 ? (position === 'Councilor' ? candidates.join(' + ') : candidates[0]) : '';
                 
