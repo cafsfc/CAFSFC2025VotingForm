@@ -88,6 +88,9 @@
         // Handles the Google Sign-In flow
         const handleGoogleLogin = async () => {
             const provider = new GoogleAuthProvider();
+            // Add a hosted domain restriction to only allow @up.edu.ph emails
+            provider.setCustomParameters({ hd: 'up.edu.ph' });
+            
             try {
                 // signInWithPopup opens a new window, which is why it's a good practice
                 // to wrap it in a try-catch block
