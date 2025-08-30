@@ -137,7 +137,7 @@
         const entryMap = {
             'Chairperson': 'entry.759707648',
             'Vice Chairperson': 'entry.192266479',
-            'Councilors': 'entry.692317949',
+            'Councilor': 'entry.692317949',
             'Google Account ID': 'entry.1533979100' // New entry for the user ID
         };
 
@@ -176,7 +176,7 @@
             const formData = new FormData(votingForm);
             
             // Check for councilors limit
-            const councilors = formData.getAll(entryMap['Councilors']);
+            const councilors = formData.getAll(entryMap['Councilor']);
             if (councilors.length > 3) {
                 displayMessage('You can only select a maximum of 3 councilors. Please adjust your selection.', 'error');
                 return;
@@ -193,7 +193,7 @@
                 const candidates = formData.getAll(entryId);
                 let candidateString = '';
 
-                if (position === 'Councilors') {
+                if (position === 'Councilor') {
                     candidateString = candidates.join(' + ');
                     voteDataToSubmit[entryId] = candidateString;
                 } else {
@@ -273,9 +273,16 @@
                 const candidates = {};
                 lines.forEach((line, index) => {
                     if (index === 0) return; // Skip header row
-                    // Handle cases with extra columns by taking only the first two.
-                    const [name, position] = line.split(',').map(s => s.trim());
-
+                    
+                    const parts = line.split(',');
+                    if (parts.length < 2) {
+                        console.error(`Skipping malformed row: ${line}`);
+                        return;
+                    }
+                    
+                    const position = parts.pop().trim();
+                    const name = parts.join(',').trim();
+                    
                     if (name && position) {
                         if (!candidates[position]) {
                             candidates[position] = [];
@@ -312,7 +319,7 @@
                     continue;
                 }
 
-                const isCheckbox = position.toLowerCase() === 'councilors';
+                const isCheckbox = position.toLowerCase() === 'councilor';
                 const inputType = isCheckbox ? 'checkbox' : 'radio';
                 const required = !isCheckbox ? 'required' : '';
 
@@ -338,7 +345,7 @@
             if (ballotHTML.trim() === '') {
                  ballotContainer.innerHTML = `
                     <p class="text-center text-red-500 font-medium">
-                        The ballot is empty. Please check that the names in your Google Sheet's 'POSITION' column exactly match 'Chairperson', 'Vice Chairperson', or 'Councilors'.
+                        The ballot is empty. Please check that the names in your Google Sheet's 'POSITION' column exactly match 'Chairperson', 'Vice Chairperson', or 'Councilor'.
                     </p>
                 `;
             } else {
