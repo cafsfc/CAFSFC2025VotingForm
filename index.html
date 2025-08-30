@@ -120,6 +120,24 @@
         </div>
     </main>
 
+    <!-- Vote Verifier Popup -->
+    <div id="verifier-popup" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-sm">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Verify Your Vote</h2>
+            <div id="vote-summary" class="text-gray-700 space-y-4 mb-6">
+                <!-- Vote summary will be dynamically inserted here -->
+            </div>
+            <div class="flex justify-between space-x-4">
+                <button id="change-vote-btn" class="w-1/2 py-2 border border-gray-300 rounded-full text-gray-700 font-medium hover:bg-gray-100 transition-colors">
+                    Change Vote
+                </button>
+                <button id="confirm-vote-btn" class="w-1/2 py-2 bg-indigo-600 text-white rounded-full font-medium hover:bg-indigo-700 transition-colors">
+                    Confirm Vote
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase Scripts -->
     <script type="module">
         // Firebase CDN imports
@@ -154,11 +172,38 @@
         const votingContentEl = document.getElementById('voting-content');
         const votingForm = document.getElementById('voting-form');
         const messageDisplayEl = document.getElementById('message-display');
+        const verifierPopup = document.getElementById('verifier-popup');
+        const voteSummaryEl = document.getElementById('vote-summary');
+        const confirmVoteBtn = document.getElementById('confirm-vote-btn');
+        const changeVoteBtn = document.getElementById('change-vote-btn');
 
         let auth, db;
         let userId = null;
 
         // --- Ballot Logic and Firestore Interactions ---
+
+        const setFormState = (state) => {
+            const inputs = votingForm.querySelectorAll('input, button');
+            if (state === 'disabled') {
+                inputs.forEach(input => input.disabled = true);
+                votingForm.querySelector('#submit-vote-btn').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                inputs.forEach(input => input.disabled = false);
+                votingForm.querySelector('#submit-vote-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        };
+
+        const displayMessage = (text, type) => {
+            messageDisplayEl.textContent = text;
+            messageDisplayEl.classList.remove('hidden', 'bg-red-100', 'bg-green-100', 'bg-blue-100', 'text-red-700', 'text-green-700', 'text-blue-700');
+            if (type === 'success') {
+                messageDisplayEl.classList.add('bg-green-100', 'text-green-700');
+            } else if (type === 'error') {
+                messageDisplayEl.classList.add('bg-red-100', 'text-red-700');
+            } else {
+                messageDisplayEl.classList.add('bg-blue-100', 'text-blue-700');
+            }
+        };
 
         // Checks if the user has already voted
         const checkIfVoted = async () => {
@@ -169,28 +214,54 @@
             try {
                 const voteDoc = await getDoc(voteDocRef);
                 if (voteDoc.exists()) {
-                    messageDisplayEl.textContent = 'You have already submitted your ballot. Thank you!';
-                    messageDisplayEl.className = 'mb-6 px-4 py-3 rounded-lg text-sm text-center font-medium bg-green-100 text-green-700';
-                    messageDisplayEl.classList.remove('hidden');
-                    votingForm.querySelectorAll('input').forEach(input => input.disabled = true);
-                    votingForm.querySelector('#submit-vote-btn').disabled = true;
-                    votingForm.querySelector('#submit-vote-btn').classList.add('opacity-50', 'cursor-not-allowed');
+                    displayMessage('You have already submitted your ballot. Thank you!', 'success');
+                    setFormState('disabled');
                 } else {
-                    messageDisplayEl.textContent = 'Please make your selections and submit your ballot.';
-                    messageDisplayEl.className = 'mb-6 px-4 py-3 rounded-lg text-sm text-center font-medium bg-blue-100 text-blue-700';
-                    messageDisplayEl.classList.remove('hidden');
+                    displayMessage('Please make your selections and submit your ballot.', 'info');
+                    setFormState('enabled');
                 }
             } catch (error) {
                 console.error("Error checking vote status:", error);
-                messageDisplayEl.textContent = "Error checking vote status. Please try again.";
-                messageDisplayEl.className = 'mb-6 px-4 py-3 rounded-lg text-sm text-center font-medium bg-red-100 text-red-700';
-                messageDisplayEl.classList.remove('hidden');
+                displayMessage("Error checking vote status. Please try again.", 'error');
+                setFormState('enabled');
             }
         };
 
-        // Handles the vote submission
-        const handleVote = async (event) => {
+        const closeVerifier = () => {
+            verifierPopup.classList.add('hidden');
+        };
+
+        const openVoteVerifier = (event) => {
             event.preventDefault();
+            const formData = new FormData(votingForm);
+            
+            let summaryHTML = '';
+            
+            // Chairperson
+            const chairperson = formData.get('entry.759707648');
+            summaryHTML += `<div><h4 class="font-semibold text-gray-800">Chairperson:</h4><p class="pl-4">${chairperson || 'No selection'}</p></div>`;
+
+            // Vice-Chairperson
+            const viceChairperson = formData.get('entry.192266479');
+            summaryHTML += `<div><h4 class="font-semibold text-gray-800">Vice-Chairperson:</h4><p class="pl-4">${viceChairperson || 'No selection'}</p></div>`;
+            
+            // Councilors
+            const councilors = formData.getAll('entry.692317949');
+            summaryHTML += `<div><h4 class="font-semibold text-gray-800">Councilors:</h4><ul class="list-disc pl-8">`;
+            if (councilors.length > 0) {
+                councilors.forEach(c => {
+                    summaryHTML += `<li>${c}</li>`;
+                });
+            } else {
+                summaryHTML += `<li>No selection</li>`;
+            }
+            summaryHTML += `</ul></div>`;
+
+            voteSummaryEl.innerHTML = summaryHTML;
+            verifierPopup.classList.remove('hidden');
+        };
+
+        const handleVote = async () => {
             if (!db || !userId) return;
 
             const voteDocRef = doc(db, 'voter-ballots', userId);
@@ -199,18 +270,13 @@
                 // First, check if the user has already voted.
                 const voteDoc = await getDoc(voteDocRef);
                 if (voteDoc.exists()) {
-                     messageDisplayEl.textContent = 'You have already submitted your ballot. Thank you!';
-                     messageDisplayEl.className = 'mb-6 px-4 py-3 rounded-lg text-sm text-center font-medium bg-green-100 text-green-700';
-                     messageDisplayEl.classList.remove('hidden');
-                     votingForm.querySelectorAll('input').forEach(input => input.disabled = true);
-                     votingForm.querySelector('#submit-vote-btn').disabled = true;
-                     votingForm.querySelector('#submit-vote-btn').classList.add('opacity-50', 'cursor-not-allowed');
+                     displayMessage('You have already submitted your ballot. Thank you!', 'success');
+                     setFormState('disabled');
                      return;
                 }
 
                 // If not, submit the vote to the Google Form.
-                // IMPORTANT: Replace this URL with the pre-filled link from your own Google Form.
-                // The `no-cors` mode is a browser security feature that prevents the app
+                // IMPORTANT: The `no-cors` mode is a browser security feature that prevents the app
                 // from reading the form's response, so we rely on Firestore to track
                 // a successful vote.
                 const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLScPqTz3iJ6e4o2FzHj2tYl4z3F1sY3V7H2fT0vJ4P7zKq1gQ/formResponse";
@@ -225,17 +291,13 @@
                 // Then, save a record in Firestore to prevent future votes.
                 await setDoc(voteDocRef, { timestamp: new Date().toISOString() });
                 
-                messageDisplayEl.textContent = `Your ballot has been successfully submitted!`;
-                messageDisplayEl.className = 'mb-6 px-4 py-3 rounded-lg text-sm text-center font-medium bg-green-100 text-green-700';
-                messageDisplayEl.classList.remove('hidden');
-                votingForm.querySelectorAll('input').forEach(input => input.disabled = true);
-                votingForm.querySelector('#submit-vote-btn').disabled = true;
-                votingForm.querySelector('#submit-vote-btn').classList.add('opacity-50', 'cursor-not-allowed');
+                closeVerifier();
+                displayMessage(`Your ballot has been successfully submitted!`, 'success');
+                setFormState('disabled');
             } catch (error) {
                 console.error("Error submitting vote:", error);
-                messageDisplayEl.textContent = "Error submitting vote. Please try again.";
-                messageDisplayEl.className = 'mb-6 px-4 py-3 rounded-lg text-sm text-center font-medium bg-red-100 text-red-700';
-                messageDisplayEl.classList.remove('hidden');
+                closeVerifier();
+                displayMessage("Error submitting vote. Please try again.", 'error');
             }
         };
 
@@ -283,7 +345,9 @@
         const attachListeners = () => {
             googleLoginBtn.addEventListener('click', handleGoogleLogin);
             logoutBtn.addEventListener('click', handleLogout);
-            votingForm.addEventListener('submit', handleVote);
+            votingForm.addEventListener('submit', openVoteVerifier);
+            confirmVoteBtn.addEventListener('click', handleVote);
+            changeVoteBtn.addEventListener('click', closeVerifier);
         };
 
         const setupAuthStateListener = () => {
