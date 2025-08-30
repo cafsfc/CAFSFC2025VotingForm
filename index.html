@@ -60,36 +60,55 @@
             <form id="voting-form" class="bg-white rounded-xl shadow-lg p-8">
                 <div id="message-display" class="mb-6 hidden px-4 py-3 rounded-lg text-sm text-center font-medium"></div>
 
-                <!-- President Section -->
+                <!-- Chairperson Section -->
                 <div class="mb-8">
-                    <h3 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">President</h3>
+                    <h3 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Chairperson</h3>
                     <div class="space-y-4">
                         <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                            <input type="radio" name="president" value="candidateA" class="mr-3" required>
-                            <span class="font-medium text-gray-800">Candidate A</span>
-                            <p class="text-sm text-gray-500">The Candidate for Change</p>
+                            <input type="radio" name="entry.759707648" value="Juan Dela Cruz" class="mr-3" required>
+                            <span class="font-medium text-gray-800">Juan Dela Cruz</span>
                         </label>
                         <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                            <input type="radio" name="president" value="candidateB" class="mr-3">
-                            <span class="font-medium text-gray-800">Candidate B</span>
-                            <p class="text-sm text-gray-500">The Candidate for Experience</p>
+                            <input type="radio" name="entry.759707648" value="Abel Paner Jr." class="mr-3">
+                            <span class="font-medium text-gray-800">Abel Paner Jr.</span>
                         </label>
                     </div>
                 </div>
 
-                <!-- Vice President Section -->
+                <!-- Vice-Chairperson Section -->
                 <div class="mb-8">
-                    <h3 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Vice President</h3>
+                    <h3 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Vice-Chairperson</h3>
                     <div class="space-y-4">
                         <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                            <input type="radio" name="vicePresident" value="candidateC" class="mr-3" required>
-                            <span class="font-medium text-gray-800">Candidate C</span>
-                            <p class="text-sm text-gray-500">The Candidate for the Future</p>
+                            <input type="radio" name="entry.192266479" value="Aera Ramos" class="mr-3" required>
+                            <span class="font-medium text-gray-800">Aera Ramos</span>
                         </label>
                         <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                            <input type="radio" name="vicePresident" value="candidateD" class="mr-3">
-                            <span class="font-medium text-gray-800">Candidate D</span>
-                            <p class="text-sm text-gray-500">The Candidate for Progress</p>
+                            <input type="radio" name="entry.192266479" value="Yuan Buto" class="mr-3">
+                            <span class="font-medium text-gray-800">Yuan Buto</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Councilors Section (Checkboxes) -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Councilors</h3>
+                    <div class="space-y-4">
+                        <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
+                            <input type="checkbox" name="entry.692317949" value="Juan Dela Cruz" class="mr-3">
+                            <span class="font-medium text-gray-800">Juan Dela Cruz</span>
+                        </label>
+                        <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
+                            <input type="checkbox" name="entry.692317949" value="Abel Paner" class="mr-3">
+                            <span class="font-medium text-gray-800">Abel Paner</span>
+                        </label>
+                        <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
+                            <input type="checkbox" name="entry.692317949" value="Juan Migro" class="mr-3">
+                            <span class="font-medium text-gray-800">Juan Migro</span>
+                        </label>
+                        <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
+                            <input type="checkbox" name="entry.692317949" value="Carlos Corpuz" class="mr-3">
+                            <span class="font-medium text-gray-800">Carlos Corpuz</span>
                         </label>
                     </div>
                 </div>
@@ -176,15 +195,32 @@
 
             const voteDocRef = doc(db, 'voter-ballots', userId);
             
-            const formData = new FormData(votingForm);
-            const ballotData = {
-                president: formData.get('president'),
-                vicePresident: formData.get('vicePresident'),
-                timestamp: new Date().toISOString()
-            };
-
             try {
-                await setDoc(voteDocRef, ballotData);
+                // First, check if the user has already voted.
+                const voteDoc = await getDoc(voteDocRef);
+                if (voteDoc.exists()) {
+                     messageDisplayEl.textContent = 'You have already submitted your ballot. Thank you!';
+                     messageDisplayEl.className = 'mb-6 px-4 py-3 rounded-lg text-sm text-center font-medium bg-green-100 text-green-700';
+                     messageDisplayEl.classList.remove('hidden');
+                     votingForm.querySelectorAll('input').forEach(input => input.disabled = true);
+                     votingForm.querySelector('#submit-vote-btn').disabled = true;
+                     votingForm.querySelector('#submit-vote-btn').classList.add('opacity-50', 'cursor-not-allowed');
+                     return;
+                }
+
+                // If not, submit the vote to the Google Form.
+                const formUrl = "https://docs.google.com/forms/u/0/d/e/1FAIpQLSf9S0ksmz3OSCfcLHgaux1vGXfrDPR1Nl3Aa-Fe7soKM0Uvgg/formResponse";
+                const formData = new FormData(votingForm);
+
+                await fetch(formUrl, {
+                    method: 'POST',
+                    mode: 'no-cors', // Required for Google Forms
+                    body: formData
+                });
+                
+                // Then, save a record in Firestore to prevent future votes.
+                await setDoc(voteDocRef, { timestamp: new Date().toISOString() });
+                
                 messageDisplayEl.textContent = `Your ballot has been successfully submitted!`;
                 messageDisplayEl.className = 'mb-6 px-4 py-3 rounded-lg text-sm text-center font-medium bg-green-100 text-green-700';
                 messageDisplayEl.classList.remove('hidden');
