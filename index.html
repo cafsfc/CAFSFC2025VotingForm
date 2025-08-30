@@ -273,15 +273,14 @@
                 const candidates = {};
                 lines.forEach((line, index) => {
                     if (index === 0) return; // Skip header row
-                    const [name, position] = line.split(',');
+                    // Handle cases with extra columns by taking only the first two.
+                    const [name, position] = line.split(',').map(s => s.trim());
 
                     if (name && position) {
-                        const trimmedName = name.trim();
-                        const trimmedPosition = position.trim();
-                        if (!candidates[trimmedPosition]) {
-                            candidates[trimmedPosition] = [];
+                        if (!candidates[position]) {
+                            candidates[position] = [];
                         }
-                        candidates[trimmedPosition].push(trimmedName);
+                        candidates[position].push(name);
                     }
                 });
 
@@ -335,8 +334,16 @@
                     </div>
                 `;
             }
-
-            ballotContainer.innerHTML = ballotHTML;
+            // Check if the ballot is empty after attempting to render it
+            if (ballotHTML.trim() === '') {
+                 ballotContainer.innerHTML = `
+                    <p class="text-center text-red-500 font-medium">
+                        The ballot is empty. Please check that the names in your Google Sheet's 'POSITION' column exactly match 'Chairperson', 'Vice Chairperson', or 'Councilors'.
+                    </p>
+                `;
+            } else {
+                 ballotContainer.innerHTML = ballotHTML;
+            }
         };
 
         // --- Authentication and UI Logic ---
