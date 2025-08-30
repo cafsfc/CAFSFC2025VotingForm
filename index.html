@@ -54,12 +54,9 @@
         </div>
 
         <!-- Voting Content -->
-        <div id="voting-content" class="hidden w-full max-w-lg">
+        <div id="voting-content" class="hidden w-full h-full">
             <h2 class="text-2xl font-bold text-gray-800 text-center mb-4">Please Cast Your Vote</h2>
-            <div id="vote-options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Candidate Cards will be generated here by JavaScript -->
-            </div>
-            <p id="message-display" class="mt-6 text-center text-sm font-medium"></p>
+            <iframe id="google-form-iframe" src="https://docs.google.com/forms/d/e/1FAIpQLSf9S0ksmz3OSCfcLHgaux1vGXfrDPR1Nl3Aa-Fe7soKM0Uvgg/viewform?usp=header&embedded=true" class="w-full h-full rounded-xl" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
         </div>
 
     </main>
@@ -104,83 +101,19 @@
         let userId = null;
 
         // --- Voting Logic and Firestore Interactions ---
-        const candidates = [
-            { id: 'candidate1', name: 'Candidate A', description: 'The candidate for change.' },
-            { id: 'candidate2', name: 'Candidate B', description: 'The candidate for experience.' },
-            { id: 'candidate3', name: 'Candidate C', description: 'The candidate for the future.' },
-            { id: 'candidate4', name: 'Candidate D', description: 'The candidate for progress.' },
-        ];
-
         // Renders the voting cards
         const renderVotingCards = (hasVoted) => {
-            voteOptionsEl.innerHTML = ''; // Clear previous cards
-            candidates.forEach(candidate => {
-                const card = document.createElement('div');
-                card.id = `card-${candidate.id}`;
-                card.className = `bg-white rounded-xl shadow-md p-6 transition-all duration-200 cursor-pointer ${hasVoted ? 'opacity-50 pointer-events-none' : 'hover:shadow-lg'}`;
-                card.innerHTML = `
-                    <h3 class="text-xl font-semibold text-gray-800">${candidate.name}</h3>
-                    <p class="mt-2 text-gray-500 text-sm">${candidate.description}</p>
-                    <button class="mt-4 w-full px-4 py-2 bg-indigo-600 text-white font-medium rounded-full shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${hasVoted ? 'hidden' : ''}" data-candidate-id="${candidate.id}">
-                        Vote
-                    </button>
-                `;
-                if (!hasVoted) {
-                    card.querySelector('button').addEventListener('click', () => handleVote(candidate.id));
-                }
-                voteOptionsEl.appendChild(card);
-            });
+            // This function is no longer needed for the embedded form
         };
 
         // Checks if the user has already voted
         const checkIfVoted = async () => {
-            if (!db || !userId) return;
-
-            // This is a public collection to store votes. Document ID is the user ID.
-            const voteDocRef = doc(db, 'votes', userId);
-            
-            try {
-                const voteDoc = await getDoc(voteDocRef);
-                if (voteDoc.exists()) {
-                    messageDisplayEl.textContent = `You have already voted for ${voteDoc.data().candidateName}. Thank you!`;
-                    messageDisplayEl.className = 'mt-6 text-center text-green-600 font-bold';
-                    renderVotingCards(true); // Disable voting
-                } else {
-                    messageDisplayEl.textContent = 'Please select a candidate to cast your vote.';
-                    messageDisplayEl.className = 'mt-6 text-center text-gray-500 font-medium';
-                    renderVotingCards(false); // Enable voting
-                }
-            } catch (error) {
-                console.error("Error checking vote status:", error);
-                messageDisplayEl.textContent = "Error checking vote status. Please try again.";
-                messageDisplayEl.className = 'mt-6 text-center text-red-500 font-medium';
-            }
+            // This function is no longer needed for the embedded form
         };
 
         // Handles the vote submission
         const handleVote = async (candidateId) => {
-            if (!db || !userId) return;
-
-            const voteDocRef = doc(db, 'votes', userId);
-            const candidate = candidates.find(c => c.id === candidateId);
-
-            const voteData = {
-                userId: userId,
-                candidateId: candidate.id,
-                candidateName: candidate.name,
-                timestamp: new Date().toISOString()
-            };
-
-            try {
-                await setDoc(voteDocRef, voteData);
-                messageDisplayEl.textContent = `Your vote for ${candidate.name} has been successfully submitted!`;
-                messageDisplayEl.className = 'mt-6 text-center text-green-600 font-bold';
-                renderVotingCards(true); // Disable voting after submission
-            } catch (error) {
-                console.error("Error submitting vote:", error);
-                messageDisplayEl.textContent = "Error submitting vote. Please try again.";
-                messageDisplayEl.className = 'mt-6 text-center text-red-500 font-medium';
-            }
+            // This function is no longer needed for the embedded form
         };
 
         // --- Authentication and UI Logic ---
@@ -261,7 +194,6 @@
                     userPhotoEl.src = user.photoURL;
 
                     saveUserProfile(user);
-                    checkIfVoted();
 
                 } else {
                     userId = null;
