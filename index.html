@@ -284,6 +284,12 @@
                     const name = parts.join(',').trim();
                     
                     if (name && position) {
+                        // Check if the position exists in our mapping.
+                        if (!entryMap[position]) {
+                            console.warn(`Skipping candidate "${name}" because position "${position}" is not in the entryMap.`);
+                            return;
+                        }
+                        
                         if (!candidates[position]) {
                             candidates[position] = [];
                         }
@@ -313,11 +319,6 @@
             for (const position in candidates) {
                 const candidateList = candidates[position];
                 const entryId = entryMap[position];
-
-                if (!entryId) {
-                    console.error(`No entry ID mapped for position: ${position}`);
-                    continue;
-                }
 
                 const isCheckbox = position.toLowerCase() === 'councilor';
                 const inputType = isCheckbox ? 'checkbox' : 'radio';
