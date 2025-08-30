@@ -209,6 +209,7 @@
 
             voteSummaryEl.innerHTML = summaryHTML;
             verifierPopup.classList.remove('hidden');
+            console.log("Vote data prepared for verification:", voteDataToSubmit);
         };
 
         const handleVote = async () => {
@@ -234,7 +235,8 @@
                 for (const entryId in voteDataToSubmit) {
                     formData.append(entryId, voteDataToSubmit[entryId]);
                 }
-
+                
+                console.log("Submitting vote data to Google Form:", voteDataToSubmit);
                 await fetch(GOOGLE_FORM_URL, {
                     method: 'POST',
                     mode: 'no-cors',
@@ -254,7 +256,7 @@
         // --- Main Ballot Rendering Logic ---
         const fetchCandidatesFromSheet = async () => {
             try {
-                const response = await fetch(CANDIDATES_SHEET_URL);
+                const response = await fetch(`${CANDIDATES_SHEET_URL}&t=${new Date().getTime()}`);
                 if (!response.ok) {
                     throw new Error(`Failed to fetch ballot data. HTTP Status: ${response.status}. Please ensure the URL is correct and the sheet is published.`);
                 }
@@ -357,7 +359,7 @@
         // --- Authentication and UI Logic ---
         const checkIfVoted = async (uid) => {
             try {
-                const response = await fetch(RESPONSES_SHEET_URL);
+                const response = await fetch(`${RESPONSES_SHEET_URL}&t=${new Date().getTime()}`);
                 if (!response.ok) {
                     throw new Error(`Failed to fetch vote responses. HTTP Status: ${response.status}`);
                 }
