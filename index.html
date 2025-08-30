@@ -209,7 +209,11 @@
                 }
 
                 // If not, submit the vote to the Google Form.
-                const formUrl = "https://docs.google.com/forms/u/0/d/e/1FAIpQLSf9S0ksmz3OSCfcLHgaux1vGXfrDPR1Nl3Aa-Fe7soKM0Uvgg/formResponse";
+                // IMPORTANT: Replace this URL with the pre-filled link from your own Google Form.
+                // The `no-cors` mode is a browser security feature that prevents the app
+                // from reading the form's response, so we rely on Firestore to track
+                // a successful vote.
+                const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLScPqTz3iJ6e4o2FzHj2tYl4z3F1sY3V7H2fT0vJ4P7zKq1gQ/formResponse";
                 const formData = new FormData(votingForm);
 
                 await fetch(formUrl, {
