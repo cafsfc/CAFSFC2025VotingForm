@@ -20,12 +20,6 @@
     <!-- Header -->
     <header id="header" class="hidden bg-white shadow-md p-4 flex justify-between items-center z-10">
         <div class="flex items-center">
-            <!-- Hamburger Icon (SVG) -->
-            <button class="text-gray-600 hover:text-gray-800 focus:outline-none p-2 rounded-full hover:bg-gray-200 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
             <h1 class="text-xl font-bold text-gray-800 ml-4">Voting App</h1>
         </div>
         
@@ -60,60 +54,12 @@
             <form id="voting-form" class="bg-white rounded-xl shadow-lg p-8">
                 <div id="message-display" class="mb-6 hidden px-4 py-3 rounded-lg text-sm text-center font-medium"></div>
 
-                <!-- Chairperson Section -->
-                <div class="mb-8">
-                    <h3 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Chairperson</h3>
-                    <div class="space-y-4">
-                        <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                            <input type="radio" name="entry.759707648" value="Juan Dela Cruz" class="mr-3" required>
-                            <span class="font-medium text-gray-800">Juan Dela Cruz</span>
-                        </label>
-                        <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                            <input type="radio" name="entry.759707648" value="Abel Paner Jr." class="mr-3">
-                            <span class="font-medium text-gray-800">Abel Paner Jr.</span>
-                        </label>
-                    </div>
+                <!-- Ballot will be dynamically generated here -->
+                <div id="ballot-container" class="space-y-8">
+                    <p class="text-center text-gray-500">Loading ballot...</p>
                 </div>
-
-                <!-- Vice-Chairperson Section -->
-                <div class="mb-8">
-                    <h3 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Vice-Chairperson</h3>
-                    <div class="space-y-4">
-                        <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                            <input type="radio" name="entry.192266479" value="Aera Ramos" class="mr-3" required>
-                            <span class="font-medium text-gray-800">Aera Ramos</span>
-                        </label>
-                        <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                            <input type="radio" name="entry.192266479" value="Yuan Buto" class="mr-3">
-                            <span class="font-medium text-gray-800">Yuan Buto</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Councilors Section (Checkboxes) -->
-                <div class="mb-8">
-                    <h3 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Councilors</h3>
-                    <div class="space-y-4">
-                        <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                            <input type="checkbox" name="entry.692317949" value="Juan Dela Cruz" class="mr-3">
-                            <span class="font-medium text-gray-800">Juan Dela Cruz</span>
-                        </label>
-                        <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                            <input type="checkbox" name="entry.692317949" value="Abel Paner" class="mr-3">
-                            <span class="font-medium text-gray-800">Abel Paner</span>
-                        </label>
-                        <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                            <input type="checkbox" name="entry.692317949" value="Juan Migro" class="mr-3">
-                            <span class="font-medium text-gray-800">Juan Migro</span>
-                        </label>
-                        <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                            <input type="checkbox" name="entry.692317949" value="Carlos Corpuz" class="mr-3">
-                            <span class="font-medium text-gray-800">Carlos Corpuz</span>
-                        </label>
-                    </div>
-                </div>
-
-                <button id="submit-vote-btn" type="submit" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-full shadow-lg hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                
+                <button id="submit-vote-btn" type="submit" class="mt-8 w-full py-3 bg-indigo-600 text-white font-semibold rounded-full shadow-lg hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     Submit Vote
                 </button>
             </form>
@@ -138,20 +84,19 @@
         </div>
     </div>
 
-    <!-- Firebase Scripts -->
     <script type="module">
         // Firebase CDN imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        // Log all Firestore debug messages to the console
         setLogLevel('Debug');
 
-        // --- PASTE YOUR FIREBASE CONFIGURATION HERE ---
-        // You can get this from the Firebase console by going to Project Settings -> General -> Your apps
-        const firebaseConfig = {
+        // --- GLOBAL VARIABLES (MANDATORY USE) ---
+        // These variables are provided by the canvas environment.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
             apiKey: "AIzaSyBdj6ePKM_3YEQTQlaZk9kKrNoMgqsjcjA",
             authDomain: "votingmachine-c8e34.firebaseapp.com",
             projectId: "votingmachine-c8e34",
@@ -159,6 +104,7 @@
             messagingSenderId: "175934636307",
             appId: "1:175934636307:web:717f4a5ba28789f13f5ae6"
         };
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         // ----------------------------------------------
 
         // --- UI Element Selectors ---
@@ -176,23 +122,24 @@
         const voteSummaryEl = document.getElementById('vote-summary');
         const confirmVoteBtn = document.getElementById('confirm-vote-btn');
         const changeVoteBtn = document.getElementById('change-vote-btn');
+        const submitVoteBtn = document.getElementById('submit-vote-btn');
+        const ballotContainer = document.getElementById('ballot-container');
 
-        let auth, db;
-        let userId = null;
+        let auth, db, userId;
 
-        // --- Ballot Logic and Firestore Interactions ---
-
-        const setFormState = (state) => {
-            const inputs = votingForm.querySelectorAll('input, button');
-            if (state === 'disabled') {
-                inputs.forEach(input => input.disabled = true);
-                votingForm.querySelector('#submit-vote-btn').classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                inputs.forEach(input => input.disabled = false);
-                votingForm.querySelector('#submit-vote-btn').classList.remove('opacity-50', 'cursor-not-allowed');
-            }
+        // --- Configuration Constants ---
+        const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScPqTz3iJ6e4o2FzHj2tYl4z3F1sYV2cQ/formResponse";
+        const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRjOEwpZwKpYm25jVZhudIUxi-HexgfFioCJg5xR-_7DZ8mwWuPmvJ2H21q4q93Cab7z0NbnavIs7v6/pubhtml?gid=0&single=true";
+        
+        // This maps the position name from the Google Sheet to the Google Form's entry ID.
+        // The names must match exactly.
+        const entryMap = {
+            'Chairperson': 'entry.759707648',
+            'Vice Chairperson': 'entry.192266479',
+            'Councilors': 'entry.692317949'
         };
 
+        // --- Helper Functions ---
         const displayMessage = (text, type) => {
             messageDisplayEl.textContent = text;
             messageDisplayEl.classList.remove('hidden', 'bg-red-100', 'bg-green-100', 'bg-blue-100', 'text-red-700', 'text-green-700', 'text-blue-700');
@@ -205,25 +152,16 @@
             }
         };
 
-        // Checks if the user has already voted
-        const checkIfVoted = async () => {
-            if (!db || !userId) return;
-
-            const voteDocRef = doc(db, 'voter-ballots', userId);
-            
-            try {
-                const voteDoc = await getDoc(voteDocRef);
-                if (voteDoc.exists()) {
-                    displayMessage('You have already submitted your ballot. Thank you!', 'success');
-                    setFormState('disabled');
-                } else {
-                    displayMessage('Please make your selections and submit your ballot.', 'info');
-                    setFormState('enabled');
-                }
-            } catch (error) {
-                console.error("Error checking vote status:", error);
-                displayMessage("Error checking vote status. Please try again.", 'error');
-                setFormState('enabled');
+        const setFormState = (state) => {
+            const inputs = votingForm.querySelectorAll('input');
+            if (state === 'disabled') {
+                inputs.forEach(input => input.disabled = true);
+                submitVoteBtn.disabled = true;
+                submitVoteBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                inputs.forEach(input => input.disabled = false);
+                submitVoteBtn.disabled = false;
+                submitVoteBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         };
 
@@ -237,54 +175,49 @@
             
             let summaryHTML = '';
             
-            // Chairperson
-            const chairperson = formData.get('entry.759707648');
-            summaryHTML += `<div><h4 class="font-semibold text-gray-800">Chairperson:</h4><p class="pl-4">${chairperson || 'No selection'}</p></div>`;
-
-            // Vice-Chairperson
-            const viceChairperson = formData.get('entry.192266479');
-            summaryHTML += `<div><h4 class="font-semibold text-gray-800">Vice-Chairperson:</h4><p class="pl-4">${viceChairperson || 'No selection'}</p></div>`;
-            
-            // Councilors
-            const councilors = formData.getAll('entry.692317949');
-            summaryHTML += `<div><h4 class="font-semibold text-gray-800">Councilors:</h4><ul class="list-disc pl-8">`;
-            if (councilors.length > 0) {
-                councilors.forEach(c => {
-                    summaryHTML += `<li>${c}</li>`;
-                });
-            } else {
-                summaryHTML += `<li>No selection</li>`;
+            for (let position in entryMap) {
+                const entryId = entryMap[position];
+                const candidates = formData.getAll(entryId);
+                summaryHTML += `<div><h4 class="font-semibold text-gray-800">${position}:</h4><ul class="list-disc pl-8">`;
+                if (candidates.length > 0) {
+                    candidates.forEach(c => {
+                        summaryHTML += `<li>${c}</li>`;
+                    });
+                } else {
+                    summaryHTML += `<li>No selection</li>`;
+                }
+                summaryHTML += `</ul></div>`;
             }
-            summaryHTML += `</ul></div>`;
 
             voteSummaryEl.innerHTML = summaryHTML;
             verifierPopup.classList.remove('hidden');
         };
 
         const handleVote = async () => {
-            if (!db || !userId) return;
+            if (!db || !userId) {
+                console.error("User not authenticated or database not initialized.");
+                displayMessage("An error occurred. Please try logging in again.", 'error');
+                closeVerifier();
+                return;
+            }
 
-            const voteDocRef = doc(db, 'voter-ballots', userId);
+            const voteDocRef = doc(db, `artifacts/${appId}/users/${userId}/voter-ballots`, "vote-status");
             
             try {
-                // First, check if the user has already voted.
+                // Check if the user has already voted
                 const voteDoc = await getDoc(voteDocRef);
                 if (voteDoc.exists()) {
                      displayMessage('You have already submitted your ballot. Thank you!', 'success');
                      setFormState('disabled');
+                     closeVerifier();
                      return;
                 }
 
                 // If not, submit the vote to the Google Form.
-                // IMPORTANT: The `no-cors` mode is a browser security feature that prevents the app
-                // from reading the form's response, so we rely on Firestore to track
-                // a successful vote.
-                const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLScPqTz3iJ6e4o2FzHj2tYl4z3F1sY3V7H2fT0vJ4P7zKq1gQ/formResponse";
                 const formData = new FormData(votingForm);
-
-                await fetch(formUrl, {
+                await fetch(GOOGLE_FORM_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // Required for Google Forms
+                    mode: 'no-cors',
                     body: formData
                 });
                 
@@ -301,7 +234,106 @@
             }
         };
 
+        // --- Main Ballot Rendering Logic ---
+        const fetchCandidatesFromSheet = async () => {
+            try {
+                const response = await fetch(GOOGLE_SHEET_URL);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const text = await response.text();
+
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                const table = doc.querySelector('table');
+                
+                if (!table) {
+                    throw new Error("Could not find table in Google Sheet HTML.");
+                }
+
+                const candidates = {};
+                const rows = table.querySelectorAll('tr');
+
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length < 2) return;
+
+                    const name = cells[0].textContent.trim();
+                    const position = cells[1].textContent.trim();
+
+                    if (name && position) {
+                        if (!candidates[position]) {
+                            candidates[position] = [];
+                        }
+                        candidates[position].push(name);
+                    }
+                });
+
+                renderBallot(candidates);
+                displayMessage("Ballot loaded successfully. Please make your selections.", 'info');
+
+            } catch (error) {
+                console.error("Error fetching or parsing candidates:", error);
+                ballotContainer.innerHTML = `<p class="text-center text-red-500">Failed to load ballot. Please check the Google Sheet URL.</p>`;
+                submitVoteBtn.disabled = true;
+                submitVoteBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        };
+
+        const renderBallot = (candidates) => {
+            let ballotHTML = '';
+            for (const position in candidates) {
+                const candidateList = candidates[position];
+                const entryId = entryMap[position];
+
+                if (!entryId) {
+                    console.error(`No entry ID mapped for position: ${position}`);
+                    continue;
+                }
+
+                const isCheckbox = position.toLowerCase() === 'councilors';
+                const inputType = isCheckbox ? 'checkbox' : 'radio';
+                const required = !isCheckbox ? 'required' : '';
+
+                ballotHTML += `
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">${position}</h3>
+                        <div class="space-y-4">
+                `;
+                candidateList.forEach(name => {
+                    ballotHTML += `
+                        <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
+                            <input type="${inputType}" name="${entryId}" value="${name}" class="mr-3" ${required}>
+                            <span class="font-medium text-gray-800">${name}</span>
+                        </label>
+                    `;
+                });
+                ballotHTML += `
+                        </div>
+                    </div>
+                `;
+            }
+
+            ballotContainer.innerHTML = ballotHTML;
+        };
+
         // --- Authentication and UI Logic ---
+        const checkIfVoted = async (uid) => {
+            const voteDocRef = doc(db, `artifacts/${appId}/users/${uid}/voter-ballots`, "vote-status");
+            try {
+                const voteDoc = await getDoc(voteDocRef);
+                if (voteDoc.exists()) {
+                    displayMessage('You have already submitted your ballot. Thank you!', 'success');
+                    setFormState('disabled');
+                } else {
+                    displayMessage('Please make your selections and submit your ballot.', 'info');
+                    setFormState('enabled');
+                }
+            } catch (error) {
+                console.error("Error checking vote status:", error);
+                displayMessage("Error checking vote status. Please try again.", 'error');
+                setFormState('enabled');
+            }
+        };
+
         const handleGoogleLogin = async () => {
             const provider = new GoogleAuthProvider();
             try {
@@ -324,24 +356,6 @@
             }
         };
 
-        const saveUserProfile = async (user) => {
-            if (!db || !user) return;
-            const userProfileRef = doc(db, `/users/${user.uid}/user_profiles`, "profile");
-            
-            const profileData = {
-                displayName: user.displayName,
-                email: user.email,
-                photoURL: user.photoURL,
-                lastLogin: new Date().toISOString()
-            };
-            
-            try {
-                await setDoc(userProfileRef, profileData, { merge: true });
-            } catch (error) {
-                console.error("Firestore Error:", error);
-            }
-        };
-
         const attachListeners = () => {
             googleLoginBtn.addEventListener('click', handleGoogleLogin);
             logoutBtn.addEventListener('click', handleLogout);
@@ -355,7 +369,7 @@
                 errorMessageEl.classList.add('hidden');
                 
                 if (user) {
-                    if (!user.email.endsWith('@up.edu.ph')) {
+                    if (user.email && !user.email.endsWith('@up.edu.ph')) {
                         console.log("Incorrect domain. Signing out.");
                         errorMessageEl.textContent = "Please sign-in with your UP edu account (@up.edu.ph).";
                         errorMessageEl.classList.remove('hidden');
@@ -371,8 +385,7 @@
                     userNameEl.textContent = user.displayName;
                     userPhotoEl.src = user.photoURL;
 
-                    saveUserProfile(user);
-                    checkIfVoted();
+                    checkIfVoted(user.uid);
 
                 } else {
                     userId = null;
@@ -383,11 +396,15 @@
             });
         };
 
-        const initializeFirebase = () => {
+        const initializeFirebase = async () => {
             try {
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
+                
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                }
                 
                 setupAuthStateListener();
                 attachListeners();
@@ -398,7 +415,8 @@
             }
         };
         
-        initializeFirebase();
+        // Fetch candidates and render ballot on page load, then initialize Firebase
+        fetchCandidatesFromSheet().then(initializeFirebase);
     </script>
 </body>
 </html>
