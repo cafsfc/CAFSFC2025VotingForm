@@ -43,13 +43,18 @@
             <h1 class="text-xl font-bold text-gray-800 ml-4">Voting App</h1>
         </div>
         
-        <!-- User Profile -->
-        <div id="user-profile" class="relative flex items-center space-x-2">
-            <span id="user-name" class="font-medium text-gray-700 hidden md:inline"></span>
-            <img id="user-photo" class="w-10 h-10 rounded-full shadow-sm cursor-pointer" alt="User photo">
-            <button id="logout-btn" class="ml-4 px-4 py-2 bg-indigo-600 text-white font-medium rounded-full shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-sm">
-                Log Out
+        <!-- User Profile and Export Button -->
+        <div class="flex items-center space-x-4">
+            <button id="export-btn" class="px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-full shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-sm">
+                Export Votes
             </button>
+            <div id="user-profile" class="relative flex items-center space-x-2">
+                <span id="user-name" class="font-medium text-gray-700 hidden md:inline"></span>
+                <img id="user-photo" class="w-10 h-10 rounded-full shadow-sm cursor-pointer" alt="User photo">
+                <button id="logout-btn" class="ml-4 px-4 py-2 bg-indigo-600 text-white font-medium rounded-full shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-sm">
+                    Log Out
+                </button>
+            </div>
         </div>
     </header>
 
@@ -104,10 +109,12 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
     <script type="module">
         // Firebase CDN imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- GLOBAL VARIABLES (MANDATORY USE) ---
         // These variables are provided by the canvas environment.
@@ -140,26 +147,29 @@
         const changeVoteBtn = document.getElementById('change-vote-btn');
         const submitVoteBtn = document.getElementById('submit-vote-btn');
         const ballotContainer = document.getElementById('ballot-container');
+        const exportBtn = document.getElementById('export-btn');
 
-        let auth, userId;
+        let auth, db, userId;
         let voteDataToSubmit = {};
+        let candidatesData = {};
 
         // --- Configuration Constants ---
-        // The GOOGLE_FORM_URL is the destination for the vote data.
-        const GOOGLE_FORM_URL = "https://docs.google.com/forms/u/0/d/e/1FAIpQLSf9S0ksmz3OSCfcLHgaux1vGXfrDPR1Nl3Aa-Fe7soKM0Uvgg/formResponse";
-        // The GOOGLE_SHEET_URL is the source for the candidate list.
-        const CANDIDATES_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRjOEwpZwKpYm25jVZhudIUxi-HexgfFioCJg5xR-_7DZ8mwWuPmvJ2H21q4q93Cab7z0NbnavIs7v6/pub?gid=0&single=true&output=csv";
-        // The GOOGLE_RESPONSES_SHEET is for checking if the user has already voted.
-        const RESPONSES_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTnZExJ9injJGTsk1uFOUT45te0_gXPu0BGvAhgpWwNRIKxwgV3bXW-gygrr4omsBY9luXXxpPe1lE6/pub?gid=1706937725&single=true&output=csv";
-        
-        // This maps the position name from the Google Sheet to the Google Form's entry ID.
-        // The names in this map's keys must match the Position column in the Google Sheet exactly.
-        const entryMap = {
-            'Chairperson': 'entry.759707648',
-            'Vice Chairperson': 'entry.192266479',
-            'Councilor': 'entry.692317949',
-            'Google Account ID': 'entry.1533979100' // New entry for the user ID
+        // Firestore paths
+        const VOTES_COLLECTION = `artifacts/${appId}/public/data/votes`;
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT3yG48Vz9l4n6Y3tB90N2Q3g8qL5wX6_s7X6xJ3t_s1f4y7w/pub?output=csv';
+
+        // --- GOOGLE FORM CONFIGURATION ---
+        // IMPORTANT: Replace these placeholders with your actual Google Form URL and entry IDs.
+        // To find these, open your Google Form, right-click, and "Inspect". Find the form action URL and the input element names (e.g., 'entry.123456789').
+        const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfp6_3f6m0l6b5z_g0y_5l5_2b_c2_d2_f2_g2/formResponse';
+        const FORM_ENTRY_IDS = {
+            'voterId': 'entry.237072485', // Note: You must add a question for the voter ID in your Google Form and get its entry ID.
+            'President': 'entry.103006764',
+            'Vice President': 'entry.1221703666',
+            'Secretary': 'entry.887265225',
+            'Councilor': 'entry.2065839089'
         };
+        // ------------------------------------
 
         // --- Helper Functions ---
         const displayMessage = (text, type) => {
@@ -182,6 +192,18 @@
                 submitVoteBtn.classList.add('opacity-50', 'cursor-not-allowed');
             } else {
                 voteButtons.forEach(button => button.style.pointerEvents = 'auto');
+                submitVoteBtn.disabled = false;
+                submitVoteBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        };
+        
+        const showLoading = (isLoading) => {
+            if (isLoading) {
+                submitVoteBtn.textContent = 'Submitting...';
+                submitVoteBtn.disabled = true;
+                submitVoteBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                submitVoteBtn.textContent = 'Submit Vote';
                 submitVoteBtn.disabled = false;
                 submitVoteBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
@@ -216,24 +238,14 @@
             let summaryHTML = '';
             voteDataToSubmit = {}; 
 
-            for (let position in entryMap) {
-                if (position === 'Google Account ID') continue;
-
+            for (let position in selectedCandidates) {
                 const candidates = selectedCandidates[position] || [];
-                
-                // Use a different separator for the display vs. the submission
                 const displaySeparator = (position === 'Councilor') ? '<br>' : ' + ';
                 const candidateString = candidates.length > 0 ? candidates.join(displaySeparator) : 'No selection';
                 
-                // Store data for submission, always using '+' for councilors
-                const entryId = entryMap[position];
-                voteDataToSubmit[entryId] = candidates.length > 0 ? (position === 'Councilor' ? candidates.join(' + ') : candidates[0]) : '';
-                
+                voteDataToSubmit[position] = candidates;
                 summaryHTML += `<div><h4 class="font-semibold text-gray-800">${position}:</h4><p>${candidateString}</p></div>`;
             }
-
-            // Add the user ID to the data to be submitted to the Google Form
-            voteDataToSubmit[entryMap['Google Account ID']] = userId;
 
             voteSummaryEl.innerHTML = summaryHTML;
             verifierPopup.classList.remove('hidden');
@@ -247,29 +259,29 @@
                 closeVerifier();
                 return;
             }
+            
+            showLoading(true);
 
             try {
-                // Check for vote status before submitting again
+                // Check for vote status before submitting again to prevent a race condition
                 const hasVoted = await checkIfVoted(userId);
                 if (hasVoted) {
                     displayMessage('You have already submitted your ballot. Thank you!', 'success');
                     setFormState('disabled');
                     closeVerifier();
+                    showLoading(false);
                     return;
                 }
                 
-                // Submit the vote to the Google Form.
-                const formData = new FormData();
-                for (const entryId in voteDataToSubmit) {
-                    formData.append(entryId, voteDataToSubmit[entryId]);
-                }
-                
-                console.log("Submitting vote data to Google Form:", voteDataToSubmit);
-                await fetch(GOOGLE_FORM_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: formData
+                // Submit the vote to Firestore first for secure, atomic storage
+                const voteRef = doc(db, VOTES_COLLECTION, userId);
+                await setDoc(voteRef, {
+                    timestamp: new Date(),
+                    selections: voteDataToSubmit
                 });
+
+                // Now, send the data to the Google Form
+                await sendToGoogleForm(voteDataToSubmit, userId);
                 
                 closeVerifier();
                 displayMessage(`Your ballot has been successfully submitted!`, 'success');
@@ -278,79 +290,53 @@
                 console.error("Error submitting vote:", error);
                 closeVerifier();
                 displayMessage("Error submitting vote. Please try again.", 'error');
+            } finally {
+                showLoading(false);
+            }
+        };
+
+        const sendToGoogleForm = async (voteData, userId) => {
+            try {
+                // Create a FormData object to simulate a form submission
+                const formData = new FormData();
+                formData.append(FORM_ENTRY_IDS['voterId'], userId);
+
+                for (const position in voteData) {
+                    const candidateNames = voteData[position];
+                    const entryId = FORM_ENTRY_IDS[position];
+
+                    if (entryId && Array.isArray(candidateNames) && candidateNames.length > 0) {
+                        if (position === 'Councilor') {
+                             // Google Forms handles multiple choices by appending multiple entries with the same name
+                            candidateNames.forEach(candidate => {
+                                formData.append(entryId, candidate);
+                            });
+                        } else {
+                            formData.append(entryId, candidateNames.join(', '));
+                        }
+                    }
+                }
+
+                // Send the POST request to the Google Form
+                const response = await fetch(GOOGLE_FORM_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Required for Google Forms endpoint
+                    body: formData
+                });
+                
+                console.log("Vote data successfully sent to Google Form.");
+
+            } catch (error) {
+                // Log the error but don't stop the app, since the data is already in Firestore
+                console.error("Error submitting data to Google Form:", error);
             }
         };
 
         // --- Main Ballot Rendering Logic ---
-        const fetchCandidatesFromSheet = async () => {
-            try {
-                const response = await fetch(`${CANDIDATES_SHEET_URL}&t=${new Date().getTime()}`);
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch ballot data. HTTP Status: ${response.status}. Please ensure the URL is correct and the sheet is published.`);
-                }
-                const text = await response.text();
-                
-                // Check for empty or invalid data
-                if (!text || text.trim().length === 0) {
-                     throw new Error("The Google Sheet data is empty or malformed. Please check the sheet and its public URL.");
-                }
-
-                const lines = text.split('\n');
-                if (lines.length <= 1) {
-                     throw new Error("No candidate data found in the CSV. The sheet may be empty or not formatted correctly.");
-                }
-
-                const candidates = {};
-                lines.forEach((line, index) => {
-                    if (index === 0) return; // Skip header row
-                    
-                    const parts = line.trim().split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    if (parts.length < 2) {
-                        console.error(`Skipping malformed row: ${line}`);
-                        return;
-                    }
-                    
-                    // Remove quotation marks and trim whitespace
-                    const position = parts.pop().trim().replace(/^"|"$/g, '');
-                    const name = parts.join(',').trim().replace(/^"|"$/g, '');
-                    
-                    if (name && position) {
-                        // Check if the position exists in our mapping.
-                        if (!entryMap[position]) {
-                            console.warn(`Skipping candidate "${name}" because position "${position}" is not in the entryMap.`);
-                            return;
-                        }
-                        
-                        if (!candidates[position]) {
-                            candidates[position] = [];
-                        }
-                        candidates[position].push(name);
-                    }
-                });
-
-                renderBallot(candidates);
-                displayMessage("Ballot loaded successfully. Please make your selections.", 'info');
-
-            } catch (error) {
-                console.error("Error fetching or parsing candidates:", error);
-                ballotContainer.innerHTML = `
-                    <p class="text-center text-red-500">
-                        Failed to load ballot. Please check the Google Sheet URL and ensure it is publicly accessible.
-                        <br><br>
-                        Error details: ${error.message}
-                    </p>
-                `;
-                submitVoteBtn.disabled = true;
-                submitVoteBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            }
-        };
-
         const renderBallot = (candidates) => {
             let ballotHTML = '';
             for (const position in candidates) {
                 const candidateList = candidates[position];
-                const isCouncilor = position.toLowerCase() === 'councilor';
-
                 ballotHTML += `
                     <div class="mb-8">
                         <h3 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">${position}</h3>
@@ -374,7 +360,7 @@
             if (ballotHTML.trim() === '') {
                  ballotContainer.innerHTML = `
                     <p class="text-center text-red-500 font-medium">
-                        The ballot is empty. Please check that the names in your Google Sheet's 'POSITION' column exactly match 'Chairperson', 'Vice Chairperson', or 'Councilor'.
+                        The ballot is empty.
                     </p>
                 `;
             } else {
@@ -409,29 +395,10 @@
         // --- Authentication and UI Logic ---
         const checkIfVoted = async (uid) => {
             try {
-                const response = await fetch(`${RESPONSES_SHEET_URL}&t=${new Date().getTime()}`);
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch vote responses. HTTP Status: ${response.status}`);
-                }
-                const text = await response.text();
-                const lines = text.split('\n');
-                
-                // Find the index for the Google Account ID column
-                const headers = lines[0].split(',');
-                const googleIdColumnIndex = headers.findIndex(header => header.trim() === 'Google Account ID');
-                
-                if (googleIdColumnIndex === -1) {
-                    console.error("Google Account ID column not found in responses sheet.");
-                    return false; // Assume user has not voted to allow them to proceed
-                }
-                
-                // Check if the user's ID exists in the responses
-                const hasVoted = lines.slice(1).some(line => {
-                    const columns = line.split(',');
-                    return columns[googleIdColumnIndex] && columns[googleIdColumnIndex].trim() === uid;
-                });
+                const voteRef = doc(db, VOTES_COLLECTION, uid);
+                const voteDoc = await getDoc(voteRef);
 
-                if (hasVoted) {
+                if (voteDoc.exists()) {
                     displayMessage('You have already submitted your ballot. Thank you!', 'success');
                     setFormState('disabled');
                     return true;
@@ -441,7 +408,7 @@
                     return false;
                 }
             } catch (error) {
-                console.error("Error checking vote status from responses sheet:", error);
+                console.error("Error checking vote status from Firestore:", error);
                 displayMessage("Error checking vote status. Please try again.", 'error');
                 setFormState('enabled');
                 return false;
@@ -476,6 +443,7 @@
             votingForm.addEventListener('submit', openVoteVerifier);
             confirmVoteBtn.addEventListener('click', handleVote);
             changeVoteBtn.addEventListener('click', closeVerifier);
+            exportBtn.addEventListener('click', exportVotes);
         };
 
         const setupAuthStateListener = () => {
@@ -483,6 +451,7 @@
                 errorMessageEl.classList.add('hidden');
                 
                 if (user) {
+                    // Domain check
                     if (user.email && !user.email.endsWith('@up.edu.ph')) {
                         console.log("Incorrect domain. Signing out.");
                         errorMessageEl.textContent = "Please sign-in with your UP edu account (@up.edu.ph).";
@@ -510,14 +479,114 @@
             });
         };
 
+        // Function to fetch and parse candidates from a CSV file
+        const fetchCandidates = async () => {
+            try {
+                const response = await fetch(CSV_URL);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch CSV: ${response.statusText}`);
+                }
+                const csvText = await response.text();
+                
+                // Use Papa.parse to parse the CSV text
+                const result = Papa.parse(csvText, {
+                    header: false,
+                    skipEmptyLines: true
+                });
+
+                if (result.errors.length > 0) {
+                    throw new Error(`CSV parsing errors: ${JSON.stringify(result.errors)}`);
+                }
+
+                // Transform the 2D array into a structured object
+                const rows = result.data;
+                if (rows.length < 2) {
+                    throw new Error("CSV file must have at least one header row and one data row.");
+                }
+                const positions = rows[0];
+                const newCandidates = {};
+                for (let i = 0; i < positions.length; i++) {
+                    const position = positions[i].trim();
+                    if (position) {
+                        newCandidates[position] = [];
+                        for (let j = 1; j < rows.length; j++) {
+                            const candidateName = (rows[j][i] || "").trim();
+                            if (candidateName) {
+                                newCandidates[position].push(candidateName);
+                            }
+                        }
+                    }
+                }
+                console.log("Parsed candidates from CSV:", newCandidates);
+                return newCandidates;
+            } catch (error) {
+                console.error("Error fetching or parsing candidates:", error);
+                displayMessage("Failed to load candidates. Please check the CSV file URL.", 'error');
+                return {};
+            }
+        };
+        
+        // Function to export votes from Firestore to a CSV file
+        const exportVotes = async () => {
+            try {
+                const querySnapshot = await getDocs(collection(db, VOTES_COLLECTION));
+                const allVotes = [];
+                const headers = ['voterId', 'timestamp', ...Object.keys(candidatesData)];
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const row = {
+                        voterId: doc.id,
+                        timestamp: data.timestamp ? data.timestamp.toDate().toLocaleString() : 'N/A',
+                    };
+                    for (const position of Object.keys(candidatesData)) {
+                        row[position] = data.selections[position] ? data.selections[position].join(', ') : 'No Selection';
+                    }
+                    allVotes.push(row);
+                });
+
+                let csvContent = headers.join(',') + '\n';
+                allVotes.forEach(row => {
+                    const values = headers.map(header => {
+                        const cell = row[header] || '';
+                        // Escape quotes and wrap in quotes for proper CSV formatting
+                        return `"${String(cell).replace(/"/g, '""')}"`;
+                    });
+                    csvContent += values.join(',') + '\n';
+                });
+
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                if (link.download !== undefined) {
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', 'vote_results.csv');
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+                displayMessage('Votes successfully exported to vote_results.csv!', 'success');
+
+            } catch (error) {
+                console.error("Error exporting votes:", error);
+                displayMessage("Failed to export votes. Please try again.", 'error');
+            }
+        };
+
         const initializeFirebase = async () => {
             try {
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
+                db = getFirestore(app);
                 
                 if (initialAuthToken) {
                     await signInWithCustomToken(auth, initialAuthToken);
                 }
+
+                // Load candidates from the CSV before setting up the UI
+                candidatesData = await fetchCandidates();
+                renderBallot(candidatesData);
                 
                 setupAuthStateListener();
                 attachListeners();
@@ -528,8 +597,8 @@
             }
         };
         
-        // Fetch candidates and render ballot on page load, then initialize Firebase
-        fetchCandidatesFromSheet().then(initializeFirebase);
+        // Initialize Firebase on page load.
+        initializeFirebase();
     </script>
 </body>
 </html>
