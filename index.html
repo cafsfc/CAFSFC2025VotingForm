@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Sign-In App</title>
+    <title>Voting App</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,45 +15,61 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-gray-100 min-h-screen flex flex-col">
 
-    <!-- Main Container -->
-    <div id="app-container" class="bg-white rounded-xl shadow-lg p-8 w-full max-w-sm text-center transform transition-all duration-300">
+    <!-- Header -->
+    <header id="header" class="hidden bg-white shadow-md p-4 flex justify-between items-center z-10">
+        <div class="flex items-center">
+            <!-- Hamburger Icon (SVG) -->
+            <button class="text-gray-600 hover:text-gray-800 focus:outline-none p-2 rounded-full hover:bg-gray-200 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+            <h1 class="text-xl font-bold text-gray-800 ml-4">Voting App</h1>
+        </div>
         
-        <!-- Logged-out State -->
-        <div id="logged-out-state" class="flex flex-col items-center">
+        <!-- User Profile -->
+        <div id="user-profile" class="relative flex items-center space-x-2">
+            <span id="user-name" class="font-medium text-gray-700 hidden md:inline"></span>
+            <img id="user-photo" class="w-10 h-10 rounded-full shadow-sm cursor-pointer" alt="User photo">
+            <button id="logout-btn" class="ml-4 px-4 py-2 bg-indigo-600 text-white font-medium rounded-full shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-sm">
+                Log Out
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow flex items-center justify-center p-4">
+        
+        <!-- Logged-out State (Card) -->
+        <div id="logged-out-state" class="bg-white rounded-xl shadow-lg p-8 w-full max-w-sm text-center transform transition-all duration-300">
             <h1 class="text-3xl font-bold text-gray-800">Welcome</h1>
-            <p class="mt-2 text-gray-600">Sign in with your Google account to get started.</p>
-            <button id="google-login-btn" class="mt-6 px-4 py-2 bg-white border border-gray-300 rounded-full shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex items-center justify-center">
+            <p class="mt-2 text-gray-600">Sign in with your Google account to vote.</p>
+            <button id="google-login-btn" class="mt-6 px-4 py-2 bg-white border border-gray-300 rounded-full shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex items-center justify-center mx-auto">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-2" alt="Google icon">
                 Sign in with Google
             </button>
             <p id="error-message" class="mt-4 text-red-500 text-sm hidden"></p>
         </div>
 
-        <!-- Logged-in State -->
-        <div id="logged-in-state" class="hidden flex flex-col items-center">
-            <img id="user-photo" class="w-20 h-20 rounded-full mb-4 shadow-md" alt="User photo">
-            <h1 id="user-name" class="text-xl font-semibold text-gray-800"></h1>
-            <p class="text-gray-500 text-sm mt-1 break-all">
-                <span class="font-bold">User ID:</span> 
-                <span id="user-id"></span>
-            </p>
-            <p id="user-email" class="text-gray-500 text-sm mt-1"></p>
-            <p id="firestore-status" class="mt-4 text-gray-500 text-xs font-medium"></p>
-            <button id="logout-btn" class="mt-6 px-4 py-2 bg-indigo-600 text-white font-medium rounded-full shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                Log Out
-            </button>
+        <!-- Voting Content -->
+        <div id="voting-content" class="hidden w-full max-w-lg">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-4">Please Cast Your Vote</h2>
+            <div id="vote-options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Candidate Cards will be generated here by JavaScript -->
+            </div>
+            <p id="message-display" class="mt-6 text-center text-sm font-medium"></p>
         </div>
 
-    </div>
+    </main>
 
     <!-- Firebase Scripts -->
     <script type="module">
         // Firebase CDN imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // Log all Firestore debug messages to the console
@@ -78,24 +94,105 @@
         const logoutBtn = document.getElementById('logout-btn');
         const userNameEl = document.getElementById('user-name');
         const userPhotoEl = document.getElementById('user-photo');
-        const userEmailEl = document.getElementById('user-email');
-        const userIdEl = document.getElementById('user-id');
         const errorMessageEl = document.getElementById('error-message');
-        const firestoreStatusEl = document.getElementById('firestore-status');
+        const headerEl = document.getElementById('header');
+        const votingContentEl = document.getElementById('voting-content');
+        const voteOptionsEl = document.getElementById('vote-options');
+        const messageDisplayEl = document.getElementById('message-display');
 
         let auth, db;
+        let userId = null;
+
+        // --- Voting Logic and Firestore Interactions ---
+        const candidates = [
+            { id: 'candidate1', name: 'Candidate A', description: 'The candidate for change.' },
+            { id: 'candidate2', name: 'Candidate B', description: 'The candidate for experience.' },
+            { id: 'candidate3', name: 'Candidate C', description: 'The candidate for the future.' },
+            { id: 'candidate4', name: 'Candidate D', description: 'The candidate for progress.' },
+        ];
+
+        // Renders the voting cards
+        const renderVotingCards = (hasVoted) => {
+            voteOptionsEl.innerHTML = ''; // Clear previous cards
+            candidates.forEach(candidate => {
+                const card = document.createElement('div');
+                card.id = `card-${candidate.id}`;
+                card.className = `bg-white rounded-xl shadow-md p-6 transition-all duration-200 cursor-pointer ${hasVoted ? 'opacity-50 pointer-events-none' : 'hover:shadow-lg'}`;
+                card.innerHTML = `
+                    <h3 class="text-xl font-semibold text-gray-800">${candidate.name}</h3>
+                    <p class="mt-2 text-gray-500 text-sm">${candidate.description}</p>
+                    <button class="mt-4 w-full px-4 py-2 bg-indigo-600 text-white font-medium rounded-full shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${hasVoted ? 'hidden' : ''}" data-candidate-id="${candidate.id}">
+                        Vote
+                    </button>
+                `;
+                if (!hasVoted) {
+                    card.querySelector('button').addEventListener('click', () => handleVote(candidate.id));
+                }
+                voteOptionsEl.appendChild(card);
+            });
+        };
+
+        // Checks if the user has already voted
+        const checkIfVoted = async () => {
+            if (!db || !userId) return;
+
+            // This is a public collection to store votes. Document ID is the user ID.
+            const voteDocRef = doc(db, 'votes', userId);
+            
+            try {
+                const voteDoc = await getDoc(voteDocRef);
+                if (voteDoc.exists()) {
+                    messageDisplayEl.textContent = `You have already voted for ${voteDoc.data().candidateName}. Thank you!`;
+                    messageDisplayEl.className = 'mt-6 text-center text-green-600 font-bold';
+                    renderVotingCards(true); // Disable voting
+                } else {
+                    messageDisplayEl.textContent = 'Please select a candidate to cast your vote.';
+                    messageDisplayEl.className = 'mt-6 text-center text-gray-500 font-medium';
+                    renderVotingCards(false); // Enable voting
+                }
+            } catch (error) {
+                console.error("Error checking vote status:", error);
+                messageDisplayEl.textContent = "Error checking vote status. Please try again.";
+                messageDisplayEl.className = 'mt-6 text-center text-red-500 font-medium';
+            }
+        };
+
+        // Handles the vote submission
+        const handleVote = async (candidateId) => {
+            if (!db || !userId) return;
+
+            const voteDocRef = doc(db, 'votes', userId);
+            const candidate = candidates.find(c => c.id === candidateId);
+
+            const voteData = {
+                userId: userId,
+                candidateId: candidate.id,
+                candidateName: candidate.name,
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                await setDoc(voteDocRef, voteData);
+                messageDisplayEl.textContent = `Your vote for ${candidate.name} has been successfully submitted!`;
+                messageDisplayEl.className = 'mt-6 text-center text-green-600 font-bold';
+                renderVotingCards(true); // Disable voting after submission
+            } catch (error) {
+                console.error("Error submitting vote:", error);
+                messageDisplayEl.textContent = "Error submitting vote. Please try again.";
+                messageDisplayEl.className = 'mt-6 text-center text-red-500 font-medium';
+            }
+        };
+
+        // --- Authentication and UI Logic ---
 
         // Handles the Google Sign-In flow
         const handleGoogleLogin = async () => {
             const provider = new GoogleAuthProvider();
-            // Add a hosted domain restriction to only allow @up.edu.ph emails
-            provider.setCustomParameters({ hd: 'up.edu.ph' });
+            // Remove the hosted domain restriction to allow any Google account to sign in initially
+            // provider.setCustomParameters({ hd: 'up.edu.ph' });
             
             try {
-                // signInWithPopup opens a new window, which is why it's a good practice
-                // to wrap it in a try-catch block
                 await signInWithPopup(auth, provider);
-                // The onAuthStateChanged listener will handle the rest
             } catch (error) {
                 console.error("Google Sign-In Error:", error);
                 const errorMessage = "Sign-in failed. Please try again.";
@@ -108,7 +205,6 @@
         const handleLogout = async () => {
             try {
                 await signOut(auth);
-                // onAuthStateChanged listener will handle the UI update
             } catch (error) {
                 console.error("Logout Error:", error);
                 errorMessageEl.textContent = "Logout failed. Please try again.";
@@ -116,11 +212,9 @@
             }
         };
 
-        // Save user profile to Firestore
+        // Saves user profile to Firestore (private data)
         const saveUserProfile = async (user) => {
             if (!db || !user) return;
-
-            // This is a private collection for the authenticated user
             const userProfileRef = doc(db, `/users/${user.uid}/user_profiles`, "profile");
             
             const profileData = {
@@ -132,10 +226,8 @@
             
             try {
                 await setDoc(userProfileRef, profileData, { merge: true });
-                firestoreStatusEl.textContent = "User profile saved to Firestore!";
             } catch (error) {
                 console.error("Firestore Error:", error);
-                firestoreStatusEl.textContent = "Error saving profile to Firestore.";
             }
         };
 
@@ -151,27 +243,31 @@
                 errorMessageEl.classList.add('hidden');
                 
                 if (user) {
-                    // User is signed in with a Google account
-                    console.log("User logged in:", user);
+                    // Check if the user's email is from the correct domain
+                    if (!user.email.endsWith('@up.edu.ph')) {
+                        console.log("Incorrect domain. Signing out.");
+                        errorMessageEl.textContent = "Please sign-in with your UP edu account (@up.edu.ph).";
+                        errorMessageEl.classList.remove('hidden');
+                        signOut(auth); // Immediately sign them out
+                        return; // Exit the function to prevent further actions
+                    }
                     
-                    // Show logged-in state
+                    userId = user.uid;
                     loggedOutStateEl.classList.add('hidden');
-                    loggedInStateEl.classList.remove('hidden');
+                    votingContentEl.classList.remove('hidden');
+                    headerEl.classList.remove('hidden');
                     
-                    // Update UI with user info
                     userNameEl.textContent = user.displayName;
-                    userEmailEl.textContent = user.email;
                     userPhotoEl.src = user.photoURL;
-                    userIdEl.textContent = user.uid;
 
-                    // Save user data to Firestore
                     saveUserProfile(user);
+                    checkIfVoted();
 
                 } else {
-                    // User is signed out
-                    console.log("User logged out.");
+                    userId = null;
                     loggedOutStateEl.classList.remove('hidden');
-                    loggedInStateEl.classList.add('hidden');
+                    votingContentEl.classList.add('hidden');
+                    headerEl.classList.add('hidden');
                 }
             });
         };
@@ -183,7 +279,6 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
                 
-                // Setup the auth state listener first
                 setupAuthStateListener();
                 attachListeners();
             } catch (error) {
