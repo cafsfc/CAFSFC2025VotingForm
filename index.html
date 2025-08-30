@@ -13,6 +13,32 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+        /* Custom styles for the round voting buttons */
+        .vote-button {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #D1D5DB; /* Gray border */
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            position: relative;
+            z-index: 10;
+        }
+
+        .vote-button.active {
+            background-color: #4F46E5; /* Indigo fill */
+            border-color: #4F46E5;
+        }
+
+        .vote-button.active::after {
+            content: '✓';
+            color: white;
+            font-size: 1.5rem;
+            line-height: 1;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -155,13 +181,13 @@
         };
 
         const setFormState = (state) => {
-            const inputs = votingForm.querySelectorAll('input');
+            const voteButtons = ballotContainer.querySelectorAll('.vote-button-wrapper');
             if (state === 'disabled') {
-                inputs.forEach(input => input.disabled = true);
+                voteButtons.forEach(button => button.style.pointerEvents = 'none');
                 submitVoteBtn.disabled = true;
                 submitVoteBtn.classList.add('opacity-50', 'cursor-not-allowed');
             } else {
-                inputs.forEach(input => input.disabled = false);
+                voteButtons.forEach(button => button.style.pointerEvents = 'auto');
                 submitVoteBtn.disabled = false;
                 submitVoteBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
@@ -173,35 +199,39 @@
 
         const openVoteVerifier = (event) => {
             event.preventDefault();
-            const formData = new FormData(votingForm);
             
-            // Check for councilors limit
-            const councilors = formData.getAll(entryMap['Councilor']);
+            const selectedCandidates = {};
+            // Find all selected candidates based on the 'active' class
+            const activeButtons = ballotContainer.querySelectorAll('.vote-button.active');
+            
+            activeButtons.forEach(button => {
+                const position = button.dataset.position;
+                const name = button.dataset.name;
+                if (!selectedCandidates[position]) {
+                    selectedCandidates[position] = [];
+                }
+                selectedCandidates[position].push(name);
+            });
+
+            const councilors = selectedCandidates['Councilor'] || [];
             if (councilors.length > 3) {
                 displayMessage('You can only select a maximum of 3 councilors. Please adjust your selection.', 'error');
                 return;
             }
 
             let summaryHTML = '';
-            voteDataToSubmit = {}; // Reset the data to submit
+            voteDataToSubmit = {}; 
 
             for (let position in entryMap) {
-                // Skip the Google Account ID for the summary display
                 if (position === 'Google Account ID') continue;
 
+                const candidates = selectedCandidates[position] || [];
+                const candidateString = candidates.length > 0 ? candidates.join(' + ') : 'No selection';
+                
+                // Store data for submission
                 const entryId = entryMap[position];
-                const candidates = formData.getAll(entryId);
-                let candidateString = '';
-
-                // Handle both single and multiple selections
-                if (position === 'Councilor') {
-                    candidateString = candidates.length > 0 ? candidates.join(' + ') : 'No selection';
-                    voteDataToSubmit[entryId] = candidates.length > 0 ? candidates.join(' + ') : '';
-                } else {
-                    candidateString = candidates[0] || 'No selection';
-                    voteDataToSubmit[entryId] = candidates[0] || '';
-                }
-
+                voteDataToSubmit[entryId] = candidates.length > 0 ? (position === 'Councilor' ? candidates.join(' + ') : candidates[0]) : '';
+                
                 summaryHTML += `<div><h4 class="font-semibold text-gray-800">${position}:</h4><p>${candidateString}</p></div>`;
             }
 
@@ -277,14 +307,15 @@
                 lines.forEach((line, index) => {
                     if (index === 0) return; // Skip header row
                     
-                    const parts = line.split(',');
+                    const parts = line.trim().split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                     if (parts.length < 2) {
                         console.error(`Skipping malformed row: ${line}`);
                         return;
                     }
                     
-                    const position = parts.pop().trim();
-                    const name = parts.join(',').trim();
+                    // Remove quotation marks and trim whitespace
+                    const position = parts.pop().trim().replace(/^"|"$/g, '');
+                    const name = parts.join(',').trim().replace(/^"|"$/g, '');
                     
                     if (name && position) {
                         // Check if the position exists in our mapping.
@@ -321,11 +352,7 @@
             let ballotHTML = '';
             for (const position in candidates) {
                 const candidateList = candidates[position];
-                const entryId = entryMap[position];
-
-                const isCheckbox = position.toLowerCase() === 'councilor';
-                const inputType = isCheckbox ? 'checkbox' : 'radio';
-                const required = !isCheckbox ? 'required' : '';
+                const isCouncilor = position.toLowerCase() === 'councilor';
 
                 ballotHTML += `
                     <div class="mb-8">
@@ -335,10 +362,10 @@
                 candidateList.forEach(name => {
                     if (name.trim() !== '') {
                         ballotHTML += `
-                            <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                                <input type="${inputType}" name="${entryId}" value="${name}" class="mr-3" ${required}>
+                            <div class="vote-button-wrapper p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors flex items-center space-x-4">
+                                <div class="vote-button" data-name="${name}" data-position="${position}"></div>
                                 <span class="font-medium text-gray-800">${name}</span>
-                            </label>
+                            </div>
                         `;
                     }
                 });
@@ -347,7 +374,6 @@
                     </div>
                 `;
             }
-            // Check if the ballot is empty after attempting to render it
             if (ballotHTML.trim() === '') {
                  ballotContainer.innerHTML = `
                     <p class="text-center text-red-500 font-medium">
@@ -356,7 +382,31 @@
                 `;
             } else {
                  ballotContainer.innerHTML = ballotHTML;
+                 attachButtonListeners();
             }
+        };
+
+        const attachButtonListeners = () => {
+            ballotContainer.addEventListener('click', (event) => {
+                const clickedButton = event.target.closest('.vote-button');
+                if (!clickedButton) return;
+
+                const position = clickedButton.dataset.position;
+                
+                if (position === 'Councilor') {
+                    // Allow multiple selections for councilors
+                    clickedButton.classList.toggle('active');
+                } else {
+                    // Only one selection for other positions
+                    const positionButtons = ballotContainer.querySelectorAll(`[data-position="${position}"]`);
+                    positionButtons.forEach(button => {
+                        if (button !== clickedButton) {
+                            button.classList.remove('active');
+                        }
+                    });
+                    clickedButton.classList.toggle('active');
+                }
+            });
         };
 
         // --- Authentication and UI Logic ---
