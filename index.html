@@ -54,11 +54,51 @@
         </div>
 
         <!-- Voting Content -->
-        <div id="voting-content" class="hidden w-full h-full">
-            <h2 class="text-2xl font-bold text-gray-800 text-center mb-4">Please Cast Your Vote</h2>
-            <iframe id="google-form-iframe" src="https://docs.google.com/forms/d/e/1FAIpQLSf9S0ksmz3OSCfcLHgaux1vGXfrDPR1Nl3Aa-Fe7soKM0Uvgg/viewform?usp=header&embedded=true" class="w-full h-full rounded-xl" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
-        </div>
+        <div id="voting-content" class="hidden w-full max-w-2xl">
+            <h2 class="text-3xl font-bold text-gray-800 text-center mb-6">Official Ballot</h2>
+            
+            <form id="voting-form" class="bg-white rounded-xl shadow-lg p-8">
+                <div id="message-display" class="mb-6 hidden px-4 py-3 rounded-lg text-sm text-center font-medium"></div>
 
+                <!-- President Section -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">President</h3>
+                    <div class="space-y-4">
+                        <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
+                            <input type="radio" name="president" value="candidateA" class="mr-3" required>
+                            <span class="font-medium text-gray-800">Candidate A</span>
+                            <p class="text-sm text-gray-500">The Candidate for Change</p>
+                        </label>
+                        <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
+                            <input type="radio" name="president" value="candidateB" class="mr-3">
+                            <span class="font-medium text-gray-800">Candidate B</span>
+                            <p class="text-sm text-gray-500">The Candidate for Experience</p>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Vice President Section -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Vice President</h3>
+                    <div class="space-y-4">
+                        <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
+                            <input type="radio" name="vicePresident" value="candidateC" class="mr-3" required>
+                            <span class="font-medium text-gray-800">Candidate C</span>
+                            <p class="text-sm text-gray-500">The Candidate for the Future</p>
+                        </label>
+                        <label class="block p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
+                            <input type="radio" name="vicePresident" value="candidateD" class="mr-3">
+                            <span class="font-medium text-gray-800">Candidate D</span>
+                            <p class="text-sm text-gray-500">The Candidate for Progress</p>
+                        </label>
+                    </div>
+                </div>
+
+                <button id="submit-vote-btn" type="submit" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-full shadow-lg hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Submit Vote
+                </button>
+            </form>
+        </div>
     </main>
 
     <!-- Firebase Scripts -->
@@ -85,7 +125,6 @@
         // ----------------------------------------------
 
         // --- UI Element Selectors ---
-        const loggedInStateEl = document.getElementById('logged-in-state');
         const loggedOutStateEl = document.getElementById('logged-out-state');
         const googleLoginBtn = document.getElementById('google-login-btn');
         const logoutBtn = document.getElementById('logout-btn');
@@ -94,36 +133,75 @@
         const errorMessageEl = document.getElementById('error-message');
         const headerEl = document.getElementById('header');
         const votingContentEl = document.getElementById('voting-content');
-        const voteOptionsEl = document.getElementById('vote-options');
+        const votingForm = document.getElementById('voting-form');
         const messageDisplayEl = document.getElementById('message-display');
 
         let auth, db;
         let userId = null;
 
-        // --- Voting Logic and Firestore Interactions ---
-        // Renders the voting cards
-        const renderVotingCards = (hasVoted) => {
-            // This function is no longer needed for the embedded form
-        };
+        // --- Ballot Logic and Firestore Interactions ---
 
         // Checks if the user has already voted
         const checkIfVoted = async () => {
-            // This function is no longer needed for the embedded form
+            if (!db || !userId) return;
+
+            const voteDocRef = doc(db, 'voter-ballots', userId);
+            
+            try {
+                const voteDoc = await getDoc(voteDocRef);
+                if (voteDoc.exists()) {
+                    messageDisplayEl.textContent = 'You have already submitted your ballot. Thank you!';
+                    messageDisplayEl.className = 'mb-6 px-4 py-3 rounded-lg text-sm text-center font-medium bg-green-100 text-green-700';
+                    messageDisplayEl.classList.remove('hidden');
+                    votingForm.querySelectorAll('input').forEach(input => input.disabled = true);
+                    votingForm.querySelector('#submit-vote-btn').disabled = true;
+                    votingForm.querySelector('#submit-vote-btn').classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    messageDisplayEl.textContent = 'Please make your selections and submit your ballot.';
+                    messageDisplayEl.className = 'mb-6 px-4 py-3 rounded-lg text-sm text-center font-medium bg-blue-100 text-blue-700';
+                    messageDisplayEl.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error("Error checking vote status:", error);
+                messageDisplayEl.textContent = "Error checking vote status. Please try again.";
+                messageDisplayEl.className = 'mb-6 px-4 py-3 rounded-lg text-sm text-center font-medium bg-red-100 text-red-700';
+                messageDisplayEl.classList.remove('hidden');
+            }
         };
 
         // Handles the vote submission
-        const handleVote = async (candidateId) => {
-            // This function is no longer needed for the embedded form
+        const handleVote = async (event) => {
+            event.preventDefault();
+            if (!db || !userId) return;
+
+            const voteDocRef = doc(db, 'voter-ballots', userId);
+            
+            const formData = new FormData(votingForm);
+            const ballotData = {
+                president: formData.get('president'),
+                vicePresident: formData.get('vicePresident'),
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                await setDoc(voteDocRef, ballotData);
+                messageDisplayEl.textContent = `Your ballot has been successfully submitted!`;
+                messageDisplayEl.className = 'mb-6 px-4 py-3 rounded-lg text-sm text-center font-medium bg-green-100 text-green-700';
+                messageDisplayEl.classList.remove('hidden');
+                votingForm.querySelectorAll('input').forEach(input => input.disabled = true);
+                votingForm.querySelector('#submit-vote-btn').disabled = true;
+                votingForm.querySelector('#submit-vote-btn').classList.add('opacity-50', 'cursor-not-allowed');
+            } catch (error) {
+                console.error("Error submitting vote:", error);
+                messageDisplayEl.textContent = "Error submitting vote. Please try again.";
+                messageDisplayEl.className = 'mb-6 px-4 py-3 rounded-lg text-sm text-center font-medium bg-red-100 text-red-700';
+                messageDisplayEl.classList.remove('hidden');
+            }
         };
 
         // --- Authentication and UI Logic ---
-
-        // Handles the Google Sign-In flow
         const handleGoogleLogin = async () => {
             const provider = new GoogleAuthProvider();
-            // Remove the hosted domain restriction to allow any Google account to sign in initially
-            // provider.setCustomParameters({ hd: 'up.edu.ph' });
-            
             try {
                 await signInWithPopup(auth, provider);
             } catch (error) {
@@ -134,7 +212,6 @@
             }
         };
 
-        // Handles user logout
         const handleLogout = async () => {
             try {
                 await signOut(auth);
@@ -145,7 +222,6 @@
             }
         };
 
-        // Saves user profile to Firestore (private data)
         const saveUserProfile = async (user) => {
             if (!db || !user) return;
             const userProfileRef = doc(db, `/users/${user.uid}/user_profiles`, "profile");
@@ -164,25 +240,23 @@
             }
         };
 
-        // Attaches event listeners
         const attachListeners = () => {
             googleLoginBtn.addEventListener('click', handleGoogleLogin);
             logoutBtn.addEventListener('click', handleLogout);
+            votingForm.addEventListener('submit', handleVote);
         };
 
-        // Main logic to handle auth state changes and update UI
         const setupAuthStateListener = () => {
             onAuthStateChanged(auth, (user) => {
                 errorMessageEl.classList.add('hidden');
                 
                 if (user) {
-                    // Check if the user's email is from the correct domain
                     if (!user.email.endsWith('@up.edu.ph')) {
                         console.log("Incorrect domain. Signing out.");
                         errorMessageEl.textContent = "Please sign-in with your UP edu account (@up.edu.ph).";
                         errorMessageEl.classList.remove('hidden');
-                        signOut(auth); // Immediately sign them out
-                        return; // Exit the function to prevent further actions
+                        signOut(auth);
+                        return;
                     }
                     
                     userId = user.uid;
@@ -194,6 +268,7 @@
                     userPhotoEl.src = user.photoURL;
 
                     saveUserProfile(user);
+                    checkIfVoted();
 
                 } else {
                     userId = null;
@@ -204,7 +279,6 @@
             });
         };
 
-        // Initialize Firebase and Auth
         const initializeFirebase = () => {
             try {
                 const app = initializeApp(firebaseConfig);
@@ -220,9 +294,7 @@
             }
         };
         
-        // Initialize the application
         initializeFirebase();
-
     </script>
 </body>
 </html>
