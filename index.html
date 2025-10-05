@@ -19,6 +19,9 @@
                         'custom-light-gold': '#fcf8eb', // Very light gold background for selection
                         'custom-neutral': '#e0e7ff', // Light blue for Abstain/Neutral
                         'custom-neutral-border': '#6366f1', // Indigo for Abstain border
+                        'vote-positive': '#10b981', // Emerald 500
+                        'vote-negative': '#ef4444', // Red 500
+                        'vote-abstain': '#f59e0b', // Amber 500
                     }
                 }
             }
@@ -40,6 +43,8 @@
             border: 1px solid #E5E7EB; /* Light border */
             position: relative;
             background-color: white;
+            padding: 1rem; /* Added padding for touch target */
+            border-radius: 0.5rem; /* Consistent rounded corners */
         }
 
         /* Abstain Item Styling */
@@ -76,7 +81,7 @@
         .vote-checkmark {
             position: absolute;
             top: 50%;
-            right: 1rem; /* Adjusted for mobile */
+            right: 1rem; 
             transform: translateY(-50%);
             width: 20px;
             height: 20px;
@@ -91,12 +96,12 @@
         .candidate-name-link {
             text-decoration: underline;
             cursor: pointer;
-            color: #1e5629; /* Deep Green */
+            color: #1e5629; 
             font-weight: 600;
             transition: color 0.15s;
         }
         .candidate-name-link:hover {
-            color: #c39f09; /* Gold Hover */
+            color: #c39f09; 
         }
         
         /* Candidate ID Card Specific Styles */
@@ -114,7 +119,43 @@
             left: 0;
             width: 100%;
             height: 20px;
-            background-color: #1e5629; /* Deep Green header stripe */
+            background-color: #1e5629; 
+        }
+
+        /* Responsive table styling for tally section */
+        .tally-table-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            font-weight: 700;
+            font-size: 0.75rem; /* text-xs */
+            padding: 0.5rem;
+            border-bottom: 2px solid #E5E7EB;
+            color: #1F2937;
+            background-color: #f9fafb;
+        }
+
+        .tally-table-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid #F3F4F6;
+            align-items: center;
+        }
+
+        /* Mobile specific adjustments for vote item text */
+        @media (max-width: 640px) {
+            .vote-item > div {
+                /* Ensures vertical stacking on mobile */
+                flex-direction: column; 
+                align-items: flex-start;
+                word-wrap: break-word; /* Prevents overflow */
+                overflow-wrap: break-word;
+            }
+            .vote-item > div > span {
+                /* Ensures text uses full width and wraps */
+                width: 100%;
+                text-align: left;
+            }
         }
         
     </style>
@@ -133,7 +174,6 @@
         
         <!-- User Profile and Logout Button -->
         <div class="flex items-center space-x-2 sm:space-x-4 mt-2 sm:mt-0">
-            <!-- Export button is hidden for standard voters -->
             <div id="user-profile" class="relative flex items-center space-x-2">
                 <span id="user-name" class="font-medium text-custom-text hidden lg:inline text-sm"></span>
                 <img id="user-photo" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full shadow-sm cursor-pointer border border-gray-300" alt="User photo" onerror="this.onerror=null; this.src='https://placehold.co/32x32/f1f1f1/1F2937?text=U';">
@@ -179,6 +219,18 @@
                     Review and Submit Vote
                 </button>
             </form>
+
+            <!-- Live Tally Section -->
+            <section id="live-tally-section" class="mt-10 p-4 sm:p-6 bg-white rounded-xl shadow-2xl border-t-8 border-custom-sub/50">
+                <h3 class="text-2xl font-extrabold text-custom-sub mb-4 border-b-2 border-custom-sub/20 pb-2">Live Aggregated Tally</h3>
+                <p class="text-sm text-gray-500 mb-6">
+                    This section displays the real-time aggregated vote count from the system ledger.
+                </p>
+                <div id="tally-results-container" class="space-y-8">
+                    <!-- Tally results will be rendered here -->
+                    <p class="text-center text-gray-400">Tally loading...</p>
+                </div>
+            </section>
         </div>
     </main>
 
@@ -247,7 +299,7 @@
         // Firebase CDN imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, onSnapshot, query, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // Enable Firebase Debug Logging (Mandatory for tracing issues)
         setLogLevel('Debug');
@@ -283,6 +335,7 @@
         const submitVoteBtn = document.getElementById('submit-vote-btn');
         const ballotContainer = document.getElementById('ballot-container');
         const userIdDisplay = document.getElementById('user-id-display');
+        const tallyResultsContainer = document.getElementById('tally-results-container');
         
         // Nominee Popup Elements
         const nomineePopup = document.getElementById('nominee-popup');
@@ -391,22 +444,22 @@
 
 
         // --- Main Ballot Rendering Logic ---
+        const positionOrder = [
+            'Chairperson', 
+            'Vice Chairperson', 
+            'UFC Nominee', 
+            'College Representative to the UFC', 
+            'Councilors'
+        ];
+
         const renderBallot = (candidates) => {
             let ballotHTML = '';
-            
-            const positionOrder = [
-                'Chairperson', 
-                'Vice Chairperson', 
-                'UFC Nominee', 
-                'College Representative to the UFC', 
-                'Councilors'
-            ];
             
             for (const position of positionOrder) {
                 const candidateList = candidates[position];
 
                 if (!candidateList || candidateList.length === 0) {
-                    ballotHTML += `<p class="text-center text-red-500 font-medium my-4">No candidates found for ${position}.</p>`;
+                    ballotHTML += `<div class="p-4 bg-gray-100 rounded-lg"><p class="text-center text-red-500 font-medium my-2">No candidates found for **${position}**.</p></div>`;
                     continue; 
                 }
                 
@@ -416,8 +469,8 @@
                 ballotHTML += `
                     <div class="mb-6 sm:mb-8 p-4 sm:p-6 bg-gray-50 rounded-xl shadow-inner border border-gray-200">
                         <h3 class="text-xl sm:text-2xl font-bold text-custom-sub border-b-2 border-custom-main pb-2 mb-3 sm:mb-4">${position}</h3>
-                        <p class="text-xs sm:text-sm text-gray-500 mt-1">Select ${limitText}, or choose **Abstain** to skip this position entirely.</p>
-                        ${isMultiSelect ? '<p class="text-xs text-red-500 font-medium mt-1">**NOTE for Councilors:** Selecting **Abstain** means you forfeit all 3 of your available votes.</p>' : ''}
+                        <p class="text-xs sm:text-sm text-gray-500 mt-1 mb-3">Select ${limitText}, or choose **Abstain** to skip this position entirely.</p>
+                        ${isMultiSelect ? '<p class="text-xs text-red-500 font-medium mt-1">**NOTE:** Selecting **Abstain** for Councilors forfeits all 3 available votes.</p>' : ''}
                         
                         <div class="space-y-3 pt-3 sm:pt-4">
                 `;
@@ -425,10 +478,10 @@
                 // Add the candidates
                 candidateList.forEach(info => {
                     ballotHTML += `
-                        <div class="vote-item p-4 rounded-lg flex items-center justify-between transition-all" 
+                        <div class="vote-item transition-all flex items-center justify-between" 
                              data-name="${info.name}" data-position="${position}" data-multiselect="${isMultiSelect}">
                             <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-3">
-                                <span class="candidate-name-link text-sm sm:text-base" data-candidate-name="${info.name}">
+                                <span class="candidate-name-link text-sm sm:text-base text-wrap" data-candidate-name="${info.name}">
                                     ${info.name}
                                 </span>
                                 <span class="text-xs text-gray-400 hidden sm:block">(${info.course})</span>
@@ -440,7 +493,7 @@
                 
                 // Add the ABSTAIN option *after* the candidates
                 ballotHTML += `
-                    <div class="vote-item p-4 rounded-lg flex items-center justify-between transition-all" 
+                    <div class="vote-item transition-all flex items-center justify-between" 
                          data-name="Abstain" data-position="${position}" data-multiselect="${isMultiSelect}" data-abstain="true">
                         <span class="text-custom-neutral-border font-extrabold text-sm sm:text-base">ABSTAIN - Skip All Votes for this Position</span>
                         ${getCheckmarkSvg('custom-neutral-border')}
@@ -540,7 +593,179 @@
         };
 
 
-        // --- Authentication and Vote Logic (mostly unchanged) ---
+        // --- Live Tally Logic (New Section) ---
+
+        /**
+         * Converts vote data into a simplified status (Positive/Negative/Abstain) for display.
+         * For multi-select positions (Councilors), it determines the overall status.
+         * @param {Array<string>} selections - Array of names selected, e.g., ['Candidate A', 'Candidate B', 'Abstain'].
+         * @returns {string} The simplified vote status: 'Abstain', 'Positive', 'Negative', 'Split', or 'None'.
+         */
+        const getSimplifiedStatus = (selections) => {
+            if (!selections || selections.length === 0) return 'None';
+            if (selections.includes('Abstain')) return 'Abstain';
+            
+            // NOTE: Since the ballot only allows candidates to be selected (no Negative/Positive shade),
+            // a selection implies a positive vote. We can't distinguish between Positive/Negative
+            // votes for a single candidate based on this ballot structure, only whether they were chosen.
+            // We'll treat selection as 'Positive' (or 'Shade').
+            return 'Positive'; 
+        };
+
+        const getVoteDisplayColor = (status) => {
+            switch(status) {
+                case 'Positive': return 'text-vote-positive';
+                case 'Negative': return 'text-vote-negative';
+                case 'Abstain': return 'text-vote-abstain';
+                default: return 'text-gray-500';
+            }
+        };
+
+        const startLiveTallyListener = () => {
+            if (!db) return;
+
+            const votesRef = collection(db, VOTES_COLLECTION);
+            const q = query(votesRef);
+
+            // Listen for real-time changes to the votes collection
+            onSnapshot(q, (snapshot) => {
+                const allVotes = snapshot.docs.map(doc => ({ 
+                    voterId: doc.data().voterId,
+                    selections: doc.data().selections || {}
+                }));
+                
+                // Aggregate votes
+                const positionTally = {};
+                for (const position of positionOrder) {
+                    positionTally[position] = {
+                        totalVotes: 0,
+                        candidates: {}, // { 'Candidate Name': { Positive: 0, Abstain: 0 } }
+                        abstains: 0,
+                        individualVotes: [] // Array of { voterId, status }
+                    };
+                }
+
+                allVotes.forEach(vote => {
+                    const voterId = vote.voterId;
+                    for (const position in vote.selections) {
+                        const candidatesSelected = vote.selections[position] || [];
+                        const tally = positionTally[position];
+
+                        if (!tally) continue; // Skip invalid positions
+                        
+                        // Check if the vote was cast for this position (either candidate or abstain)
+                        if (candidatesSelected.length > 0) {
+                            tally.totalVotes++; 
+                            
+                            const status = getSimplifiedStatus(candidatesSelected);
+                            tally.individualVotes.push({ voterId, status });
+                            
+                            if (status === 'Abstain') {
+                                tally.abstains++;
+                            } else {
+                                // Tally the votes per candidate
+                                candidatesSelected.forEach(name => {
+                                    if (name !== 'Abstain') {
+                                        if (!tally.candidates[name]) {
+                                            tally.candidates[name] = { Positive: 0 };
+                                        }
+                                        tally.candidates[name].Positive++;
+                                    }
+                                });
+                            }
+                        }
+                    }
+                });
+
+                renderLiveTally(positionTally);
+
+            }, (error) => {
+                console.error("Error reading live tally:", error);
+                tallyResultsContainer.innerHTML = `<p class="text-center text-red-500 font-medium">Failed to load live tally data.</p>`;
+            });
+        };
+        
+        const renderLiveTally = (tallyData) => {
+            let tallyHTML = '';
+
+            for (const position of positionOrder) {
+                const tally = tallyData[position];
+                if (!tally) continue;
+
+                const candidateVotes = Object.entries(tally.candidates).map(([name, counts]) => ({ name, ...counts }));
+                const allResults = [...candidateVotes, { name: 'ABSTAIN', Positive: tally.abstains }];
+                
+                // Filter out candidates with zero votes for a cleaner display unless they are the official abstention count
+                const displayResults = allResults.filter(r => r.Positive > 0 || r.name === 'ABSTAIN');
+
+                tallyHTML += `
+                    <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-inner">
+                        <h4 class="text-lg font-bold text-custom-text mb-3">${position}</h4>
+                        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 text-center text-sm font-semibold mb-3">
+                            <div class="p-2 bg-vote-positive/10 rounded-md text-vote-positive">Voted: ${tally.totalVotes - tally.abstains}</div>
+                            <div class="p-2 bg-vote-abstain/10 rounded-md text-vote-abstain">Abstain: ${tally.abstains}</div>
+                            <div class="p-2 bg-gray-200 rounded-md text-gray-700 col-span-2">Total Ballots Cast: ${tally.totalVotes}</div>
+                        </div>
+
+                        <ul class="space-y-2">
+                            ${displayResults.length > 0 ? displayResults.map(res => `
+                                <li class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-md shadow-sm">
+                                    <span class="font-semibold text-custom-sub w-1/2 text-sm">${res.name}</span>
+                                    <span class="font-extrabold text-lg ${res.name === 'ABSTAIN' ? 'text-vote-abstain' : 'text-vote-positive'}">${res.Positive}</span>
+                                    <span class="text-xs text-gray-400">Vote${res.Positive !== 1 ? 's' : ''}</span>
+                                </li>
+                            `).join('') : '<li class="text-center text-gray-500 p-2">No votes recorded yet for this position.</li>'}
+                        </ul>
+
+                        <!-- Individual Votes Columnar Display (as requested) -->
+                        <div class="mt-6 pt-4 border-t border-gray-200">
+                            <h5 class="text-base font-bold text-gray-700 mb-3">Individual Voter Selections (Sample)</h5>
+                            <p class="text-xs text-red-600 mb-3 font-semibold p-2 bg-red-50 rounded">
+                                **WARNING:** Displaying individual votes (even truncated IDs) compromises the secrecy of the ballot and is only for demonstration purposes.
+                            </p>
+                            <div class="bg-white rounded-lg border max-h-48 overflow-y-auto">
+                                <div class="tally-table-header">
+                                    <div class="text-left">Voter ID (Truncated)</div>
+                                    <div class="text-center">Vote Shade</div>
+                                    <div class="text-center">Abstain Status</div>
+                                </div>
+                                <div class="divide-y divide-gray-100">
+                                    ${tally.individualVotes.length > 0 ? tally.individualVotes.map(vote => {
+                                        const displayStatus = vote.status;
+                                        const colorClass = getVoteDisplayColor(displayStatus);
+                                        const isAbstain = displayStatus === 'Abstain';
+                                        return `
+                                            <div class="tally-table-row text-sm">
+                                                <div class="font-mono text-gray-600 text-left">
+                                                    ${vote.voterId.substring(0, 8)}...
+                                                </div>
+                                                <div class="text-center">
+                                                    <span class="font-bold ${colorClass}">${displayStatus}</span>
+                                                </div>
+                                                <div class="text-center">
+                                                    <span class="font-bold ${isAbstain ? 'text-vote-abstain' : 'text-gray-400'}">
+                                                        ${isAbstain ? 'YES' : 'NO'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('') : `
+                                        <div class="tally-table-row text-center text-gray-400 text-sm">
+                                            No individual selections yet.
+                                        </div>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            tallyResultsContainer.innerHTML = tallyHTML.trim() || '<p class="text-center text-gray-400">Tally is ready but no positions have votes yet.</p>';
+        };
+
+
+        // --- Authentication and Vote Submission Logic ---
         const openVoteVerifier = (event) => {
             event.preventDefault();
             
@@ -559,8 +784,7 @@
             // --- Verification Logic ---
             let requiredSelectionMissing = false;
             voteDataToSubmit = {}; 
-            const positionOrder = ['Chairperson', 'Vice Chairperson', 'UFC Nominee', 'College Representative to the UFC', 'Councilors'];
-
+            
             for (const position of positionOrder) {
                 const selections = selectedCandidates[position] || [];
                 const isCouncilors = position === 'Councilors';
@@ -611,7 +835,7 @@
                 if (isAbstain) {
                     candidateString = `<span class="font-bold text-custom-neutral-border">ABSTAIN</span>`;
                 } else if (candidates.length > 0) {
-                     const displaySeparator = (position === 'Councilors') ? '<br>' : '';
+                     const displaySeparator = (position === 'Councilors') ? '<br>' : ', ';
                      candidateString = candidates.map(name => `<span class="font-bold">${name}</span>`).join(displaySeparator);
                 } else {
                     candidateString = '<span class="italic text-gray-400">No selection (Error in logic)</span>';
@@ -659,7 +883,7 @@
 
                 hasUserVoted = true;
                 closeVerifier();
-                displayMessage(`Your official ballot has been securely submitted! Thank you for participating.`, 'success');
+                displayMessage(`Your official ballot has been securely submitted! Thank you for participating. You may view the live tally below.`, 'success');
                 setFormState('disabled');
             } catch (error) {
                 console.error("Error submitting vote:", error);
@@ -684,7 +908,8 @@
                             formData.append(entryId, name);
                         });
                     } else if (entryId) {
-                         formData.append(entryId, 'No Selection');
+                         // Send a placeholder for positions where the user explicitly abstained or didn't select.
+                         formData.append(entryId, 'No Selection / Abstain');
                     }
                 }
 
@@ -698,7 +923,6 @@
                             mode: 'no-cors', 
                             body: formData
                         });
-                        console.log("Vote data successfully sent to Google Form on attempt", i + 1);
                         return;
                     } catch (e) {
                         if (i === maxRetries - 1) throw e; 
@@ -711,7 +935,7 @@
             }
         };
         
-        // --- UPDATED fetchCandidates Logic to handle the new CSV structure ---
+        // --- CSV Fetch and Parse Logic ---
         const fetchCandidates = async () => {
             try {
                 const response = await fetch(CSV_URL);
@@ -736,7 +960,7 @@
                 const allInfo = {}; 
 
                 rows.forEach(row => {
-                    // Expecting: [Name (0), Position (1), Picture URL (2), Course (3)]
+                    // Expecting: [Name (0), Position (1), Picture URL (2), Course | Platform Details (3)]
                     const name = (row[0] || "").trim();
                     const position = (row[1] || "").trim();
                     const photo = (row[2] || "").trim();
@@ -746,7 +970,7 @@
                         // Split the course/platform data for display
                         const parts = courseAndPlatform.split(' | ');
                         const course = parts[0] || '';
-                        const platform = parts.slice(1).join(' | ') || 'Platform details unavailable';
+                        const platform = parts.slice(1).join(' | ') || 'Platform details unavailable.';
 
                         const candidateInfo = {
                             name: name,
@@ -768,7 +992,6 @@
                 });
 
                 allCandidateInfo = allInfo;
-                console.log("Parsed candidates (Grouped):", groupedCandidates);
                 return groupedCandidates;
 
             } catch (error) {
@@ -786,7 +1009,7 @@
                 hasUserVoted = voteDoc.exists();
 
                 if (hasUserVoted) {
-                    displayMessage('You have already submitted your official ballot. Your vote is secured.', 'success');
+                    displayMessage('You have already submitted your official ballot. Your vote is secured. View the tally below.', 'success');
                     setFormState('disabled');
                     return true;
                 } else {
@@ -868,8 +1091,8 @@
                     userIdDisplay.textContent = user.uid;
                     document.getElementById('user-traceability').classList.remove('hidden');
 
-
                     await checkIfVoted(user.uid);
+                    startLiveTallyListener(); // Start listening for live tally updates
 
                 } else {
                     userId = null;
@@ -878,6 +1101,7 @@
                     votingContentEl.classList.add('hidden');
                     headerEl.classList.add('hidden');
                     document.getElementById('user-traceability').classList.add('hidden');
+                    tallyResultsContainer.innerHTML = '<p class="text-center text-gray-400">Sign in to view the live tally.</p>';
                 }
             });
         };
