@@ -48,45 +48,8 @@
             align-items: center;
         }
 
-        /* Abstain Item Styling (uses full-width flex layout) */
-        .vote-item[data-abstain="true"] {
-            border-color: #a5b4fc; 
-            background-color: #f5f8ff; 
-            font-weight: 700;
-            grid-template-columns: 1fr; /* Abstain text and button on the same line */
-        }
-        .vote-item[data-abstain="true"] > div:first-child {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-        }
-
-        /* Abstain Button (The visual "zero/circle") */
-        .abstain-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            border: 2px solid #6366f1; /* Indigo border */
-            background-color: transparent;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.15s, border-color 0.15s;
-        }
-        /* Abstain Selected State */
-        .vote-item[data-abstain="true"].selected .abstain-icon {
-            background-color: #6366f1; /* Shaded indigo */
-            border-color: #6366f1;
-        }
-        .vote-item[data-abstain="true"].selected {
-            border-color: #6366f1; 
-            background-color: #e0e7ff; 
-            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2);
-        }
-
         /* Candidate Active state: highlight the border and background to confirm selection */
-        .vote-item:not([data-abstain="true"]).selected {
+        .vote-item.selected {
             border-color: #c39f09; /* Custom Main Color (Gold) */
             background-color: #fcf8eb; /* Custom Light Gold */
             box-shadow: 0 4px 6px -1px rgba(195, 159, 9, 0.1);
@@ -168,7 +131,10 @@
         <!-- User Profile and Logout Button -->
         <div class="flex items-center space-x-2 sm:space-x-4 mt-2 sm:mt-0">
             <div id="user-profile" class="relative flex items-center space-x-2">
-                <span id="user-name" class="font-medium text-custom-text hidden lg:inline text-sm"></span>
+                <div class="text-xs text-gray-500 hidden md:block text-right">
+                    <span id="user-name" class="font-medium text-custom-text block text-sm"></span>
+                    <span id="user-email" class="font-mono text-xs block -mt-1"></span>
+                </div>
                 <img id="user-photo" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full shadow-sm cursor-pointer border border-gray-300" alt="User photo" onerror="this.onerror=null; this.src='https://placehold.co/32x32/f1f1f1/1F2937?text=U';">
                 <button id="logout-btn" class="ml-2 px-3 py-1 bg-custom-main text-custom-sub font-medium rounded-lg shadow-md hover:bg-custom-main-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-main text-sm">
                     Log Out
@@ -189,6 +155,9 @@
             <p class="mt-4 text-xs sm:text-sm text-red-700 font-semibold bg-red-50 p-3 rounded-lg border border-red-200">
                 <span class="text-custom-sub">Authentication Required:</span> You must sign in with your **@up.edu.ph** email account.
             </p>
+             <!-- Non-UP Email Warning Message -->
+            <p id="auth-warning-message" class="mt-4 text-red-600 text-sm font-semibold bg-red-100 p-3 rounded-lg border border-red-300 hidden"></p>
+
             <button id="google-login-btn" class="mt-6 sm:mt-8 px-6 py-3 btn-primary-submit rounded-lg shadow-lg text-base font-semibold focus:outline-none focus:ring-4 focus:ring-custom-main/50 flex items-center justify-center mx-auto transition-colors w-full">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-3 bg-white p-0.5 rounded" alt="Google icon">
                 Sign in Securely with Google
@@ -304,8 +273,10 @@
         const googleLoginBtn = document.getElementById('google-login-btn');
         const logoutBtn = document.getElementById('logout-btn');
         const userNameEl = document.getElementById('user-name');
+        const userEmailEl = document.getElementById('user-email');
         const userPhotoEl = document.getElementById('user-photo');
         const errorMessageEl = document.getElementById('error-message');
+        const authWarningMessageEl = document.getElementById('auth-warning-message'); // New warning element
         const headerEl = document.getElementById('header');
         const votingContentEl = document.getElementById('voting-content');
         const votingForm = document.getElementById('voting-form');
@@ -333,11 +304,12 @@
         let candidatesData = {};
         let allCandidateInfo = {}; // Store all detailed info keyed by name for easy lookup
         let hasUserVoted = false;
+        const REQUIRED_DOMAIN = '@up.edu.ph';
 
         // --- Configuration Constants ---
         const VOTES_COLLECTION = `artifacts/${appId}/public/data/votes`;
         
-        // ** UPDATED CSV URL **
+        // ** CSV URL **
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTnZExJ9injJGTsk1uFOUT45te0_gXPu0BGvAhgpWwNRIKxwgV3bXW-gygrr4omsBY9luXXxpPe1lE6/pub?gid=1092490256&single=true&output=csv';
         const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLS-PLACEHOLDER-FOR-NEW-GOOGLE-FORM/formResponse';
         
@@ -355,20 +327,14 @@
         // --- Helper Functions ---
 
         /**
-         * Returns an SVG for a checkmark (for positive vote) or a simple circle (for abstain).
-         * @param {string} type - 'checkmark' or 'circle'
+         * Returns an SVG for a checkmark (for positive vote).
          */
-        const getSelectionIcon = (type) => {
-            if (type === 'checkmark') {
-                return `
-                    <svg class="vote-checkmark" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                `;
-            } else if (type === 'circle') {
-                // Circular shaded icon for Abstain (the "zero/circle" shaded effect)
-                return `<div class="abstain-icon"></div>`;
-            }
+        const getSelectionIcon = () => {
+             return `
+                <svg class="vote-checkmark" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            `;
         };
         
         const displayMessage = (text, type) => {
@@ -460,8 +426,7 @@
                 ballotHTML += `
                     <div class="mb-6 sm:mb-8 p-4 sm:p-6 bg-gray-50 rounded-xl shadow-inner border border-gray-200">
                         <h3 class="text-xl sm:text-2xl font-bold text-custom-sub border-b-2 border-custom-main pb-2 mb-3 sm:mb-4">${position}</h3>
-                        <p class="text-xs sm:text-sm text-gray-500 mt-1 mb-3">Select ${limitText}, or choose **Abstain** to skip this position entirely.</p>
-                        ${isMultiSelect ? '<p class="text-xs text-red-500 font-medium mt-1">**NOTE:** Selecting **Abstain** for Councilors forfeits all 3 available votes.</p>' : ''}
+                        <p class="text-xs sm:text-sm text-gray-500 mt-1 mb-3">Select ${limitText}. If you do not select any candidate, your vote for this position will be considered abstained.</p>
                         
                         <div class="space-y-3 pt-3 sm:pt-4">
                             <!-- Column Headers for Visual Reference (Hidden on Mobile) -->
@@ -485,24 +450,12 @@
                             </div>
                             <!-- Selection Column (Vote / Shade) -->
                             <div class="text-right">
-                                ${getSelectionIcon('checkmark')}
+                                ${getSelectionIcon()}
                             </div>
                         </div>
                     `;
                 });
                 
-                // Add the ABSTAIN option *after* the candidates
-                ballotHTML += `
-                    <div class="vote-item transition-all" 
-                         data-name="Abstain" data-position="${position}" data-multiselect="${isMultiSelect}" data-abstain="true">
-                        <!-- Abstain Text and Circular Button -->
-                        <div>
-                            <span class="text-custom-neutral-border font-extrabold text-sm sm:text-base">ABSTAIN - Skip All Votes</span>
-                            ${getSelectionIcon('circle')}
-                        </div>
-                    </div>
-                `;
-
                 ballotHTML += `
                         </div>
                     </div>
@@ -526,12 +479,11 @@
                 
                 const clickedItem = event.target.closest('.vote-item');
                 const clickedNameLink = event.target.closest('.candidate-name-link');
-                const clickedAbstainIcon = event.target.closest('.abstain-icon');
 
                 // --- Handle Nominee Card Popup Click ---
                 if (clickedNameLink) {
                     event.stopPropagation(); 
-                    const candidateName = clickedNameLink.dataset.candidateName;
+                    const candidateName = clickedNameLink.dataset.candidate-name;
                     const info = allCandidateInfo[candidateName];
                     if (info) {
                         openNomineeCard(info);
@@ -539,48 +491,29 @@
                     return;
                 }
                 
-                // Ensure we click a vote item (either the row or the abstain circle)
-                if (!clickedItem && !clickedAbstainIcon) return;
+                // Ensure we click a vote item
+                if (!clickedItem) return;
                 
-                const targetItem = clickedItem || clickedAbstainIcon.closest('.vote-item');
-                if (!targetItem) return;
-
+                const targetItem = clickedItem;
                 const position = targetItem.dataset.position;
                 const isMultiSelect = targetItem.dataset.multiselect === 'true';
-                const isAbstain = targetItem.dataset.abstain === 'true';
                 const positionItems = ballotContainer.querySelectorAll(`[data-position="${position}"]`);
-                const abstainItem = ballotContainer.querySelector(`[data-position="${position}"][data-abstain="true"]`);
 
 
                 if (isMultiSelect) {
                     // --- Councilors Logic (Multi-select) ---
+                    const maxSelections = 3;
+                    const selectedCount = Array.from(positionItems).filter(item => item.classList.contains('selected')).length;
 
-                    if (isAbstain) {
-                        // If Abstain is clicked: toggle it, and ensure all candidates are deselected.
-                        targetItem.classList.toggle('selected');
-                        if (targetItem.classList.contains('selected')) {
-                            positionItems.forEach(item => {
-                                if (item.dataset.abstain !== 'true') {
-                                    item.classList.remove('selected');
-                                }
-                            });
-                        }
+                    if (targetItem.classList.contains('selected')) {
+                         // Deselecting
+                         targetItem.classList.remove('selected');
+                    } else if (selectedCount < maxSelections) {
+                        // Selecting
+                        targetItem.classList.add('selected');
                     } else {
-                        // If a Candidate is clicked: toggle it, and ensure Abstain is deselected.
-                        const maxSelections = 3;
-                        const selectedCount = Array.from(positionItems).filter(item => item.classList.contains('selected') && item.dataset.abstain !== 'true').length;
-
-                        if (targetItem.classList.contains('selected')) {
-                             // Deselecting
-                             targetItem.classList.remove('selected');
-                        } else if (selectedCount < maxSelections) {
-                            // Selecting
-                            targetItem.classList.add('selected');
-                            abstainItem.classList.remove('selected'); // Deselect Abstain if a candidate is chosen
-                        } else {
-                            // Max reached
-                            displayMessage(`You can only select a maximum of ${maxSelections} Councilors.`, 'error');
-                        }
+                        // Max reached
+                        displayMessage(`You can only select a maximum of ${maxSelections} Councilors.`, 'error');
                     }
                 } else {
                     // --- Single-select Positions Logic ---
@@ -606,7 +539,7 @@
         const openVoteVerifier = (event) => {
             event.preventDefault();
             
-            // Collect the names of candidates/options that were explicitly selected by the user.
+            // Collect the names of candidates that were explicitly selected by the user.
             const explicitlySelectedNames = {}; 
             const activeItems = ballotContainer.querySelectorAll('.vote-item.selected');
             
@@ -626,90 +559,71 @@
             for (const position of positionOrder) {
                 const selections = Array.from(explicitlySelectedNames[position] || []);
                 const isCouncilors = position === 'Councilors';
-                const isAbstainSelected = selections.includes('Abstain');
-                const candidateCount = selections.filter(name => name !== 'Abstain').length;
+                const candidateCount = selections.length;
                 
                 // Fetch all candidate names for this position from the global data
                 const allNamesForPosition = candidatesData[position].map(c => c.name);
                 
-                // 1. Check if the position was interacted with (either candidates or abstain selected)
-                if (selections.length === 0) {
-                     displayMessage(`Please make a selection or explicitly choose **Abstain** for **${position}**.`, 'error');
-                     requiredSelectionMissing = true;
-                     break;
-                }
-                
-                // 2. Check for single-select positions 
+                // 1. Check for single-select positions 
                 if (!isCouncilors) {
                     if (selections.length > 1) { 
-                        displayMessage(`You can only select one item (one candidate OR Abstain) for **${position}**.`, 'error');
+                        displayMessage(`You can only select one candidate for **${position}**.`, 'error');
                         requiredSelectionMissing = true;
                         break;
                     }
                 } 
-                // 3. Check for Councilors (Multi-select)
+                // 2. Check for Councilors (Multi-select)
                 else {
-                    if (isAbstainSelected && selections.length > 1) {
-                         displayMessage(`If you select **Abstain** for Councilors, you cannot select any candidates.`, 'error');
-                         requiredSelectionMissing = true;
-                         break;
-                    }
-                    if (!isAbstainSelected && candidateCount > 3) {
+                    if (candidateCount > 3) {
                          displayMessage('You can only select a maximum of 3 Councilors. Please adjust your selection.', 'error');
                          requiredSelectionMissing = true;
                          break;
                     }
                 }
                 
-                if (requiredSelectionMissing) continue; // Skip to next position check if current one failed
+                if (requiredSelectionMissing) continue;
 
-                // --- MODIFIED LOGIC: ABN: Surname generation for submission ---
+                // --- LOGIC: ABN: Surname generation for submission ---
                 let finalSelectionsForSubmission = [];
-                const votedCandidates = selections.filter(name => name !== 'Abstain');
+                const votedCandidates = selections; 
 
-                if (isAbstainSelected) {
-                    // If 'Abstain' is selected, add it to the list
-                    finalSelectionsForSubmission.push('Abstain');
-                } else {
-                    // Add all voted candidates
-                    finalSelectionsForSubmission = [...votedCandidates];
-                }
+                // 1. Add voted candidates
+                finalSelectionsForSubmission.push(...votedCandidates);
 
-                // Add ABN: Surname for all candidates who were NOT voted for
+                // 2. Add ABN: Surname for all candidates who were NOT voted for
                 allNamesForPosition.forEach(name => {
                     if (!votedCandidates.includes(name)) {
-                        // Extract surname: get the part before the first comma
+                        // Extract surname (part before the comma)
                         const surname = name.split(',')[0].trim();
                         finalSelectionsForSubmission.push(`ABN: ${surname}`);
                     }
                 });
                 
-                // Store the final structured list for Firestore and Google Form
                 voteDataToSubmit[position] = finalSelectionsForSubmission; 
             }
             
             if (requiredSelectionMissing) return;
+            
+            // Clear any previous error messages if verification passed
+            messageDisplayEl.classList.add('hidden');
+
 
             // Generate Summary (Uses the simple selection list for clean display)
             let summaryHTML = '';
 
             for (const position of positionOrder) { 
-                // Get the simple selections list from the DOM for display
+                // Get the simple selected candidates from the DOM for display
                 const votedCandidates = Array.from(ballotContainer.querySelectorAll(`[data-position="${position}"].selected`))
                                          .map(item => item.dataset.name)
                                          .filter(name => name !== undefined);
 
-                const isAbstain = votedCandidates.includes('Abstain');
                 
                 let candidateString;
-                if (isAbstain) {
-                    candidateString = `<span class="font-bold text-custom-neutral-border">ABSTAIN</span>`;
-                } else if (votedCandidates.length > 0) {
+                if (votedCandidates.length > 0) {
                      const displaySeparator = (position === 'Councilors') ? '<br>' : ', ';
-                     const namesToDisplay = votedCandidates.filter(name => name !== 'Abstain'); 
-                     candidateString = namesToDisplay.map(name => `<span class="font-bold">${name}</span>`).join(displaySeparator);
+                     candidateString = votedCandidates.map(name => `<span class="font-bold">${name}</span>`).join(displaySeparator);
                 } else {
-                    candidateString = `<span class="font-bold text-red-500">NO VOTE CAST</span>`;
+                    candidateString = `<span class="font-bold text-gray-500">ABSTAIN (No Candidate Selected)</span>`;
                 }
                 
                 summaryHTML += `
@@ -747,7 +661,7 @@
                 await setDoc(voteRef, {
                     timestamp: new Date(),
                     voterId: userId,
-                    selections: voteDataToSubmit // Contains Voted Names, Abstain, and ABN: Surname records
+                    selections: voteDataToSubmit // Contains Voted Names and ABN: Surname records
                 });
 
                 // Background process: Send a copy of the vote to the Google Form for redundancy
@@ -766,7 +680,6 @@
             }
         };
 
-        // MODIFIED: This function now sends the comprehensive list, including ABN: Surname.
         const sendToGoogleForm = async (voteData, userId) => {
             try {
                 const formData = new FormData();
@@ -779,7 +692,7 @@
 
                     if (entryId && Array.isArray(submissionRecords) && submissionRecords.length > 0) {
                         submissionRecords.forEach(record => {
-                             // Append all records (Voted Name, Abstain, or ABN: Surname)
+                             // Append all records (Voted Name or ABN: Surname)
                             formData.append(entryId, record);
                         });
                     }
@@ -885,7 +798,7 @@
                     setFormState('disabled');
                     return true;
                 } else {
-                    displayMessage('Please make your selections or explicitly choose Abstain for all positions.', 'info');
+                    displayMessage('Please make your selections. Unvoted positions are considered abstained.', 'info');
                     setFormState('enabled');
                     return false;
                 }
@@ -899,14 +812,18 @@
 
         const handleGoogleLogin = async () => {
             const provider = new GoogleAuthProvider();
+            authWarningMessageEl.classList.add('hidden'); // Hide previous warnings
+            
             try {
                 const result = await signInWithPopup(auth, provider);
                 const user = result.user;
-
-                if (user.email && !user.email.endsWith('@up.edu.ph')) {
-                    errorMessageEl.textContent = "Access Denied: Please sign-in with your **@up.edu.ph** email account.";
-                    errorMessageEl.classList.remove('hidden');
-                    await signOut(auth);
+                
+                // --- MANDATORY EMAIL DOMAIN CHECK ---
+                if (user.email && !user.email.endsWith(REQUIRED_DOMAIN)) {
+                    authWarningMessageEl.innerHTML = `**Access Denied:** The email **${user.email}** is not a required **${REQUIRED_DOMAIN}** account. Please sign in with your official account.`;
+                    authWarningMessageEl.classList.remove('hidden');
+                    // Must sign out the user immediately if the domain is incorrect
+                    await signOut(auth); 
                     return;
                 }
                 errorMessageEl.classList.add('hidden'); 
@@ -945,9 +862,11 @@
         const setupAuthStateListener = () => {
             onAuthStateChanged(auth, async (user) => {
                 errorMessageEl.classList.add('hidden');
+                authWarningMessageEl.classList.add('hidden');
                 
                 if (user) {
-                    if (user.email && !user.email.endsWith('@up.edu.ph')) {
+                    // Re-check domain on auth state change just in case the check in handleGoogleLogin was bypassed (e.g., refreshing an existing session)
+                    if (user.email && !user.email.endsWith(REQUIRED_DOMAIN)) {
                         if (auth.currentUser) await signOut(auth);
                         return;
                     }
@@ -959,6 +878,7 @@
                     
                     // Display user info and critical ID for traceability
                     userNameEl.textContent = user.displayName;
+                    userEmailEl.textContent = user.email;
                     userPhotoEl.src = user.photoURL || 'https://placehold.co/32x32/f1f1f1/1F2937?text=U';
                     userIdDisplay.textContent = user.uid;
                     document.getElementById('user-traceability').classList.remove('hidden');
