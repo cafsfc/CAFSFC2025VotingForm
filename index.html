@@ -46,6 +46,7 @@
         .vote-item[data-abstain="true"] {
             border-color: #a5b4fc; /* Tailwind Indigo 300 */
             background-color: #f5f8ff; /* Very light blue */
+            font-weight: 700;
         }
         .vote-item[data-abstain="true"].selected {
             border-color: #6366f1; /* Tailwind Indigo 500 */
@@ -153,7 +154,7 @@
                 Official Ballot Access
             </p>
             <p class="mt-4 text-xs sm:text-sm text-red-700 font-semibold bg-red-50 p-3 rounded-lg border border-red-200">
-                <span class="text-custom-sub">Authentication Required:</span> You must sign in with an **@up.edu.ph** email address.
+                <span class="text-custom-sub">Authentication Required:</span> You must sign in with your **@up.edu.ph** email account.
             </p>
             <button id="google-login-btn" class="mt-6 sm:mt-8 px-6 py-3 btn-primary-submit rounded-lg shadow-lg text-base font-semibold focus:outline-none focus:ring-4 focus:ring-custom-main/50 flex items-center justify-center mx-auto transition-colors w-full">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-3 bg-white p-0.5 rounded" alt="Google icon">
@@ -217,7 +218,8 @@
                 <div class="flex-shrink-0 text-center">
                     <img id="nominee-photo" class="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-full shadow-lg border-4 border-custom-main" 
                          alt="Nominee Photo" 
-                         src="https://placehold.co/128x128/f1f1f1/1F2937?text=ID">
+                         src="https://placehold.co/128x128/f1f1f1/1F2937?text=ID"
+                         onerror="this.onerror=null;this.src='https://placehold.co/128x128/f1f1f1/1F2937?text=ID';">
                     <p class="text-xs text-gray-400 mt-1">Official Candidate Photo</p>
                 </div>
 
@@ -404,6 +406,7 @@
                 const candidateList = candidates[position];
 
                 if (!candidateList || candidateList.length === 0) {
+                    ballotHTML += `<p class="text-center text-red-500 font-medium my-4">No candidates found for ${position}.</p>`;
                     continue; 
                 }
                 
@@ -413,19 +416,12 @@
                 ballotHTML += `
                     <div class="mb-6 sm:mb-8 p-4 sm:p-6 bg-gray-50 rounded-xl shadow-inner border border-gray-200">
                         <h3 class="text-xl sm:text-2xl font-bold text-custom-sub border-b-2 border-custom-main pb-2 mb-3 sm:mb-4">${position}</h3>
-                        <p class="text-xs sm:text-sm text-gray-500 mt-1">Select ${limitText}, or choose **Abstain**.</p>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-1">Select ${limitText}, or choose **Abstain** to skip this position entirely.</p>
+                        ${isMultiSelect ? '<p class="text-xs text-red-500 font-medium mt-1">**NOTE for Councilors:** Selecting **Abstain** means you forfeit all 3 of your available votes.</p>' : ''}
+                        
                         <div class="space-y-3 pt-3 sm:pt-4">
                 `;
                 
-                // Add the ABSTAIN option first
-                ballotHTML += `
-                    <div class="vote-item p-4 rounded-lg flex items-center justify-between transition-all" 
-                         data-name="Abstain" data-position="${position}" data-multiselect="${isMultiSelect}" data-abstain="true">
-                        <span class="font-medium text-custom-neutral-border font-extrabold text-sm sm:text-base">ABSTAIN (Do not vote for this position)</span>
-                        ${getCheckmarkSvg('custom-neutral-border')}
-                    </div>
-                `;
-
                 // Add the candidates
                 candidateList.forEach(info => {
                     ballotHTML += `
@@ -441,6 +437,16 @@
                         </div>
                     `;
                 });
+                
+                // Add the ABSTAIN option *after* the candidates
+                ballotHTML += `
+                    <div class="vote-item p-4 rounded-lg flex items-center justify-between transition-all" 
+                         data-name="Abstain" data-position="${position}" data-multiselect="${isMultiSelect}" data-abstain="true">
+                        <span class="text-custom-neutral-border font-extrabold text-sm sm:text-base">ABSTAIN - Skip All Votes for this Position</span>
+                        ${getCheckmarkSvg('custom-neutral-border')}
+                    </div>
+                `;
+
                 ballotHTML += `
                         </div>
                     </div>
@@ -499,8 +505,20 @@
                         }
                     } else {
                         // If a Candidate is clicked: toggle it, and ensure Abstain is deselected.
-                        clickedItem.classList.toggle('selected');
-                        abstainItem.classList.remove('selected');
+                        const maxSelections = 3;
+                        const selectedCount = Array.from(positionItems).filter(item => item.classList.contains('selected') && item.dataset.abstain !== 'true').length;
+
+                        if (clickedItem.classList.contains('selected')) {
+                             // Deselecting
+                             clickedItem.classList.remove('selected');
+                        } else if (selectedCount < maxSelections) {
+                            // Selecting
+                            clickedItem.classList.add('selected');
+                            abstainItem.classList.remove('selected'); // Deselect Abstain if a candidate is chosen
+                        } else {
+                            // Max reached
+                            displayMessage(`You can only select a maximum of ${maxSelections} Councilors.`, 'error');
+                        }
                     }
                 } else {
                     // --- Single-select Positions Logic ---
@@ -522,7 +540,7 @@
         };
 
 
-        // --- Authentication and Vote Logic (unchanged from previous version) ---
+        // --- Authentication and Vote Logic (mostly unchanged) ---
         const openVoteVerifier = (event) => {
             event.preventDefault();
             
@@ -653,10 +671,46 @@
         };
 
         const sendToGoogleForm = async (voteData, userId) => {
-            // Non-blocking Google Form submission logic (omitted for brevity, assume functioning as before)
-            // ...
-        };
+            try {
+                const formData = new FormData();
+                formData.append(FORM_ENTRY_IDS['voterId'], userId);
 
+                for (const position in voteData) {
+                    const candidateNames = voteData[position];
+                    const entryId = FORM_ENTRY_IDS[position];
+
+                    if (entryId && Array.isArray(candidateNames) && candidateNames.length > 0) {
+                        candidateNames.forEach(name => {
+                            formData.append(entryId, name);
+                        });
+                    } else if (entryId) {
+                         formData.append(entryId, 'No Selection');
+                    }
+                }
+
+                // Use exponential backoff for robustness
+                const maxRetries = 3;
+                let delay = 1000; 
+                for (let i = 0; i < maxRetries; i++) {
+                    try {
+                        await fetch(GOOGLE_FORM_URL, {
+                            method: 'POST',
+                            mode: 'no-cors', 
+                            body: formData
+                        });
+                        console.log("Vote data successfully sent to Google Form on attempt", i + 1);
+                        return;
+                    } catch (e) {
+                        if (i === maxRetries - 1) throw e; 
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2;
+                    }
+                }
+            } catch (error) {
+                console.error("Error submitting data to Google Form:", error);
+            }
+        };
+        
         // --- UPDATED fetchCandidates Logic to handle the new CSV structure ---
         const fetchCandidates = async () => {
             try {
@@ -668,7 +722,7 @@
                 const csvText = await response.text();
                 
                 const result = Papa.parse(csvText, {
-                    header: false, // Data has no header row
+                    header: false,
                     skipEmptyLines: true
                 });
 
@@ -686,16 +740,20 @@
                     const name = (row[0] || "").trim();
                     const position = (row[1] || "").trim();
                     const photo = (row[2] || "").trim();
-                    // Using Column D (index 3) for Course/Platform description
                     const courseAndPlatform = (row[3] || "").trim(); 
                     
                     if (name && position) {
+                        // Split the course/platform data for display
+                        const parts = courseAndPlatform.split(' | ');
+                        const course = parts[0] || '';
+                        const platform = parts.slice(1).join(' | ') || 'Platform details unavailable';
+
                         const candidateInfo = {
                             name: name,
                             position: position,
                             photo: photo,
-                            course: courseAndPlatform.split(/\s*\|\s*/)[0] || courseAndPlatform, // Take first part as course
-                            platform: courseAndPlatform.split(/\s*\|\s*/).slice(1).join(' / ') || 'Platform details unavailable' // Rest as platform
+                            course: course,
+                            platform: platform
                         };
 
                         // Store info for the popup lookup
@@ -720,7 +778,6 @@
             }
         };
         
-        // --- Authentication Logic (unchanged) ---
         const checkIfVoted = async (uid) => {
             try {
                 const voteRef = doc(db, VOTES_COLLECTION, uid);
