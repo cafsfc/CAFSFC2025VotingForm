@@ -6,11 +6,26 @@
     <title>Freshman Council Election</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom Tailwind Configuration for New Colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'custom-main': '#c39f09', // Primary Accent: Warm Gold
+                        'custom-main-dark': '#a08107', // Darker Gold for Hover
+                        'custom-sub': '#1e5629', // Secondary Accent: Deep Forest Green
+                        'custom-text': '#1F2937', // Near Black for general text
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Minimalist Corporate Theme Styling */
+        /* Minimalist Collegiate Theme Styling */
         body {
             font-family: 'Inter', sans-serif;
         }
@@ -19,7 +34,7 @@
             display: inline-flex;
             justify-content: center;
             align-items: center;
-            width: 32px; /* Slightly smaller */
+            width: 32px;
             height: 32px;
             border-radius: 50%;
             border: 2px solid #9CA3AF; /* Light Gray border */
@@ -29,30 +44,30 @@
             z-index: 10;
         }
 
-        /* Deep Slate filled circle for the corporate active state */
+        /* Deep Forest Green filled circle for the active state */
         .vote-button.active {
-            background-color: #1F2937; /* Deep Slate */
-            border-color: #1F2937;
+            background-color: #1e5629; /* Custom Sub Color */
+            border-color: #1e5629;
         }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col">
 
     <!-- Header -->
-    <header id="header" class="hidden bg-white shadow-lg p-4 flex justify-between items-center z-10 border-b-4 border-teal-600">
+    <header id="header" class="hidden bg-white shadow-lg p-4 flex justify-between items-center z-10 border-b-4 border-custom-main">
         <div class="flex items-center">
-            <h1 class="text-2xl font-bold text-slate-800 ml-4">Freshman Council Election</h1>
+            <h1 class="text-2xl font-bold text-custom-sub ml-4">Freshman Council Election</h1>
         </div>
         
         <!-- User Profile and Export Button -->
         <div class="flex items-center space-x-4">
-            <button id="export-btn" class="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 text-sm">
+            <button id="export-btn" class="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-main text-sm">
                 Export Votes
             </button>
             <div id="user-profile" class="relative flex items-center space-x-2">
-                <span id="user-name" class="font-medium text-slate-700 hidden md:inline"></span>
+                <span id="user-name" class="font-medium text-custom-text hidden md:inline"></span>
                 <img id="user-photo" class="w-10 h-10 rounded-full shadow-sm cursor-pointer border border-gray-300" alt="User photo" onerror="this.onerror=null; this.src='https://placehold.co/40x40/f1f1f1/1F2937?text=U';">
-                <button id="logout-btn" class="ml-4 px-4 py-2 bg-teal-600 text-white font-medium rounded-lg shadow-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 text-sm">
+                <button id="logout-btn" class="ml-4 px-4 py-2 bg-custom-main text-white font-medium rounded-lg shadow-md hover:bg-custom-main-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-main text-sm">
                     Log Out
                 </button>
             </div>
@@ -63,10 +78,10 @@
     <main class="flex-grow flex items-center justify-center p-4">
         
         <!-- Logged-out State (Card) -->
-        <div id="logged-out-state" class="bg-white rounded-xl shadow-2xl p-10 w-full max-w-sm text-center transform transition-all duration-300 border-t-4 border-teal-600">
-            <h1 class="text-3xl font-bold text-slate-800">Welcome, Voter</h1>
+        <div id="logged-out-state" class="bg-white rounded-xl shadow-2xl p-10 w-full max-w-sm text-center transform transition-all duration-300 border-t-4 border-custom-main">
+            <h1 class="text-3xl font-bold text-custom-sub">Welcome, Voter</h1>
             <p class="mt-4 text-gray-600">Sign in with your official student email (@up.edu.ph) to cast your vote for the Freshman Council.</p>
-            <button id="google-login-btn" class="mt-8 px-6 py-3 bg-white border-2 border-slate-300 rounded-lg shadow-md text-base font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 flex items-center justify-center mx-auto transition-colors">
+            <button id="google-login-btn" class="mt-8 px-6 py-3 bg-white border-2 border-slate-300 rounded-lg shadow-md text-base font-semibold text-custom-text hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-main flex items-center justify-center mx-auto transition-colors">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-3" alt="Google icon">
                 Sign in with Google
             </button>
@@ -75,9 +90,9 @@
 
         <!-- Voting Content -->
         <div id="voting-content" class="hidden w-full max-w-2xl">
-            <h2 class="text-3xl font-extrabold text-slate-800 text-center mb-8">Official Freshman Council Ballot</h2>
+            <h2 class="text-3xl font-extrabold text-custom-sub text-center mb-8">Official Freshman Council Ballot</h2>
             
-            <form id="voting-form" class="bg-white rounded-xl shadow-2xl p-10 border-t-4 border-teal-600">
+            <form id="voting-form" class="bg-white rounded-xl shadow-2xl p-10 border-t-4 border-custom-main">
                 <div id="message-display" class="mb-6 hidden px-4 py-3 rounded-lg text-sm text-center font-medium"></div>
 
                 <!-- Ballot will be dynamically generated here -->
@@ -85,7 +100,7 @@
                     <p class="text-center text-gray-500">Loading ballot...</p>
                 </div>
                 
-                <button id="submit-vote-btn" type="submit" class="mt-10 w-full py-3 bg-teal-600 text-white font-bold rounded-lg shadow-xl hover:bg-teal-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                <button id="submit-vote-btn" type="submit" class="mt-10 w-full py-3 bg-custom-main text-custom-sub font-bold rounded-lg shadow-xl hover:bg-custom-main-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-main">
                     Submit Vote
                 </button>
             </form>
@@ -94,16 +109,16 @@
 
     <!-- Vote Verifier Popup -->
     <div id="verifier-popup" class="hidden fixed inset-0 bg-gray-800 bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm border-t-4 border-teal-600">
-            <h2 class="text-2xl font-bold text-slate-800 mb-6 text-center">Final Vote Verification</h2>
-            <div id="vote-summary" class="text-slate-700 space-y-4 mb-8 p-4 bg-gray-50 rounded-lg border">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm border-t-4 border-custom-main">
+            <h2 class="text-2xl font-bold text-custom-sub mb-6 text-center">Final Vote Verification</h2>
+            <div id="vote-summary" class="text-custom-text space-y-4 mb-8 p-4 bg-gray-50 rounded-lg border">
                 <!-- Vote summary will be dynamically inserted here -->
             </div>
             <div class="flex justify-between space-x-4">
-                <button id="change-vote-btn" class="w-1/2 py-2 border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-100 transition-colors">
+                <button id="change-vote-btn" class="w-1/2 py-2 border border-slate-300 rounded-lg text-custom-text font-medium hover:bg-slate-100 transition-colors">
                     Edit Ballot
                 </button>
-                <button id="confirm-vote-btn" class="w-1/2 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors">
+                <button id="confirm-vote-btn" class="w-1/2 py-2 bg-custom-sub text-white rounded-lg font-medium hover:bg-custom-main transition-colors">
                     Confirm & Submit
                 </button>
             </div>
@@ -256,7 +271,7 @@
                 const candidateString = candidates.length > 0 ? candidates.join(displaySeparator) : '<span class="italic text-gray-400">No selection</span>';
                 
                 voteDataToSubmit[position] = candidates;
-                summaryHTML += `<div><h4 class="font-semibold text-slate-800">${position}:</h4><p>${candidateString}</p></div>`;
+                summaryHTML += `<div><h4 class="font-semibold text-custom-sub">${position}:</h4><p>${candidateString}</p></div>`;
             }
 
             voteSummaryEl.innerHTML = summaryHTML;
@@ -362,16 +377,16 @@
                 
                 ballotHTML += `
                     <div class="mb-8 p-6 bg-gray-50 rounded-xl shadow-inner">
-                        <h3 class="text-2xl font-bold text-slate-800 border-b-4 border-teal-300 pb-2 mb-4">${position}</h3>
+                        <h3 class="text-2xl font-bold text-custom-sub border-b-4 border-custom-main pb-2 mb-4">${position}</h3>
                         ${helpText}
                         <div class="space-y-4 pt-2">
                 `;
                 candidateList.forEach(name => {
                     if (name.trim() !== '') {
                         ballotHTML += `
-                            <div class="vote-button-wrapper p-4 rounded-lg border border-gray-200 bg-white hover:border-teal-400 transition-colors flex items-center space-x-4 cursor-pointer">
+                            <div class="vote-button-wrapper p-4 rounded-lg border border-gray-200 bg-white hover:border-custom-main transition-colors flex items-center space-x-4 cursor-pointer">
                                 <div class="vote-button" data-name="${name}" data-position="${position}"></div>
-                                <span class="font-medium text-slate-800">${name}</span>
+                                <span class="font-medium text-custom-text">${name}</span>
                             </div>
                         `;
                     }
@@ -487,6 +502,8 @@
                 
                 if (user) {
                     // Domain check - Must use @up.edu.ph
+                    // NOTE: This is a client-side check for user experience. 
+                    // Server-side security must be enforced with Firestore rules.
                     if (user.email && !user.email.endsWith('@up.edu.ph')) {
                         console.log("Incorrect domain. Signing out.");
                         errorMessageEl.textContent = "Please sign-in with your UP edu account (@up.edu.ph).";
