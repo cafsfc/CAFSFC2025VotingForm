@@ -16,6 +16,7 @@
                         'custom-main-dark': '#a08107', // Darker Gold for Hover
                         'custom-sub': '#1e5629', // Secondary Accent: Deep Forest Green
                         'custom-text': '#1F2937', // Near Black for general text
+                        'custom-light-gold': '#fcf8eb', // Very light gold background for selection
                     }
                 }
             }
@@ -29,45 +30,72 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        /* Custom styles for the round voting buttons */
-        .vote-button {
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 2px solid #9CA3AF; /* Light Gray border */
+        
+        /* The entire candidate row is the target for selection */
+        .vote-item {
             cursor: pointer;
             transition: all 0.2s ease-in-out;
+            border: 1px solid #E5E7EB; /* Light border */
             position: relative;
-            z-index: 10;
+            background-color: white;
         }
 
-        /* Deep Forest Green filled circle for the active state */
-        .vote-button.active {
-            background-color: #1e5629; /* Custom Sub Color */
-            border-color: #1e5629;
+        /* Active state: highlight the border and background to confirm selection */
+        .vote-item.selected {
+            border-color: #c39f09; /* Custom Main Color (Gold) */
+            background-color: #fcf8eb; /* Custom Light Gold */
+            box-shadow: 0 4px 6px -1px rgba(195, 159, 9, 0.1), 0 2px 4px -2px rgba(195, 159, 9, 0.1);
         }
+        
+        /* Deep green primary button style */
+        .btn-primary-submit {
+            background-color: #1e5629;
+            color: white;
+            font-weight: 700;
+            transition: background-color 0.2s;
+        }
+        .btn-primary-submit:hover {
+            background-color: #0d3413;
+        }
+
+        /* Checkmark SVG for visual feedback (100% inlined) */
+        .vote-checkmark {
+            position: absolute;
+            top: 50%;
+            right: 1.5rem; 
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            display: none; 
+        }
+
+        .vote-item.selected .vote-checkmark {
+            display: block;
+        }
+
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col">
 
-    <!-- Header -->
-    <header id="header" class="hidden bg-white shadow-lg p-4 flex justify-between items-center z-10 border-b-4 border-custom-main">
-        <div class="flex items-center">
-            <h1 class="text-2xl font-bold text-custom-sub ml-4">Freshman Council Election</h1>
+    <!-- Header: Officiality and User ID -->
+    <header id="header" class="hidden bg-white shadow-md p-4 flex justify-between items-center z-10 border-b-4 border-custom-sub">
+        <div class="flex items-center space-x-4">
+            <h1 class="text-xl md:text-2xl font-bold text-custom-sub">Official Council Ballot</h1>
+            <div id="user-traceability" class="hidden md:flex items-center space-x-2 text-xs p-1 px-3 bg-gray-100 rounded-full border border-gray-200">
+                <span class="font-medium text-gray-500">Voter ID:</span>
+                <code id="user-id-display" class="font-mono text-custom-sub text-sm">...</code>
+            </div>
         </div>
         
         <!-- User Profile and Export Button -->
         <div class="flex items-center space-x-4">
-            <button id="export-btn" class="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-main text-sm">
+            <button id="export-btn" class="hidden px-3 py-1 bg-gray-100 text-gray-700 font-medium rounded-lg shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-main text-sm">
                 Export Votes
             </button>
             <div id="user-profile" class="relative flex items-center space-x-2">
-                <span id="user-name" class="font-medium text-custom-text hidden md:inline"></span>
-                <img id="user-photo" class="w-10 h-10 rounded-full shadow-sm cursor-pointer border border-gray-300" alt="User photo" onerror="this.onerror=null; this.src='https://placehold.co/40x40/f1f1f1/1F2937?text=U';">
-                <button id="logout-btn" class="ml-4 px-4 py-2 bg-custom-main text-white font-medium rounded-lg shadow-md hover:bg-custom-main-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-main text-sm">
+                <span id="user-name" class="font-medium text-custom-text hidden sm:inline text-sm"></span>
+                <img id="user-photo" class="w-8 h-8 rounded-full shadow-sm cursor-pointer border border-gray-300" alt="User photo" onerror="this.onerror=null; this.src='https://placehold.co/32x32/f1f1f1/1F2937?text=U';">
+                <button id="logout-btn" class="ml-2 px-3 py-1 bg-custom-main text-custom-sub font-medium rounded-lg shadow-md hover:bg-custom-main-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-main text-sm">
                     Log Out
                 </button>
             </div>
@@ -77,31 +105,36 @@
     <!-- Main Content Area -->
     <main class="flex-grow flex items-center justify-center p-4">
         
-        <!-- Logged-out State (Card) -->
-        <div id="logged-out-state" class="bg-white rounded-xl shadow-2xl p-10 w-full max-w-sm text-center transform transition-all duration-300 border-t-4 border-custom-main">
-            <h1 class="text-3xl font-bold text-custom-sub">Welcome, Voter</h1>
-            <p class="mt-4 text-gray-600">Sign in with your official student email (@up.edu.ph) to cast your vote for the Freshman Council.</p>
-            <button id="google-login-btn" class="mt-8 px-6 py-3 bg-white border-2 border-slate-300 rounded-lg shadow-md text-base font-semibold text-custom-text hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-main flex items-center justify-center mx-auto transition-colors">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-3" alt="Google icon">
-                Sign in with Google
+        <!-- Logged-out State (Trustworthy Card) -->
+        <div id="logged-out-state" class="bg-white rounded-xl shadow-2xl p-8 md:p-10 w-full max-w-md text-center transform transition-all duration-300 border-t-8 border-custom-sub">
+            <h1 class="text-3xl font-extrabold text-custom-sub">Secure University Election</h1>
+            <p class="mt-4 text-lg text-gray-700 font-medium border-b border-custom-main pb-4">
+                Official Ballot Access
+            </p>
+            <p class="mt-4 text-sm text-red-700 font-semibold bg-red-50 p-3 rounded-lg border border-red-200">
+                <span class="text-custom-sub">Authentication Required:</span> You must sign in with an **@up.edu.ph** email address.
+            </p>
+            <button id="google-login-btn" class="mt-8 px-6 py-3 btn-primary-submit rounded-lg shadow-lg text-base font-semibold focus:outline-none focus:ring-4 focus:ring-custom-main/50 flex items-center justify-center mx-auto transition-colors w-full">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-3 bg-white p-0.5 rounded" alt="Google icon">
+                Sign in Securely with Google
             </button>
             <p id="error-message" class="mt-6 text-red-500 text-sm hidden"></p>
         </div>
 
         <!-- Voting Content -->
-        <div id="voting-content" class="hidden w-full max-w-2xl">
+        <div id="voting-content" class="hidden w-full max-w-3xl">
             <h2 class="text-3xl font-extrabold text-custom-sub text-center mb-8">Official Freshman Council Ballot</h2>
             
-            <form id="voting-form" class="bg-white rounded-xl shadow-2xl p-10 border-t-4 border-custom-main">
+            <form id="voting-form" class="bg-white rounded-xl shadow-2xl p-6 md:p-10 border-t-8 border-custom-main">
                 <div id="message-display" class="mb-6 hidden px-4 py-3 rounded-lg text-sm text-center font-medium"></div>
 
                 <!-- Ballot will be dynamically generated here -->
                 <div id="ballot-container" class="space-y-10">
-                    <p class="text-center text-gray-500">Loading ballot...</p>
+                    <p class="text-center text-gray-500">Loading official candidate data...</p>
                 </div>
                 
-                <button id="submit-vote-btn" type="submit" class="mt-10 w-full py-3 bg-custom-main text-custom-sub font-bold rounded-lg shadow-xl hover:bg-custom-main-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-main">
-                    Submit Vote
+                <button id="submit-vote-btn" type="submit" class="mt-10 w-full py-3 btn-primary-submit rounded-lg shadow-xl hover:bg-custom-sub/90 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-sub/50">
+                    Review and Submit Vote
                 </button>
             </form>
         </div>
@@ -109,16 +142,19 @@
 
     <!-- Vote Verifier Popup -->
     <div id="verifier-popup" class="hidden fixed inset-0 bg-gray-800 bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm border-t-4 border-custom-main">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md border-t-8 border-custom-sub">
             <h2 class="text-2xl font-bold text-custom-sub mb-6 text-center">Final Vote Verification</h2>
-            <div id="vote-summary" class="text-custom-text space-y-4 mb-8 p-4 bg-gray-50 rounded-lg border">
+            <p class="text-sm text-gray-600 mb-6 text-center">Please review your selections before final submission. This action cannot be undone.</p>
+            
+            <div id="vote-summary" class="text-custom-text space-y-4 mb-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <!-- Vote summary will be dynamically inserted here -->
             </div>
+            
             <div class="flex justify-between space-x-4">
                 <button id="change-vote-btn" class="w-1/2 py-2 border border-slate-300 rounded-lg text-custom-text font-medium hover:bg-slate-100 transition-colors">
                     Edit Ballot
                 </button>
-                <button id="confirm-vote-btn" class="w-1/2 py-2 bg-custom-sub text-white rounded-lg font-medium hover:bg-custom-main transition-colors">
+                <button id="confirm-vote-btn" class="w-1/2 py-2 bg-custom-main text-custom-sub rounded-lg font-bold hover:bg-custom-main-dark transition-colors">
                     Confirm & Submit
                 </button>
             </div>
@@ -130,10 +166,12 @@
         // Firebase CDN imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Enable Firebase Debug Logging (Mandatory for tracing issues)
+        setLogLevel('Debug');
         
         // --- GLOBAL VARIABLES (MANDATORY USE) ---
-        // These variables are provided by the canvas environment.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
              apiKey: "AIzaSyBdj6ePKM_3YEQTQlaZk9kKrNoMgqsjcjA",
@@ -164,10 +202,12 @@
         const submitVoteBtn = document.getElementById('submit-vote-btn');
         const ballotContainer = document.getElementById('ballot-container');
         const exportBtn = document.getElementById('export-btn');
+        const userIdDisplay = document.getElementById('user-id-display');
 
         let auth, db, userId;
         let voteDataToSubmit = {};
         let candidatesData = {};
+        let hasUserVoted = false;
 
         // --- Configuration Constants ---
         // Firestore paths
@@ -175,7 +215,7 @@
         // IMPORTANT: Update this URL for the Freshman Council candidates list
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT3yG48Vz9l4n6Y3tB90N2Q3g8qL5wX6_s7X6xJ3t_s1f4y7w/pub?output=csv';
 
-        // --- GOOGLE FORM CONFIGURATION ---
+        // --- GOOGLE FORM CONFIGURATION (Backup/Data Mirroring) ---
         const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfp6_3f6m0l6b5z_g0y_5l5_2b_c2_d2_f2_g2/formResponse';
         const FORM_ENTRY_IDS = {
             'voterId': 'entry.237072485', 
@@ -187,6 +227,14 @@
         // ------------------------------------
 
         // --- Helper Functions ---
+        const getCheckmarkSvg = (color) => {
+            return `
+                <svg class="vote-checkmark text-${color}" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            `;
+        };
+        
         const displayMessage = (text, type) => {
             messageDisplayEl.textContent = text;
             messageDisplayEl.classList.remove('hidden', 'bg-red-100', 'bg-green-100', 'bg-blue-100', 'text-red-700', 'text-green-700', 'text-blue-700');
@@ -194,31 +242,39 @@
                 messageDisplayEl.classList.add('bg-green-100', 'text-green-700');
             } else if (type === 'error') {
                 messageDisplayEl.classList.add('bg-red-100', 'text-red-700');
-            } else {
+            } else { // info
                 messageDisplayEl.classList.add('bg-blue-100', 'text-blue-700');
             }
         };
 
         const setFormState = (state) => {
-            const voteButtons = ballotContainer.querySelectorAll('.vote-button-wrapper');
+            const voteItems = ballotContainer.querySelectorAll('.vote-item');
             if (state === 'disabled') {
-                voteButtons.forEach(button => button.style.pointerEvents = 'none');
+                voteItems.forEach(item => {
+                    item.style.pointerEvents = 'none';
+                    item.classList.add('opacity-70');
+                });
                 submitVoteBtn.disabled = true;
-                submitVoteBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                submitVoteBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+                submitVoteBtn.classList.remove('btn-primary-submit', 'hover:bg-custom-sub/90');
             } else {
-                voteButtons.forEach(button => button.style.pointerEvents = 'auto');
+                voteItems.forEach(item => {
+                    item.style.pointerEvents = 'auto';
+                    item.classList.remove('opacity-70');
+                });
                 submitVoteBtn.disabled = false;
-                submitVoteBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                submitVoteBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+                submitVoteBtn.classList.add('btn-primary-submit', 'hover:bg-custom-sub/90');
             }
         };
         
         const showLoading = (isLoading) => {
             if (isLoading) {
-                submitVoteBtn.textContent = 'Submitting...';
+                submitVoteBtn.textContent = 'Processing Secure Submission...';
                 submitVoteBtn.disabled = true;
                 submitVoteBtn.classList.add('opacity-50', 'cursor-not-allowed');
             } else {
-                submitVoteBtn.textContent = 'Submit Vote';
+                submitVoteBtn.textContent = 'Review and Submit Vote';
                 submitVoteBtn.disabled = false;
                 submitVoteBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
@@ -232,12 +288,12 @@
             event.preventDefault();
             
             const selectedCandidates = {};
-            // Find all selected candidates based on the 'active' class
-            const activeButtons = ballotContainer.querySelectorAll('.vote-button.active');
+            // Find all selected candidates based on the 'selected' class
+            const activeItems = ballotContainer.querySelectorAll('.vote-item.selected');
             
-            activeButtons.forEach(button => {
-                const position = button.dataset.position;
-                const name = button.dataset.name;
+            activeItems.forEach(item => {
+                const position = item.dataset.position;
+                const name = item.dataset.name;
                 if (!selectedCandidates[position]) {
                     selectedCandidates[position] = [];
                 }
@@ -250,28 +306,38 @@
                 return;
             }
 
+            let requiredSelectionMissing = false;
             // Check if all non-Councilor positions have a selection (assuming they must be filled)
             for (const position in candidatesData) {
-                if (position !== 'Councilor' && (selectedCandidates[position] === undefined || selectedCandidates[position].length === 0)) {
-                    // Only display message if a position *has* candidates but none are selected
-                    if (candidatesData[position].length > 0) {
-                         displayMessage(`Please select a candidate for ${position}.`, 'error');
-                         return;
+                if (position !== 'Councilor' && candidatesData[position].length > 0) {
+                    if (selectedCandidates[position] === undefined || selectedCandidates[position].length === 0) {
+                         displayMessage(`Please select one candidate for ${position}. This position is required.`, 'error');
+                         requiredSelectionMissing = true;
+                         break;
                     }
                 }
             }
+            if (requiredSelectionMissing) return;
 
-
+            // Generate Summary
             let summaryHTML = '';
             voteDataToSubmit = {}; 
 
-            for (let position in candidatesData) { // Iterate through all defined positions
+            for (let position in candidatesData) { 
                 const candidates = selectedCandidates[position] || [];
-                const displaySeparator = (position === 'Councilor') ? '<br>' : ' + ';
-                const candidateString = candidates.length > 0 ? candidates.join(displaySeparator) : '<span class="italic text-gray-400">No selection</span>';
+                const displaySeparator = (position === 'Councilor') ? '<br>' : '';
+                
+                const candidateString = candidates.length > 0 ? 
+                    candidates.map(name => `<span class="font-bold">${name}</span>`).join(displaySeparator) : 
+                    '<span class="italic text-gray-400">No selection (Optional/Skipped)</span>';
                 
                 voteDataToSubmit[position] = candidates;
-                summaryHTML += `<div><h4 class="font-semibold text-custom-sub">${position}:</h4><p>${candidateString}</p></div>`;
+                summaryHTML += `
+                    <div class="flex justify-between items-start border-b border-gray-100 py-2 last:border-b-0">
+                        <h4 class="font-semibold text-custom-sub w-1/3">${position}:</h4>
+                        <p class="text-right w-2/3">${candidateString}</p>
+                    </div>
+                `;
             }
 
             voteSummaryEl.innerHTML = summaryHTML;
@@ -290,17 +356,16 @@
             showLoading(true);
 
             try {
-                // Check for vote status before submitting again to prevent a race condition
-                const hasVoted = await checkIfVoted(userId);
-                if (hasVoted) {
-                    displayMessage('You have already submitted your ballot. Thank you!', 'success');
+                // Check for vote status before submitting again
+                if (hasUserVoted) {
+                    displayMessage('You have already submitted your ballot. Thank you for voting!', 'success');
                     setFormState('disabled');
                     closeVerifier();
                     showLoading(false);
                     return;
                 }
                 
-                // Submit the vote to Firestore first for secure, atomic storage
+                // 1. Submit the vote to Firestore first for secure, atomic storage
                 const voteRef = doc(db, VOTES_COLLECTION, userId);
                 await setDoc(voteRef, {
                     timestamp: new Date(),
@@ -308,16 +373,17 @@
                     selections: voteDataToSubmit
                 });
 
-                // Now, send the data to the Google Form
-                await sendToGoogleForm(voteDataToSubmit, userId);
-                
+                // 2. Now, send the data to the Google Form (as a backup/mirror)
+                sendToGoogleForm(voteDataToSubmit, userId); // Non-blocking send
+
+                hasUserVoted = true;
                 closeVerifier();
-                displayMessage(`Your ballot has been successfully submitted!`, 'success');
+                displayMessage(`Your official ballot has been securely submitted! Thank you for participating.`, 'success');
                 setFormState('disabled');
             } catch (error) {
                 console.error("Error submitting vote:", error);
                 closeVerifier();
-                displayMessage("Error submitting vote. Please try again.", 'error');
+                displayMessage("Critical Error: Failed to submit vote to the secure ledger. Please retry.", 'error');
             } finally {
                 showLoading(false);
             }
@@ -373,20 +439,23 @@
                 const candidateList = candidates[position];
                 
                 // Display help text for multi-select positions (Councilor)
-                const helpText = (position === 'Councilor') ? '<p class="text-sm text-gray-500 mt-1">Select up to 3 candidates.</p>' : '';
+                const isMultiSelect = (position === 'Councilor');
+                const helpText = isMultiSelect ? 
+                    '<p class="text-sm text-gray-500 mt-1">Select up to 3 candidates.</p>' :
+                    '<p class="text-sm text-gray-500 mt-1">Select only one candidate.</p>';
                 
                 ballotHTML += `
-                    <div class="mb-8 p-6 bg-gray-50 rounded-xl shadow-inner">
-                        <h3 class="text-2xl font-bold text-custom-sub border-b-4 border-custom-main pb-2 mb-4">${position}</h3>
+                    <div class="mb-8 p-6 bg-gray-50 rounded-xl shadow-inner border border-gray-200">
+                        <h3 class="text-2xl font-bold text-custom-sub border-b-2 border-custom-main pb-2 mb-4">${position}</h3>
                         ${helpText}
-                        <div class="space-y-4 pt-2">
+                        <div class="space-y-3 pt-2">
                 `;
                 candidateList.forEach(name => {
                     if (name.trim() !== '') {
                         ballotHTML += `
-                            <div class="vote-button-wrapper p-4 rounded-lg border border-gray-200 bg-white hover:border-custom-main transition-colors flex items-center space-x-4 cursor-pointer">
-                                <div class="vote-button" data-name="${name}" data-position="${position}"></div>
+                            <div class="vote-item p-4 rounded-lg flex items-center justify-between transition-all" data-name="${name}" data-position="${position}" data-multiselect="${isMultiSelect}">
                                 <span class="font-medium text-custom-text">${name}</span>
+                                ${getCheckmarkSvg('custom-sub')}
                             </div>
                         `;
                     }
@@ -399,7 +468,7 @@
             if (ballotHTML.trim() === '') {
                  ballotContainer.innerHTML = `
                     <p class="text-center text-red-500 font-medium">
-                        The ballot is empty. Please check the CSV configuration.
+                        The official candidate list could not be loaded. Please notify the election committee.
                     </p>
                 `;
             } else {
@@ -410,30 +479,28 @@
 
         const attachButtonListeners = () => {
             ballotContainer.addEventListener('click', (event) => {
-                const clickedElement = event.target.closest('.vote-button-wrapper, .vote-button');
-                if (!clickedElement) return;
+                if (hasUserVoted) return; // Prevent interaction after voting
+                
+                const clickedItem = event.target.closest('.vote-item');
+                if (!clickedItem) return;
 
-                // Find the actual button element whether the user clicked the dot or the whole wrapper
-                const clickedButton = clickedElement.classList.contains('vote-button') ? clickedElement : clickedElement.querySelector('.vote-button');
-                if (!clickedButton) return;
+                const position = clickedItem.dataset.position;
+                const isMultiSelect = clickedItem.dataset.multiselect === 'true';
                 
-                const position = clickedButton.dataset.position;
-                
-                if (position === 'Councilor') {
-                    // Allow multiple selections for councilors
-                    clickedButton.classList.toggle('active');
+                if (isMultiSelect) {
+                    // Councilor: Allow multiple selections (up to 3, checked during verification)
+                    clickedItem.classList.toggle('selected');
                 } else {
-                    // Only one selection for other positions
-                    const positionButtons = ballotContainer.querySelectorAll(`[data-position="${position}"]`);
-                    // Ensure that clicking the same button twice unselects it
-                    const wasActive = clickedButton.classList.contains('active');
+                    // Single-select positions
+                    const positionItems = ballotContainer.querySelectorAll(`[data-position="${position}"]`);
+                    const wasSelected = clickedItem.classList.contains('selected');
 
-                    positionButtons.forEach(button => {
-                        button.classList.remove('active');
+                    positionItems.forEach(item => {
+                        item.classList.remove('selected');
                     });
                     
-                    if (!wasActive) {
-                       clickedButton.classList.add('active');
+                    if (!wasSelected) {
+                       clickedItem.classList.add('selected');
                     }
                 }
             });
@@ -445,18 +512,20 @@
                 const voteRef = doc(db, VOTES_COLLECTION, uid);
                 const voteDoc = await getDoc(voteRef);
 
-                if (voteDoc.exists()) {
-                    displayMessage('You have already submitted your ballot. Thank you!', 'success');
+                hasUserVoted = voteDoc.exists();
+
+                if (hasUserVoted) {
+                    displayMessage('You have already submitted your official ballot. Your vote is secured.', 'success');
                     setFormState('disabled');
                     return true;
                 } else {
-                    displayMessage('Please make your selections and submit your ballot.', 'info');
+                    displayMessage('Please make your selections and submit your ballot securely.', 'info');
                     setFormState('enabled');
                     return false;
                 }
             } catch (error) {
                 console.error("Error checking vote status from Firestore:", error);
-                displayMessage("Error checking vote status. Please try again.", 'error');
+                displayMessage("Error checking vote status. System integrity check failed.", 'error');
                 setFormState('enabled');
                 return false;
             }
@@ -465,12 +534,26 @@
         const handleGoogleLogin = async () => {
             const provider = new GoogleAuthProvider();
             try {
-                await signInWithPopup(auth, provider);
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+
+                if (user.email && !user.email.endsWith('@up.edu.ph')) {
+                    console.error("Incorrect domain. Signing out.");
+                    errorMessageEl.textContent = "Access Denied: Please sign-in with your **@up.edu.ph** email account.";
+                    errorMessageEl.classList.remove('hidden');
+                    await signOut(auth);
+                    return;
+                }
+                errorMessageEl.classList.add('hidden'); // Clear error on success
+
             } catch (error) {
                 console.error("Google Sign-In Error:", error);
-                let errorMessage = "Sign-in failed. Please try again.";
+                let errorMessage = "Secure Sign-in failed. Please try again.";
                 if (error.code === 'auth/popup-closed-by-user') {
                     errorMessage = "Sign-in cancelled. Please click the button to sign in.";
+                } else if (error.code === 'auth/cancelled-popup-request') {
+                     // This often happens if user clicks button multiple times
+                     errorMessage = "Popup blocked or closed. Try again after closing existing popups.";
                 }
                 errorMessageEl.textContent = errorMessage;
                 errorMessageEl.classList.remove('hidden');
@@ -501,14 +584,9 @@
                 errorMessageEl.classList.add('hidden');
                 
                 if (user) {
-                    // Domain check - Must use @up.edu.ph
-                    // NOTE: This is a client-side check for user experience. 
-                    // Server-side security must be enforced with Firestore rules.
                     if (user.email && !user.email.endsWith('@up.edu.ph')) {
-                        console.log("Incorrect domain. Signing out.");
-                        errorMessageEl.textContent = "Please sign-in with your UP edu account (@up.edu.ph).";
-                        errorMessageEl.classList.remove('hidden');
-                        signOut(auth);
+                        // Double-check just in case the check on login was missed
+                        if (auth.currentUser) await signOut(auth);
                         return;
                     }
                     
@@ -517,17 +595,22 @@
                     votingContentEl.classList.remove('hidden');
                     headerEl.classList.remove('hidden');
                     
-                    // Display user info
+                    // Display user info and critical ID for traceability
                     userNameEl.textContent = user.displayName;
-                    userPhotoEl.src = user.photoURL || 'https://placehold.co/40x40/f1f1f1/1F2937?text=U';
+                    userPhotoEl.src = user.photoURL || 'https://placehold.co/32x32/f1f1f1/1F2937?text=U';
+                    userIdDisplay.textContent = user.uid;
+                    document.getElementById('user-traceability').classList.remove('hidden');
+
 
                     await checkIfVoted(user.uid);
 
                 } else {
                     userId = null;
+                    hasUserVoted = false;
                     loggedOutStateEl.classList.remove('hidden');
                     votingContentEl.classList.add('hidden');
                     headerEl.classList.add('hidden');
+                    document.getElementById('user-traceability').classList.add('hidden');
                 }
             });
         };
@@ -541,17 +624,16 @@
                 }
                 const csvText = await response.text();
                 
-                // Use Papa.parse to parse the CSV text
                 const result = Papa.parse(csvText, {
                     header: false,
                     skipEmptyLines: true
                 });
 
                 if (result.errors.length > 0) {
-                    throw new Error(`CSV parsing errors: ${JSON.stringify(result.errors)}`);
+                    console.error('CSV Parsing Errors:', result.errors);
+                    throw new Error(`CSV parsing errors: ${JSON.stringify(result.errors.map(e => e.message))}`);
                 }
 
-                // Transform the 2D array into a structured object
                 const rows = result.data;
                 if (rows.length < 2) {
                     return {};
@@ -574,13 +656,15 @@
                 return newCandidates;
             } catch (error) {
                 console.error("Error fetching or parsing candidates:", error);
-                displayMessage("Failed to load candidates. Please check the CSV file URL and ensure the positions are correct.", 'error');
+                displayMessage("Critical: Failed to load candidate data. System integrity check failed.", 'error');
                 return {};
             }
         };
         
         // Function to export votes from Firestore to a CSV file
         const exportVotes = async () => {
+            // Note: In a real system, access to this function would be restricted to election officials.
+            // We assume that the canvas environment handles security for this.
             try {
                 const querySnapshot = await getDocs(collection(db, VOTES_COLLECTION));
                 const allVotes = [];
@@ -602,6 +686,7 @@
                 allVotes.forEach(row => {
                     const values = headers.map(header => {
                         const cell = row[header] || '';
+                        // Basic CSV escaping for values
                         return `"${String(cell).replace(/"/g, '""')}"`;
                     });
                     csvContent += values.join(',') + '\n';
@@ -618,11 +703,11 @@
                     link.click();
                     document.body.removeChild(link);
                 }
-                displayMessage('Votes successfully exported to freshman_council_vote_results.csv!', 'success');
+                displayMessage('Official results successfully exported.', 'success');
 
             } catch (error) {
                 console.error("Error exporting votes:", error);
-                displayMessage("Failed to export votes. Please try again.", 'error');
+                displayMessage("Failed to export results. Integrity Error.", 'error');
             }
         };
 
@@ -633,6 +718,7 @@
                 db = getFirestore(app);
                 
                 if (initialAuthToken) {
+                    console.log("Signing in with initial custom token...");
                     await signInWithCustomToken(auth, initialAuthToken);
                 }
 
@@ -644,7 +730,7 @@
                 attachListeners();
             } catch (error) {
                 console.error("Error initializing Firebase:", error);
-                errorMessageEl.textContent = `Error: ${error.message}`;
+                errorMessageEl.textContent = `Critical System Error: ${error.message}`;
                 errorMessageEl.classList.remove('hidden');
             }
         };
