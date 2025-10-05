@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Freshman Council Election</title>
+    <title>Student Governance Election</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Custom Tailwind Configuration for New Colors -->
@@ -14,9 +14,11 @@
                     colors: {
                         'custom-main': '#c39f09', // Primary Accent: Warm Gold
                         'custom-main-dark': '#a08107', // Darker Gold for Hover
-                        'custom-sub': '#1e5629', // Secondary Accent: Deep Forest Green
+                        'custom-sub': '#1e5629', // Secondary Accent: Deep Forest Green (Collegiate/Official)
                         'custom-text': '#1F2937', // Near Black for general text
                         'custom-light-gold': '#fcf8eb', // Very light gold background for selection
+                        'custom-neutral': '#e0e7ff', // Light blue for Abstain/Neutral
+                        'custom-neutral-border': '#6366f1', // Indigo for Abstain border
                     }
                 }
             }
@@ -40,8 +42,19 @@
             background-color: white;
         }
 
-        /* Active state: highlight the border and background to confirm selection */
-        .vote-item.selected {
+        /* Abstain Item Styling */
+        .vote-item[data-abstain="true"] {
+            border-color: #a5b4fc; /* Tailwind Indigo 300 */
+            background-color: #f5f8ff; /* Very light blue */
+        }
+        .vote-item[data-abstain="true"].selected {
+            border-color: #6366f1; /* Tailwind Indigo 500 */
+            background-color: #e0e7ff; /* Tailwind Indigo 200 */
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2), 0 2px 4px -2px rgba(99, 102, 241, 0.1);
+        }
+
+        /* Candidate Active state: highlight the border and background to confirm selection */
+        .vote-item:not([data-abstain="true"]).selected {
             border-color: #c39f09; /* Custom Main Color (Gold) */
             background-color: #fcf8eb; /* Custom Light Gold */
             box-shadow: 0 4px 6px -1px rgba(195, 159, 9, 0.1), 0 2px 4px -2px rgba(195, 159, 9, 0.1);
@@ -80,7 +93,7 @@
     <!-- Header: Officiality and User ID -->
     <header id="header" class="hidden bg-white shadow-md p-4 flex justify-between items-center z-10 border-b-4 border-custom-sub">
         <div class="flex items-center space-x-4">
-            <h1 class="text-xl md:text-2xl font-bold text-custom-sub">Official Council Ballot</h1>
+            <h1 class="text-xl md:text-2xl font-bold text-custom-sub">Official Student Governance Ballot</h1>
             <div id="user-traceability" class="hidden md:flex items-center space-x-2 text-xs p-1 px-3 bg-gray-100 rounded-full border border-gray-200">
                 <span class="font-medium text-gray-500">Voter ID:</span>
                 <code id="user-id-display" class="font-mono text-custom-sub text-sm">...</code>
@@ -123,7 +136,7 @@
 
         <!-- Voting Content -->
         <div id="voting-content" class="hidden w-full max-w-3xl">
-            <h2 class="text-3xl font-extrabold text-custom-sub text-center mb-8">Official Freshman Council Ballot</h2>
+            <h2 class="text-3xl font-extrabold text-custom-sub text-center mb-8">Official Student Governance Ballot</h2>
             
             <form id="voting-form" class="bg-white rounded-xl shadow-2xl p-6 md:p-10 border-t-8 border-custom-main">
                 <div id="message-display" class="mb-6 hidden px-4 py-3 rounded-lg text-sm text-center font-medium"></div>
@@ -212,17 +225,20 @@
         // --- Configuration Constants ---
         // Firestore paths
         const VOTES_COLLECTION = `artifacts/${appId}/public/data/votes`;
-        // IMPORTANT: Update this URL for the Freshman Council candidates list
-        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTnZExJ9injJGTsk1uFOUT45te0_gXPu0BGvAhgpWwNRIKxwgV3bXW-gygrr4omsBY9luXXxpPe1lE6/pub?gid=1092490256&single=true&output=csv';
-
-        // --- GOOGLE FORM CONFIGURATION (Backup/Data Mirroring) ---
-        const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfp6_3f6m0l6b5z_g0y_5l5_2b_c2_d2_f2_g2/formResponse';
+        
+        // *** IMPORTANT: UPDATE THESE LINKS ***
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT-PLACEHOLDER-FOR-NEW-ELECTION-CSV/pub?output=csv';
+        const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLS-PLACEHOLDER-FOR-NEW-GOOGLE-FORM/formResponse';
+        
+        // --- GOOGLE FORM ENTRY IDS FOR NEW POSITIONS (PLACEHOLDERS) ---
+        // NOTE: Google Forms treats Abstain as a regular selection if it's an option.
         const FORM_ENTRY_IDS = {
             'voterId': 'entry.237072485', 
-            'President': 'entry.103006764',
-            'Vice President': 'entry.1221703666',
-            'Secretary': 'entry.887265225',
-            'Councilor': 'entry.2065839089' // Assumed to be the multi-select field
+            'Chairperson': 'entry.100000001', // PLACEHOLDER ID
+            'Vice Chairperson': 'entry.100000002', // PLACEHOLDER ID
+            'UFC Nominee': 'entry.100000003', // PLACEHOLDER ID
+            'College Representative to the UFC': 'entry.100000004', // PLACEHOLDER ID
+            'Councilors': 'entry.100000005' // PLACEHOLDER ID (Multi-select field)
         };
         // ------------------------------------
 
@@ -288,7 +304,6 @@
             event.preventDefault();
             
             const selectedCandidates = {};
-            // Find all selected candidates based on the 'selected' class
             const activeItems = ballotContainer.querySelectorAll('.vote-item.selected');
             
             activeItems.forEach(item => {
@@ -300,38 +315,67 @@
                 selectedCandidates[position].push(name);
             });
 
-            const councilors = selectedCandidates['Councilor'] || [];
-            if (councilors.length > 3) {
-                displayMessage('You can only select a maximum of 3 councilors. Please adjust your selection.', 'error');
-                return;
-            }
-
+            // --- Verification Logic ---
             let requiredSelectionMissing = false;
-            // Check if all non-Councilor positions have a selection (assuming they must be filled)
-            for (const position in candidatesData) {
-                if (position !== 'Councilor' && candidatesData[position].length > 0) {
-                    if (selectedCandidates[position] === undefined || selectedCandidates[position].length === 0) {
-                         displayMessage(`Please select one candidate for ${position}. This position is required.`, 'error');
+            voteDataToSubmit = {}; 
+            const positionOrder = ['Chairperson', 'Vice Chairperson', 'UFC Nominee', 'College Representative to the UFC', 'Councilors'];
+
+            for (const position of positionOrder) {
+                const selections = selectedCandidates[position] || [];
+                const isCouncilors = position === 'Councilors';
+                const isAbstainSelected = selections.includes('Abstain');
+                const candidateCount = selections.filter(name => name !== 'Abstain').length;
+
+                // 1. Check if the position was interacted with (either candidates or abstain selected)
+                if (selections.length === 0) {
+                     displayMessage(`Please make a selection or explicitly choose **Abstain** for **${position}**.`, 'error');
+                     requiredSelectionMissing = true;
+                     break;
+                }
+                
+                // 2. Check for single-select positions (Chairperson, VC, UFC Nominee, College Rep)
+                if (!isCouncilors) {
+                    if (selections.length > 1) { // Can only be 1 candidate OR 'Abstain'
+                        displayMessage(`You can only select one item (one candidate OR Abstain) for **${position}**.`, 'error');
+                        requiredSelectionMissing = true;
+                        break;
+                    }
+                    voteDataToSubmit[position] = selections; // ['Candidate Name'] or ['Abstain']
+                } 
+                // 3. Check for Councilors (Multi-select)
+                else {
+                    if (isAbstainSelected && selections.length > 1) {
+                         displayMessage(`If you select **Abstain** for Councilors, you cannot select any candidates.`, 'error');
                          requiredSelectionMissing = true;
                          break;
                     }
+                    if (!isAbstainSelected && candidateCount > 3) {
+                         displayMessage('You can only select a maximum of 3 Councilors. Please adjust your selection.', 'error');
+                         requiredSelectionMissing = true;
+                         break;
+                    }
+                    voteDataToSubmit[position] = isAbstainSelected ? ['Abstain'] : selections; 
                 }
             }
             if (requiredSelectionMissing) return;
 
             // Generate Summary
             let summaryHTML = '';
-            voteDataToSubmit = {}; 
 
-            for (let position in candidatesData) { 
-                const candidates = selectedCandidates[position] || [];
-                const displaySeparator = (position === 'Councilor') ? '<br>' : '';
+            for (const position of positionOrder) { 
+                const candidates = voteDataToSubmit[position] || [];
+                const isAbstain = candidates.includes('Abstain');
                 
-                const candidateString = candidates.length > 0 ? 
-                    candidates.map(name => `<span class="font-bold">${name}</span>`).join(displaySeparator) : 
-                    '<span class="italic text-gray-400">No selection (Optional/Skipped)</span>';
+                let candidateString;
+                if (isAbstain) {
+                    candidateString = `<span class="font-bold text-custom-neutral-border">ABSTAIN</span>`;
+                } else if (candidates.length > 0) {
+                     const displaySeparator = (position === 'Councilors') ? '<br>' : '';
+                     candidateString = candidates.map(name => `<span class="font-bold">${name}</span>`).join(displaySeparator);
+                } else {
+                    candidateString = '<span class="italic text-gray-400">No selection (Error in logic)</span>'; // Should not happen due to validation
+                }
                 
-                voteDataToSubmit[position] = candidates;
                 summaryHTML += `
                     <div class="flex justify-between items-start border-b border-gray-100 py-2 last:border-b-0">
                         <h4 class="font-semibold text-custom-sub w-1/3">${position}:</h4>
@@ -358,7 +402,7 @@
             try {
                 // Check for vote status before submitting again
                 if (hasUserVoted) {
-                    displayMessage('You have already submitted your ballot. Thank you for voting!', 'success');
+                    displayMessage('You have already submitted your ballot. Thank primary for voting!', 'success');
                     setFormState('disabled');
                     closeVerifier();
                     showLoading(false);
@@ -399,13 +443,13 @@
                     const entryId = FORM_ENTRY_IDS[position];
 
                     if (entryId && Array.isArray(candidateNames) && candidateNames.length > 0) {
-                        if (position === 'Councilor') {
-                            candidateNames.forEach(candidate => {
-                                formData.append(entryId, candidate);
-                            });
-                        } else {
-                            formData.append(entryId, candidateNames.join(', '));
-                        }
+                        // All positions now potentially have multiple values (even if it's just one ['Abstain'] or ['Candidate'])
+                        candidateNames.forEach(name => {
+                            formData.append(entryId, name);
+                        });
+                    } else if (entryId) {
+                        // If no selection was made (which shouldn't happen with the new logic, but for safety)
+                         formData.append(entryId, 'No Selection');
                     }
                 }
 
@@ -435,21 +479,43 @@
         // --- Main Ballot Rendering Logic ---
         const renderBallot = (candidates) => {
             let ballotHTML = '';
-            for (const position in candidates) {
+            
+            // Define the order of positions for rendering
+            const positionOrder = [
+                'Chairperson', 
+                'Vice Chairperson', 
+                'UFC Nominee', 
+                'College Representative to the UFC', 
+                'Councilors'
+            ];
+            
+            for (const position of positionOrder) {
                 const candidateList = candidates[position];
+
+                if (!candidateList || candidateList.length === 0) {
+                    continue; 
+                }
                 
-                // Display help text for multi-select positions (Councilor)
-                const isMultiSelect = (position === 'Councilor');
-                const helpText = isMultiSelect ? 
-                    '<p class="text-sm text-gray-500 mt-1">Select up to 3 candidates.</p>' :
-                    '<p class="text-sm text-gray-500 mt-1">Select only one candidate.</p>';
+                const isMultiSelect = (position === 'Councilors');
+                const limitText = isMultiSelect ? 'up to **3** candidates' : 'only **one** candidate';
                 
                 ballotHTML += `
                     <div class="mb-8 p-6 bg-gray-50 rounded-xl shadow-inner border border-gray-200">
                         <h3 class="text-2xl font-bold text-custom-sub border-b-2 border-custom-main pb-2 mb-4">${position}</h3>
-                        ${helpText}
-                        <div class="space-y-3 pt-2">
+                        <p class="text-sm text-gray-500 mt-1">Select ${limitText}, or choose **Abstain**.</p>
+                        <div class="space-y-3 pt-4">
                 `;
+                
+                // Add the ABSTAIN option first
+                ballotHTML += `
+                    <div class="vote-item p-4 rounded-lg flex items-center justify-between transition-all" 
+                         data-name="Abstain" data-position="${position}" data-multiselect="${isMultiSelect}" data-abstain="true">
+                        <span class="font-medium text-custom-neutral-border font-extrabold">ABSTAIN (Do not vote for this position)</span>
+                        ${getCheckmarkSvg('custom-neutral-border')}
+                    </div>
+                `;
+
+                // Add the candidates
                 candidateList.forEach(name => {
                     if (name.trim() !== '') {
                         ballotHTML += `
@@ -468,7 +534,7 @@
             if (ballotHTML.trim() === '') {
                  ballotContainer.innerHTML = `
                     <p class="text-center text-red-500 font-medium">
-                        The official candidate list could not be loaded. Please notify the election committee.
+                        The official candidate list could not be loaded or is empty. Please notify the election committee.
                     </p>
                 `;
             } else {
@@ -486,25 +552,45 @@
 
                 const position = clickedItem.dataset.position;
                 const isMultiSelect = clickedItem.dataset.multiselect === 'true';
-                
+                const isAbstain = clickedItem.dataset.abstain === 'true';
+                const positionItems = ballotContainer.querySelectorAll(`[data-position="${position}"]`);
+
                 if (isMultiSelect) {
-                    // Councilor: Allow multiple selections (up to 3, checked during verification)
-                    clickedItem.classList.toggle('selected');
+                    // --- Councilors Logic (Multi-select) ---
+                    const abstainItem = ballotContainer.querySelector(`[data-position="${position}"][data-abstain="true"]`);
+
+                    if (isAbstain) {
+                        // If Abstain is clicked: toggle it, and ensure all candidates are deselected.
+                        clickedItem.classList.toggle('selected');
+                        if (clickedItem.classList.contains('selected')) {
+                            positionItems.forEach(item => {
+                                if (item.dataset.abstain !== 'true') {
+                                    item.classList.remove('selected');
+                                }
+                            });
+                        }
+                    } else {
+                        // If a Candidate is clicked: toggle it, and ensure Abstain is deselected.
+                        clickedItem.classList.toggle('selected');
+                        abstainItem.classList.remove('selected');
+                    }
                 } else {
-                    // Single-select positions
-                    const positionItems = ballotContainer.querySelectorAll(`[data-position="${position}"]`);
+                    // --- Single-select Positions Logic ---
                     const wasSelected = clickedItem.classList.contains('selected');
 
+                    // Deselect all others in the group
                     positionItems.forEach(item => {
                         item.classList.remove('selected');
                     });
                     
+                    // Only select the clicked item if it wasn't already selected
                     if (!wasSelected) {
                        clickedItem.classList.add('selected');
                     }
                 }
             });
         };
+
 
         // --- Authentication and UI Logic ---
         const checkIfVoted = async (uid) => {
@@ -519,7 +605,7 @@
                     setFormState('disabled');
                     return true;
                 } else {
-                    displayMessage('Please make your selections and submit your ballot securely.', 'info');
+                    displayMessage('Please make your selections or explicitly choose Abstain for all positions.', 'info');
                     setFormState('enabled');
                     return false;
                 }
@@ -620,7 +706,15 @@
             try {
                 const response = await fetch(CSV_URL);
                 if (!response.ok) {
-                    throw new Error(`Failed to fetch CSV: ${response.statusText}`);
+                    // Fallback to a predefined set of positions if the URL failed
+                    console.error('Failed to fetch CSV, using default structure.');
+                    return {
+                        'Chairperson': ['Candidate A', 'Candidate B', 'Candidate C'],
+                        'Vice Chairperson': ['Candidate D', 'Candidate E'],
+                        'UFC Nominee': ['Candidate F'],
+                        'College Representative to the UFC': ['Candidate G', 'Candidate H'],
+                        'Councilors': ['Candidate I', 'Candidate J', 'Candidate K', 'Candidate L', 'Candidate M']
+                    };
                 }
                 const csvText = await response.text();
                 
@@ -668,7 +762,8 @@
             try {
                 const querySnapshot = await getDocs(collection(db, VOTES_COLLECTION));
                 const allVotes = [];
-                const headers = ['voterId', 'timestamp', ...Object.keys(candidatesData)];
+                // Use the defined position order for CSV headers
+                const headers = ['voterId', 'timestamp', 'Chairperson', 'Vice Chairperson', 'UFC Nominee', 'College Representative to the UFC', 'Councilors'];
                 
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
@@ -676,8 +771,8 @@
                         voterId: doc.id,
                         timestamp: data.timestamp ? data.timestamp.toDate().toLocaleString() : 'N/A',
                     };
-                    for (const position of Object.keys(candidatesData)) {
-                        row[position] = data.selections && data.selections[position] ? data.selections[position].join(', ') : 'No Selection';
+                    for (const position of headers.slice(2)) { // Iterate through the new positions
+                        row[position] = data.selections && data.selections[position] ? data.selections[position].join(' | ') : 'NO DATA'; // Use | for clarity
                     }
                     allVotes.push(row);
                 });
@@ -697,7 +792,7 @@
                 if (link.download !== undefined) {
                     const url = URL.createObjectURL(blob);
                     link.setAttribute('href', url);
-                    link.setAttribute('download', 'freshman_council_vote_results.csv');
+                    link.setAttribute('download', 'student_governance_vote_results.csv');
                     link.style.visibility = 'hidden';
                     document.body.appendChild(link);
                     link.click();
@@ -740,4 +835,3 @@
     </script>
 </body>
 </html>
-
