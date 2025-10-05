@@ -329,7 +329,7 @@
 
 
         let auth, db, userId;
-        let voteDataToSubmit = {};
+        let voteDataToSubmit = {}; // This will hold the FINAL data, including ABN: Surname records
         let candidatesData = {};
         let allCandidateInfo = {}; // Store all detailed info keyed by name for easy lookup
         let hasUserVoted = false;
@@ -602,32 +602,36 @@
         };
 
 
-        // --- Authentication and Vote Submission Logic ---
+        // --- Authentication and Vote Submission Logic (MODIFIED) ---
         const openVoteVerifier = (event) => {
             event.preventDefault();
             
-            const selectedCandidates = {};
+            // Collect the names of candidates/options that were explicitly selected by the user.
+            const explicitlySelectedNames = {}; 
             const activeItems = ballotContainer.querySelectorAll('.vote-item.selected');
             
             activeItems.forEach(item => {
                 const position = item.dataset.position;
                 const name = item.dataset.name;
-                if (!selectedCandidates[position]) {
-                    selectedCandidates[position] = [];
+                if (!explicitlySelectedNames[position]) {
+                    explicitlySelectedNames[position] = new Set();
                 }
-                selectedCandidates[position].push(name);
+                explicitlySelectedNames[position].add(name);
             });
 
-            // --- Verification Logic ---
+            // --- Verification Logic & Final Data Generation ---
             let requiredSelectionMissing = false;
-            voteDataToSubmit = {}; 
+            voteDataToSubmit = {}; // Reset submission data
             
             for (const position of positionOrder) {
-                const selections = selectedCandidates[position] || [];
+                const selections = Array.from(explicitlySelectedNames[position] || []);
                 const isCouncilors = position === 'Councilors';
                 const isAbstainSelected = selections.includes('Abstain');
                 const candidateCount = selections.filter(name => name !== 'Abstain').length;
-
+                
+                // Fetch all candidate names for this position from the global data
+                const allNamesForPosition = candidatesData[position].map(c => c.name);
+                
                 // 1. Check if the position was interacted with (either candidates or abstain selected)
                 if (selections.length === 0) {
                      displayMessage(`Please make a selection or explicitly choose **Abstain** for **${position}**.`, 'error');
@@ -642,7 +646,6 @@
                         requiredSelectionMissing = true;
                         break;
                     }
-                    voteDataToSubmit[position] = selections; // ['Candidate Name'] or ['Abstain']
                 } 
                 // 3. Check for Councilors (Multi-select)
                 else {
@@ -656,26 +659,57 @@
                          requiredSelectionMissing = true;
                          break;
                     }
-                    voteDataToSubmit[position] = isAbstainSelected ? ['Abstain'] : selections; 
                 }
+                
+                if (requiredSelectionMissing) continue; // Skip to next position check if current one failed
+
+                // --- MODIFIED LOGIC: ABN: Surname generation for submission ---
+                let finalSelectionsForSubmission = [];
+                const votedCandidates = selections.filter(name => name !== 'Abstain');
+
+                if (isAbstainSelected) {
+                    // If 'Abstain' is selected, add it to the list
+                    finalSelectionsForSubmission.push('Abstain');
+                } else {
+                    // Add all voted candidates
+                    finalSelectionsForSubmission = [...votedCandidates];
+                }
+
+                // Add ABN: Surname for all candidates who were NOT voted for
+                allNamesForPosition.forEach(name => {
+                    if (!votedCandidates.includes(name)) {
+                        // Extract surname: get the part before the first comma
+                        const surname = name.split(',')[0].trim();
+                        finalSelectionsForSubmission.push(`ABN: ${surname}`);
+                    }
+                });
+                
+                // Store the final structured list for Firestore and Google Form
+                voteDataToSubmit[position] = finalSelectionsForSubmission; 
             }
+            
             if (requiredSelectionMissing) return;
 
-            // Generate Summary
+            // Generate Summary (Uses the simple selection list for clean display)
             let summaryHTML = '';
 
             for (const position of positionOrder) { 
-                const candidates = voteDataToSubmit[position] || [];
-                const isAbstain = candidates.includes('Abstain');
+                // Get the simple selections list from the DOM for display
+                const votedCandidates = Array.from(ballotContainer.querySelectorAll(`[data-position="${position}"].selected`))
+                                         .map(item => item.dataset.name)
+                                         .filter(name => name !== undefined);
+
+                const isAbstain = votedCandidates.includes('Abstain');
                 
                 let candidateString;
                 if (isAbstain) {
                     candidateString = `<span class="font-bold text-custom-neutral-border">ABSTAIN</span>`;
-                } else if (candidates.length > 0) {
+                } else if (votedCandidates.length > 0) {
                      const displaySeparator = (position === 'Councilors') ? '<br>' : ', ';
-                     candidateString = candidates.map(name => `<span class="font-bold">${name}</span>`).join(displaySeparator);
+                     const namesToDisplay = votedCandidates.filter(name => name !== 'Abstain'); 
+                     candidateString = namesToDisplay.map(name => `<span class="font-bold">${name}</span>`).join(displaySeparator);
                 } else {
-                    candidateString = '<span class="italic text-gray-400">No selection (Error in logic)</span>';
+                    candidateString = `<span class="font-bold text-red-500">NO VOTE CAST</span>`;
                 }
                 
                 summaryHTML += `
@@ -713,7 +747,7 @@
                 await setDoc(voteRef, {
                     timestamp: new Date(),
                     voterId: userId,
-                    selections: voteDataToSubmit
+                    selections: voteDataToSubmit // Contains Voted Names, Abstain, and ABN: Surname records
                 });
 
                 // Background process: Send a copy of the vote to the Google Form for redundancy
@@ -732,22 +766,22 @@
             }
         };
 
+        // MODIFIED: This function now sends the comprehensive list, including ABN: Surname.
         const sendToGoogleForm = async (voteData, userId) => {
             try {
                 const formData = new FormData();
                 formData.append(FORM_ENTRY_IDS['voterId'], userId);
 
                 for (const position in voteData) {
-                    const candidateNames = voteData[position];
+                    const submissionRecords = voteData[position]; // This now includes names AND "ABN: Surname"
+
                     const entryId = FORM_ENTRY_IDS[position];
 
-                    if (entryId && Array.isArray(candidateNames) && candidateNames.length > 0) {
-                        candidateNames.forEach(name => {
-                            formData.append(entryId, name);
+                    if (entryId && Array.isArray(submissionRecords) && submissionRecords.length > 0) {
+                        submissionRecords.forEach(record => {
+                             // Append all records (Voted Name, Abstain, or ABN: Surname)
+                            formData.append(entryId, record);
                         });
-                    } else if (entryId) {
-                         // Send a placeholder for positions where the user explicitly abstained or didn't select.
-                         formData.append(entryId, 'No Selection / Abstain');
                     }
                 }
 
