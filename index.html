@@ -364,10 +364,16 @@
     </div>
 
 
-    <!-- Header: Officiality and User ID --><header id="header" class="hidden bg-white shadow-md p-3 sm:p-4 flex flex-wrap justify-between items-center z-10 border-b-4 border-custom-sub">
+    <!-- Header: Officiality and User ID -->
+    <header id="header" class="hidden bg-white shadow-md p-3 sm:p-4 flex flex-wrap justify-between items-center z-10 border-b-4 border-custom-sub">
         <div class="flex items-center space-x-2 sm:space-x-4">
-            <!-- Logo: NO FRAME/BORDER/ROUNDING (ADDED object-contain) --><img src="https://i.ibb.co/RpBzpzSk/13th.png" class="w-10 h-10 hidden sm:block object-contain" alt="CAFS Logo">
-            <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-custom-sub">13th CAFS FC Election</h1>
+            <!-- Logo 1 (cafsfc.png) on the header -->
+            <img src="https://placehold.co/128x128/1e5629/ffffff?text=cafsfc.png" class="w-10 h-10 hidden sm:block object-contain" alt="CAFS FC Logo">
+            <!-- Updated Two-Line Title -->
+            <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-custom-sub leading-tight">
+                College of Agriculture and Food Science<br>
+                <span class="text-base sm:text-lg md:text-xl font-semibold">Freshman Council</span>
+            </h1>
             <!-- User ID Display (Mandatory for multi-user apps) --><div id="user-traceability" class="hidden md:flex items-center space-x-2 text-xs p-1 px-3 bg-gray-100 rounded-full border border-gray-200">
                 <span class="font-medium text-gray-500">Voter ID:</span>
                 <code id="user-id-display" class="font-mono text-custom-sub text-sm">...</code>
@@ -392,9 +398,10 @@
         
         <!-- Logged-out State (Trustworthy Card) -->
         <div id="logged-out-state" class="bg-white rounded-xl shadow-2xl p-6 md:p-10 w-full max-w-sm sm:max-w-md text-center transform transition-all duration-300 border-t-8 border-custom-sub">
-            <!-- Logo: NO FRAME/BORDER/ROUNDING (ADDED object-contain) --><img src="https://i.ibb.co/RpBzpzSk/13th.png" class="w-20 h-20 mx-auto mb-4 object-contain" alt="CAFS Logo">
+            <!-- Logo 1 (cafsfc.png) on sign-in page -->
+            <img src="https://placehold.co/128x128/1e5629/ffffff?text=cafsfc.png" class="w-20 h-20 mx-auto mb-4 object-contain" alt="CAFS FC Logo">
             
-            <!-- CHANGED: Title to 13th CAFS FC Election -->
+            <!-- Title remains '13th CAFS FC Election' for login card -->
             <h1 class="text-2xl sm:text-3xl font-extrabold text-custom-sub">13th CAFS FC Election</h1>
             
             <p class="mt-3 sm:mt-4 text-base sm:text-lg text-gray-700 font-medium border-b border-custom-main pb-4">
@@ -418,7 +425,10 @@
         </div>
 
         <!-- Voting Content --><div id="voting-content" class="hidden w-full max-w-4xl">
-            <!-- CHANGED: Made "OFFICIAL BALLOT" much bigger --><h2 class="text-4xl sm:text-5xl font-extrabold text-custom-sub text-center mb-6 sm:mb-8">OFFICIAL BALLOT</h2>
+            <!-- Replaced 'OFFICIAL BALLOT' text with big Logo 2 (13th.png) -->
+            <div class="flex justify-center mb-6 sm:mb-8">
+                <img src="https://placehold.co/300x150/c39f09/1e5629?text=13th.png" class="w-full max-w-sm h-auto object-contain" alt="Official Ballot 13th FC Logo">
+            </div>
             
             <form id="voting-form" class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 md:p-10 border-t-8 border-custom-main">
                 <!-- Ballot will be dynamically generated here --><div id="ballot-container" class="space-y-8 sm:space-y-10">
@@ -505,7 +515,7 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
              // NOTE: Replace YOUR_API_KEY_PLACEHOLDER with your actual key if testing locally.
-             apiKey: "AIzaSyBdj6ePKM_3YEQTQlaZk9kKrNoMgqsjcjA", 
+             apiKey: "YOUR_API_KEY_PLACEHOLDER", 
              authDomain: "votingmachine-c8e34.firebaseapp.com",
              projectId: "votingmachine-c8e34",
              storageBucket: "votingmachine-c8e34.appspot.com",
@@ -1242,7 +1252,7 @@
             } catch (error) {
                 console.error("Error checking vote status from Firestore:", error);
                 displayMessage("Error checking vote status. System integrity check failed.", 'error');
-                setFormState('enabled');
+                    setFormState('enabled');
                     return false;
             }
         };
@@ -1375,4 +1385,3 @@
     </script>
 </body>
 </html>
-
