@@ -4,8 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OFFICIAL BALLOT</title>
-    <!-- Tailwind CSS CDN --><script src="https://cdn.tailwindcss.com"></script>
-    <!-- Custom Tailwind Configuration for New Colors --><script>
+    
+
+<script src="https://cdn.tailwindcss.com"></script>
+    
+
+<script>
         tailwind.config = {
             theme: {
                 extend: {
@@ -71,6 +75,11 @@
             /* Added for keyboard navigation and custom focus styles */
             outline: none; 
         }
+        
+        /* Subtle background change on column click for feedback */
+        .vote-column:active, .abstain-column:active {
+             background-color: #f0f0f0; /* Very light gray on press */
+        }
 
         /* --- Custom focus styling for interactive columns (replaces the box) --- */
         .vote-column:focus, .abstain-column:focus {
@@ -92,7 +101,9 @@
             margin-top: 0.25rem; 
             height: 1.5rem;
             width: 1.5rem;
-            border: 2px solid #ccc;
+            /* Change 2: Increased border thickness and default to transparent fill */
+            border: 3px solid #ccc;
+            background-color: transparent; 
             border-radius: 50%;
             transition: all 0.2s;
         }
@@ -105,31 +116,31 @@
             text-align: center;
         }
 
-        /* 3. FIX: Active VOTE selection styling (Shade it Yellow/Gold) */
+        /* 2. FIX: Active VOTE selection styling (Only the circle is yellow/gold) */
         .vote-column.selected {
-            background-color: #c39f09; /* Custom Main Gold */
-            border-top-right-radius: 0.5rem;
-            border-bottom-right-radius: 0.5rem;
+            /* REMOVED: background-color: #c39f09; */
+            background-color: transparent; 
         }
 
         .vote-column.selected .selection-indicator {
-            border-color: white; /* Indicator border becomes white */
-            background-color: white; /* Indicator fill becomes white */
+            /* Change 2: Indicator border becomes gold, fill becomes gold (Shade it yellow) */
+            border-color: #c39f09; 
+            background-color: #c39f09; 
         }
         .vote-column.selected .selection-text {
-            color: white; /* Text turns white for contrast */
+            color: #1F2933; /* Keep text readable (Near Black) */
         }
 
-        /* Active ABSTAIN selection styling (Charcoal Gray) */
+        /* Active ABSTAIN selection styling (Only the circle is slate) */
         .abstain-column.selected {
-            background-color: #e2e8f0; /* custom-abstain light gray */
-            border-top-left-radius: 0.5rem;
-            border-bottom-left-radius: 0.5rem;
+            /* REMOVED: background-color changes */
+            background-color: transparent;
         }
 
         .abstain-column.selected .selection-indicator {
-             border-color: #475569; /* custom-abstain-darker slate */
-             background-color: #64748B; /* custom-abstain-border slate */
+             /* Change 2: Indicator border/fill becomes slate */
+             border-color: #475569; 
+             background-color: #64748B; 
         }
         .abstain-column.selected .selection-text {
             color: #334155; /* custom-abstain-text dark slate */
@@ -365,28 +376,31 @@
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col">
 
-    <!-- Global Message Display (Fixed on screen) --><div id="central-message-container" class="hidden">
+    
+
+<div id="central-message-container" class="hidden">
         <div id="message-display" class="px-4 py-3 rounded-lg text-sm sm:text-base text-center font-medium shadow-lg transition-colors duration-300"></div>
     </div>
 
 
-    <!-- Header: Officiality and User ID -->
-    <header id="header" class="hidden bg-white shadow-md p-3 sm:p-4 flex flex-wrap justify-between items-center z-10 border-b-4 border-custom-sub">
+    
+
+<header id="header" class="hidden bg-white shadow-md p-3 sm:p-4 flex flex-wrap justify-between items-center z-10 border-b-4 border-custom-sub">
         <div class="flex items-center space-x-2 sm:space-x-4">
-            <!-- Logo 1 (cafsfc.png) on the header -->
+            
+            <!-- LOGO 1: cafsfc.png -->
             <img src="https://placehold.co/128x128/1e5629/ffffff?text=cafsfc.png" class="w-10 h-10 hidden sm:block object-contain" alt="CAFS FC Logo">
-            <!-- Updated Two-Line Title -->
-            <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-custom-sub leading-tight">
+            
+
+<h1 class="text-lg sm:text-xl md:text-2xl font-bold text-custom-sub leading-tight">
                 College of Agriculture and Food Science<br>
                 <span class="text-base sm:text-lg md:text-xl font-semibold">Freshman Council</span>
             </h1>
-            <!-- User ID Display (Mandatory for multi-user apps) --><div id="user-traceability" class="hidden md:flex items-center space-x-2 text-xs p-1 px-3 bg-gray-100 rounded-full border border-gray-200">
-                <span class="font-medium text-gray-500">Voter ID:</span>
-                <code id="user-id-display" class="font-mono text-custom-sub text-sm">...</code>
-            </div>
         </div>
         
-        <!-- User Profile and Logout Button --><div class="flex items-center space-x-2 sm:space-x-4 mt-2 sm:mt-0">
+        
+
+<div class="flex items-center space-x-2 sm:space-x-4 mt-2 sm:mt-0">
             <div id="user-profile" class="relative flex items-center space-x-2">
                 <div class="text-xs text-gray-500 hidden md:block text-right">
                     <span id="user-name" class="font-medium text-custom-text block text-sm"></span>
@@ -400,42 +414,57 @@
         </div>
     </header>
 
-    <!-- Main Content Area: Added flex-col to stack logo and card (Change 2) --><main class="flex-grow flex items-center justify-center p-4 flex-col">
+    
+
+<main class="flex-grow flex items-center justify-center p-4 flex-col">
         
-        <!-- 2. Logo 1 (cafsfc.png) positioned outside the card, top and centered -->
-        <img id="login-page-logo" src="https://placehold.co/128x128/1e5629/ffffff?text=cafsfc.png" 
-             class="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-6 object-contain" alt="CAFS FC Logo">
+        <!-- LOGO 2: 13th.png (Made BIG) -->
+        <div id="main-logo-2" class="mx-auto mb-8 p-4 rounded-xl border-4 border-custom-main w-full max-w-sm sm:max-w-md bg-white flex justify-center items-center">
+            <img src="https://placehold.co/300x150/ffffff/1e5629?text=13th.png" 
+                 class="w-full h-auto max-h-32 object-contain" 
+                 alt="13th Election Logo">
+        </div>
              
-        <!-- Logged-out State (Trustworthy Card) -->
-        <div id="logged-out-state" class="bg-white rounded-xl shadow-2xl p-6 md:p-10 w-full max-w-sm sm:max-w-md text-center transform transition-all duration-300 border-t-8 border-custom-sub">
+        
+
+<div id="logged-out-state" class="bg-white rounded-xl shadow-2xl p-6 md:p-10 w-full max-w-sm sm:max-w-md text-center transform transition-all duration-300 border-t-8 border-custom-sub">
             
             <h1 class="text-2xl sm:text-3xl font-extrabold text-custom-sub">13th CAFS FC Election</h1>
             
-            <!-- 1. Removed "Official Ballot Access" text -->
+            
 
-            <!-- Non-UP Email Warning Message --><p id="auth-warning-message" class="mt-4 text-red-600 text-sm font-semibold bg-red-100 p-3 rounded-lg border border-red-300 hidden"></p>
+<p id="auth-warning-message" class="mt-4 text-red-600 text-sm font-semibold bg-red-100 p-3 rounded-lg border border-red-300 hidden"></p>
 
-            <!-- CHANGED: Button text to Sign-in with UP MAIL -->
-            <button id="google-login-btn" class="mt-6 sm:mt-8 px-6 py-3 btn-primary-submit rounded-lg shadow-lg text-base font-semibold focus:outline-none focus:ring-4 focus:ring-custom-main/50 flex items-center justify-center mx-auto transition-colors w-full">
+            
+
+<button id="google-login-btn" class="mt-6 sm:mt-8 px-6 py-3 btn-primary-submit rounded-lg shadow-lg text-base font-semibold focus:outline-none focus:ring-4 focus:ring-custom-main/50 flex items-center justify-center mx-auto transition-colors w-full">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-3 bg-white p-0.5 rounded" alt="Google icon">
                 Sign-in with UP MAIL
             </button>
-            <!-- Instruction text to explicitly include UP Mail -->
-            <p class="mt-4 text-xs sm:text-sm text-red-700 font-semibold bg-red-50 p-3 rounded-lg border border-red-200">
+            
+
+<p class="mt-4 text-xs sm:text-sm text-red-700 font-semibold bg-red-50 p-3 rounded-lg border border-red-200">
                 Authentication Required: You must sign in with your **UP Mail (@up.edu.ph)** account.
             </p>
-            <!-- CHANGED: Default error message text -->
-            <p id="error-message" class="mt-4 text-red-500 text-sm hidden">Sign-in failed. Please try again.</p>
+            
+
+<p id="error-message" class="mt-4 text-red-500 text-sm hidden">Sign-in failed. Please try again.</p>
         </div>
 
-        <!-- Voting Content --><div id="voting-content" class="hidden w-full max-w-4xl">
-            <!-- Replaced 'OFFICIAL BALLOT' text with big Logo 2 (13th.png) -->
-            <div class="flex justify-center mb-6 sm:mb-8">
-                <img src="https://placehold.co/300x150/c39f09/1e5629?text=13th.png" class="w-full max-w-sm h-auto object-contain" alt="Official Ballot 13th FC Logo">
-            </div>
+        
+
+<div id="voting-content" class="hidden w-full max-w-4xl">
             
+
+<div id="user-traceability" class="mx-auto p-3 mb-6 sm:mb-8 text-center bg-custom-light-gold rounded-lg shadow-md border border-custom-main/50 w-full max-w-xl">
+                <span class="font-bold text-custom-sub text-sm sm:text-base">VOTER ID:</span>
+                <code id="user-id-display" class="font-mono text-custom-text text-sm sm:text-base font-semibold ml-2">...</code>
+            </div>
+
             <form id="voting-form" class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 md:p-10 border-t-8 border-custom-main">
-                <!-- Ballot will be dynamically generated here --><div id="ballot-container" class="space-y-8 sm:space-y-10">
+                
+
+<div id="ballot-container" class="space-y-8 sm:space-y-10">
                     <p class="text-center text-gray-500">Loading official candidate data...</p>
                 </div>
                 
@@ -446,13 +475,19 @@
         </div>
     </main>
 
-    <!-- Vote Verifier Popup (MODAL) --><div id="verifier-popup" class="hidden fixed inset-0 bg-gray-800 bg-opacity-70 flex items-center justify-center p-4 z-50">
+    
+
+<div id="verifier-popup" class="hidden fixed inset-0 bg-gray-800 bg-opacity-70 flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md border-t-8 border-custom-sub">
             <h2 class="text-xl sm:text-2xl font-bold text-custom-sub mb-4 text-center">Final Vote Verification</h2>
             <p class="text-xs sm:text-sm text-gray-600 mb-6 text-center">Please review your selections before final submission. This action cannot be undone.</p>
             
-            <!-- Vote Summary Table Container (max-h-96 and overflow moved to CSS for sticky header) --><div id="vote-summary-table-container" class="text-custom-text mb-6">
-                <!-- Vote summary table will be dynamically inserted here --></div>
+            
+
+<div id="vote-summary-table-container" class="text-custom-text mb-6">
+                
+
+</div>
             
             <div class="flex justify-between space-x-4">
                 <button id="change-vote-btn" class="w-1/2 py-2 text-sm sm:text-base border border-slate-300 rounded-lg text-custom-text font-medium hover:bg-slate-100 transition-colors">
@@ -465,12 +500,19 @@
         </div>
     </div>
     
-    <!-- Nominee Information Popup (ID Card Style) --><div id="nominee-popup" class="hidden fixed inset-0 bg-gray-800 bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <!-- Increased width to max-w-lg -->
-        <div id="nominee-card" class="w-full max-w-lg mx-auto rounded-xl relative overflow-hidden">
-            <!-- Top Bar for aesthetic --><div class="top-bar"></div> 
+    
 
-            <!-- Close Button Container for z-index --><div class="close-button-container">
+<div id="nominee-popup" class="hidden fixed inset-0 bg-gray-800 bg-opacity-70 flex items-center justify-center p-4 z-50">
+        
+
+<div id="nominee-card" class="w-full max-w-lg mx-auto rounded-xl relative overflow-hidden">
+            
+
+<div class="top-bar"></div> 
+
+            
+
+<div class="close-button-container">
                 <button id="close-nominee-btn" class="text-gray-200 hover:text-white transition-colors p-1" aria-label="Close">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -478,26 +520,43 @@
                 </button>
             </div>
 
-            <!-- Main Card Content (UPDATED: bg-white to custom-light-gold) --><div class="bg-custom-light-gold p-4 pt-8 sm:p-6 sm:pt-10 relative z-10">
-                <!-- Image and Text Info Side-by-Side --><div class="flex items-center space-x-6">
-                    <!-- Photo Section (Now rectangular/square, w-36 on desktop) --><div class="flex-shrink-0">
+            
+
+<div class="bg-custom-light-gold p-4 pt-8 sm:p-6 sm:pt-10 relative z-10">
+                
+
+<div class="flex items-center space-x-6">
+                    
+
+<div class="flex-shrink-0">
                         <img id="nominee-photo" class="w-24 h-24 sm:w-36 sm:h-36 object-cover rounded-md shadow-lg border-8 border-custom-main" 
                              alt="Nominee Photo" 
                              src="https://placehold.co/128x128/f1f1f1/1F2933?text=ID"
                              onerror="this.onerror=null;this.src='https://placehold.co/128x128/f1f1f1/1F2933?text=ID';">
                     </div>
 
-                    <!-- Info Section (Main Text Block) --><div class="flex-grow info-section">
-                        <!-- Small Label: REMOVED QUOTES --><p class="text-xs font-semibold text-gray-500 uppercase -mb-1">POSITION</p>
-                        <!-- Large Position Title --><h3 id="nominee-position" class="font-extrabold mb-1 leading-tight"></h3>
+                    
+
+<div class="flex-grow info-section">
                         
-                        <!-- Name --><div id="nominee-name" class="font-bold text-custom-text"></div>
-                        <!-- Course --><div id="nominee-course" class="font-medium text-gray-600 mt-0.5"></div>
+
+<p class="text-xs font-semibold text-gray-500 uppercase -mb-1">POSITION</p>
+                        
+
+<h3 id="nominee-position" class="font-extrabold mb-1 leading-tight"></h3>
+                        
+                        
+
+<div id="nominee-name" class="font-bold text-custom-text"></div>
+                        
+
+<div id="nominee-course" class="font-medium text-gray-600 mt-0.5"></div>
                     </div>
                 </div>
                 
-                <!-- Platform Details remains below the main profile block -->
-                <div class="platform-details">
+                
+
+<div class="platform-details">
                     <p class="uppercase">Platform Details</p>
                     <p id="nominee-platform"></p>
                 </div>
@@ -552,7 +611,7 @@
         const changeVoteBtn = document.getElementById('change-vote-btn');
         const submitVoteBtn = document.getElementById('submit-vote-btn');
         const ballotContainer = document.getElementById('ballot-container');
-        const userIdDisplay = document.getElementById('user-id-display');
+        const userIdDisplay = document.getElementById('user-id-display'); // Used for Voter ID
         
         // Nominee Popup Elements
         const nomineePopup = document.getElementById('nominee-popup');
@@ -574,7 +633,7 @@
 
         // --- Configuration Constants ---
         const VOTES_COLLECTION = `artifacts/${appId}/public/data/votes`;
-        const AUTH_LOGS_COLLECTION = `artifacts/${appId}/public/data/auth_logs`; // NEW: For logging successful logins
+        const AUTH_LOGS_COLLECTION = `artifacts/${appId}/public/data/auth_logs`; 
         
         // ** CSV URL (Candidate Data Source) **
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTnZExJ9injJGTsk1uFOUT45te0_gXPu0BGvAhgpWwNRIKxwgV3bXW-gygrr4omsBY9luXXxpPe1lE6/pub?gid=1092490256&single=true&output=csv';
@@ -666,7 +725,14 @@
                 displayName = `${surname}, ${givenNames}`;
             }
             nomineeNameEl.textContent = displayName;
-            nomineePositionEl.textContent = info.position.toUpperCase();
+            
+            // NEW: Abbreviate "College Representative to the UFC"
+            let displayPosition = info.position.toUpperCase();
+            if (displayPosition === 'COLLEGE REPRESENTATIVE TO THE UFC') {
+                displayPosition = 'COLREP TO THE UFC';
+            }
+            nomineePositionEl.textContent = displayPosition;
+
             nomineeCourseEl.textContent = info.course;
             nomineePlatformEl.textContent = info.platform;
             nomineePopup.classList.remove('hidden');
@@ -713,13 +779,9 @@
                         <h3 class="text-xl sm:text-2xl font-bold text-custom-sub border-b-2 border-custom-main pb-2 mb-3 sm:mb-4">${position}</h3>
                         <p class="text-xs sm:text-sm text-gray-500 mt-1 mb-3">${instructionText}</p>
                         
-                        <!-- Column Headers: Name changed to Candidate Name --><div class="grid" style="grid-template-columns: 3fr 1fr 1fr;">
-                            <span class="pl-4 text-xs font-bold text-gray-500 pb-2">Candidate Name</span>
-                            <span class="text-center text-sm font-bold text-custom-sub pb-2">VOTE</span>
-                            <span class="text-center text-sm font-bold text-custom-abstain-text pb-2">ABSTAIN</span>
-                        </div>
                         
-                        <div class="space-y-3 pt-3 sm:pt-4">
+
+<div class="space-y-3 pt-3 sm:pt-4">
                 `;
                 
                 // Add the candidates (VOTE options)
@@ -727,16 +789,22 @@
                     ballotHTML += `
                         <div class="vote-item transition-all" 
                              data-name="${info.name}" data-position="${position}" data-multiselect="${isMultiSelect}">
-                            <!-- Name Column --><div class="candidate-name-container">
+                            
+
+<div class="candidate-name-container">
                                 <span class="candidate-name-link text-sm sm:text-base text-wrap" data-candidate-name="${info.name}">
                                     ${info.name}
                                 </span>
                             </div>
-                            <!-- VOTE Column: Added tabindex for keyboard navigation --><div class="vote-column" tabindex="0" data-action="vote" data-name="${info.name}" data-position="${position}" role="radio" aria-checked="false">
+                            
+
+<div class="vote-column" tabindex="0" data-action="vote" data-name="${info.name}" data-position="${position}" role="radio" aria-checked="false">
                                 <span class="selection-text">VOTE</span>
                                 <div class="selection-indicator"></div>
                             </div>
-                            <!-- ABSTAIN Column: Added tabindex for keyboard navigation --><div class="abstain-column" tabindex="0" data-action="abstain" data-name="${info.name}" data-position="${position}" role="radio" aria-checked="false">
+                            
+
+<div class="abstain-column" tabindex="0" data-action="abstain" data-name="${info.name}" data-position="${position}" role="radio" aria-checked="false">
                                 <span class="selection-text">ABSTAIN</span>
                                 <div class="selection-indicator"></div>
                             </div>
@@ -990,21 +1058,23 @@
                 
                 // 1. ADD DIVIDER ROW
                 summaryHTML += `
-                    <!-- Separator between position groups -->
-                    <tr class="position-group-separator">
+                    
+
+<tr class="position-group-separator">
                         <td colspan="2" class="p-0 border-t-4 border-gray-200"></td>
                     </tr>
                     
-                    <!-- 2. POSITION HEADER ROW (Green Highlighted) -->
-                    <!-- Using bg-green-100 for light green highlight and text-custom-sub for deep green text -->
-                    <tr class="bg-green-100 text-custom-sub">
+                    
+
+<tr class="bg-green-100 text-custom-sub">
                         <td colspan="2" class="py-2 px-3 font-extrabold text-sm sm:text-base tracking-wider border-b border-custom-sub/50">
                             ${position.toUpperCase()}
                         </td>
                     </tr>
                     
-                    <!-- 3. Candidate Header Row (Name | Status) -->
-                    <tr>
+                    
+
+<tr>
                          <td class="py-2 px-3 font-bold text-gray-500 w-2/3 text-xs sm:text-sm">Name</td>
                          <td class="py-2 text-center font-bold text-gray-500 w-1/3 text-xs sm:text-sm">Status</td>
                     </tr>
@@ -1118,9 +1188,6 @@
                         .filter(r => r.status === 'VOTED')
                         .map(r => r.name);
                     
-                    // 1. Add Voted candidates
-                    finalSelections.push(...votedNames);
-
                     // 2. Add ABN: Surname for all candidates who were NOT voted for
                     allNamesForPosition.forEach(name => {
                         if (!votedNames.includes(name)) {
@@ -1129,9 +1196,12 @@
                             finalSelections.push(`ABN: ${surname}`);
                         }
                     });
+
+                    // 1. Add Voted candidates (after ABN to ensure ABSTAIN message comes after actual votes)
+                    finalSelections.unshift(...votedNames);
                     
                     // 3. Add explicit ABSTAIN marker if no candidates were voted for
-                    if (votedNames.length === 0) {
+                    if (votedNames.length === 0 && finalSelections.length === allNamesForPosition.length) { // Ensure all candidates processed as ABN
                         finalSelections.push("ABSTAIN (No Vote Cast for Candidate)");
                     }
 
@@ -1337,12 +1407,11 @@
                     votingContentEl.classList.remove('hidden');
                     headerEl.classList.remove('hidden');
                     
-                    // Display user info and critical ID for traceability
+                    // Display user info and critical ID for traceability (Change 1)
                     userNameEl.textContent = user.displayName;
                     userEmailEl.textContent = user.email;
                     userPhotoEl.src = user.photoURL || 'https://placehold.co/32x32/f1f1f1/1F2933?text=U';
                     userIdDisplay.textContent = user.uid;
-                    document.getElementById('user-traceability').classList.remove('hidden');
 
                     await checkIfVoted(user.uid);
 
@@ -1352,7 +1421,6 @@
                     loggedOutStateEl.classList.remove('hidden');
                     votingContentEl.classList.add('hidden');
                     headerEl.classList.add('hidden');
-                    document.getElementById('user-traceability').classList.add('hidden');
                 }
             });
         };
