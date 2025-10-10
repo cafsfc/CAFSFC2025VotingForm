@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Governance Election</title>
+    <title>OFFICIAL BALLOT</title>
     <!-- Tailwind CSS CDN --><script src="https://cdn.tailwindcss.com"></script>
     <!-- Custom Tailwind Configuration for New Colors --><script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'custom-main': '#c39f09', // Primary Accent: Warm Gold
+                        'custom-main': '#c39f09', // Primary Accent: Warm Gold (used for VOTED status)
                         'custom-main-dark': '#a08107', // Darker Gold for Hover
                         'custom-sub': '#1e5629', // Secondary Accent: Deep Forest Green (Collegiate/Official)
                         'custom-text': '#1F2933', // Near Black for general text
                         'custom-light-gold': '#fcf8eb', // Very light gold background for selection
                         
-                        // NEW: Charcoal Gray for Abstain/Info
+                        // Charcoal Gray for Abstain/Info
                         'custom-abstain': '#e2e8f0', // Light Gray-Blue for Abstain/Neutral background
                         'custom-abstain-border': '#64748B', // Slate gray for Abstain border
                         'custom-abstain-text': '#334155', // Darker slate for Abstain text
@@ -49,6 +49,13 @@
             grid-template-columns: 3fr 1fr 1fr; 
             align-items: stretch; 
             min-height: 5rem; 
+        }
+        
+        /* NEW: Class for highlighting incomplete fields */
+        .highlight-error {
+            border-color: #ef4444 !important; /* Tailwind red-500 */
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.5);
+            border-width: 2px !important;
         }
 
         /* Base style for clickable vote/abstain columns */
@@ -160,7 +167,7 @@
             color: #c39f09; 
         }
 
-        /* Nominee Popup Styling (Aesthetics Fixes) */
+        /* Nominee Popup Styling (ID Card Style Fixes) */
         #nominee-card {
             padding: 1.5rem;
             padding-top: 3.5rem; /* Space for the top bar */
@@ -185,18 +192,22 @@
             right: 0.5rem;
             z-index: 10;
         }
+        /* Nominee Photo (Fixed to rectangle with slight corner round) */
         #nominee-photo {
-            border-width: 3px; /* Slightly thinner border */
+            border-width: 8px; /* INCREASED BORDER FOR VISIBILITY */
             border-color: #c39f09; /* custom-main */
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); /* Small shadow for photo */
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
+            border-radius: 0.375rem; /* Slightly rounded rectangle */
+            object-fit: cover;
         }
-        #nominee-card .info-section { /* Added a class for the text content */
-            padding-left: 1rem;
+        /* Info Section adjustments */
+        #nominee-card .info-section { 
+            padding-left: 0;
         }
         #nominee-position {
-            font-size: 1.75rem; /* text-3xl for positions */
-            line-height: 1.2;
-            margin-bottom: 0.5rem;
+            font-size: 2rem; /* text-3xl for positions */
+            line-height: 1.1;
+            margin-bottom: 0.25rem;
             color: #1e5629;
             font-weight: 800;
         }
@@ -226,14 +237,14 @@
             font-size: 0.9rem;
             color: #374151;
             line-height: 1.5;
-            font-style: normal; /* Remove italics by default */
+            font-style: normal; 
         }
         
-        /* --- Vote Summary Table Styling (FIXED/ENHANCED) --- */
-        #vote-summary {
-            max-height: 24rem; /* Set max height for scrolling */
+        /* --- Vote Summary Table Styling --- */
+        #vote-summary-table-container {
+            max-height: 24rem; 
             overflow-y: auto;
-            position: relative; /* Important for sticky header */
+            position: relative; 
             border: 1px solid #E5E7EB;
             border-radius: 0.5rem;
             box-shadow: 0 0 10px rgba(0,0,0,0.05);
@@ -244,22 +255,32 @@
             position: sticky;
             top: 0;
             z-index: 10;
-            background-color: #f7f7f7; /* Light background for sticky header */
+            background-color: #f7f7f7; 
             box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
         }
 
         .vote-summary-table th, .vote-summary-table td {
-            /* Consistent padding and alignment */
             padding: 0.5rem 0.5rem; 
             text-align: left;
-            vertical-align: top; /* Ensures Position text aligns correctly */
+            vertical-align: top;
         }
 
-        /* Define specific column widths using helper classes (OLD 3-COLUMN STRUCTURE REMOVED) */
-        
         .vote-summary-table tbody tr {
             transition: background-color 0.15s;
-            background-color: white !important; /* All content rows are white */
+            background-color: white !important;
+        }
+        
+        /* --- Inline and Popup Message Styling (Centralized) --- */
+        #central-message-container {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 60; 
+            width: 90%;
+            max-width: 600px;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
         
         /* Mobile specific adjustments */
@@ -288,7 +309,7 @@
                  height: 1.25rem;
                  width: 1.25rem;
             }
-            /* Mobile nominee card adjustments */
+            /* Mobile nominee card adjustments: Force horizontal layout, scale down elements */
             #nominee-card {
                 padding: 1rem;
                 padding-top: 3rem;
@@ -297,18 +318,13 @@
                 height: 2rem;
             }
             #nominee-photo {
-                width: 20%; /* Smaller on mobile */
-                height: auto; /* Maintain aspect ratio */
-                margin-bottom: 0.5rem;
-                border-width: 2px;
+                width: 4.5rem; /* Smaller, fixed width on mobile */
+                height: 4.5rem;
+                margin-bottom: 0; /* Align side-by-side */
             }
-            #nominee-card .flex-col.sm\:flex-row {
-                flex-direction: column;
-                align-items: center;
-            }
-            #nominee-card .info-section {
-                padding-left: 0;
-                text-align: center;
+            /* Adjust the main flex container in the popup for better mobile flow */
+            #nominee-card .flex.items-center { 
+                align-items: flex-start; /* Align text block to top */
             }
             #nominee-position {
                 font-size: 1.5rem; 
@@ -332,10 +348,15 @@
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col">
 
+    <!-- Global Message Display (Fixed on screen) --><div id="central-message-container" class="hidden">
+        <div id="message-display" class="px-4 py-3 rounded-lg text-sm sm:text-base text-center font-medium shadow-lg transition-colors duration-300"></div>
+    </div>
+
+
     <!-- Header: Officiality and User ID --><header id="header" class="hidden bg-white shadow-md p-3 sm:p-4 flex flex-wrap justify-between items-center z-10 border-b-4 border-custom-sub">
         <div class="flex items-center space-x-2 sm:space-x-4">
-            <!-- Logo added here --><img src="https://placehold.co/40x40/1e5629/c39f09?text=CAFS" class="w-10 h-10 rounded-full border-2 border-custom-main shadow-md hidden sm:block" alt="CAFS Logo">
-            <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-custom-sub">13th CAFS FC Election Ballot</h1>
+            <!-- Logo: NO FRAME/BORDER/ROUNDING --><img src="https://i.ibb.co/RpBzpzSk/13th.png" class="w-10 h-10 hidden sm:block" alt="CAFS Logo">
+            <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-custom-sub">13th CAFS FC Election</h1>
             <!-- User ID Display (Mandatory for multi-user apps) --><div id="user-traceability" class="hidden md:flex items-center space-x-2 text-xs p-1 px-3 bg-gray-100 rounded-full border border-gray-200">
                 <span class="font-medium text-gray-500">Voter ID:</span>
                 <code id="user-id-display" class="font-mono text-custom-sub text-sm">...</code>
@@ -359,6 +380,7 @@
     <!-- Main Content Area --><main class="flex-grow flex items-center justify-center p-4">
         
         <!-- Logged-out State (Trustworthy Card) --><div id="logged-out-state" class="bg-white rounded-xl shadow-2xl p-6 md:p-10 w-full max-w-sm sm:max-w-md text-center transform transition-all duration-300 border-t-8 border-custom-sub">
+            <!-- Logo: NO FRAME/BORDER/ROUNDING --><img src="https://i.ibb.co/RpBzpzSk/13th.png" class="w-20 h-20 mx-auto mb-4" alt="CAFS Logo">
             <h1 class="text-2xl sm:text-3xl font-extrabold text-custom-sub">Secure University Election</h1>
             <p class="mt-3 sm:mt-4 text-base sm:text-lg text-gray-700 font-medium border-b border-custom-main pb-4">
                 Official Ballot Access
@@ -376,11 +398,9 @@
         </div>
 
         <!-- Voting Content --><div id="voting-content" class="hidden w-full max-w-4xl">
-            <h2 class="text-2xl sm:text-3xl font-extrabold text-custom-sub text-center mb-6 sm:mb-8">Official Student Governance Ballot</h2>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-custom-sub text-center mb-6 sm:mb-8">OFFICIAL BALLOT</h2>
             
             <form id="voting-form" class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 md:p-10 border-t-8 border-custom-main">
-                <div id="message-display" class="mb-6 hidden px-4 py-3 rounded-lg text-sm sm:text-base text-center font-medium"></div>
-
                 <!-- Ballot will be dynamically generated here --><div id="ballot-container" class="space-y-8 sm:space-y-10">
                     <p class="text-center text-gray-500">Loading official candidate data...</p>
                 </div>
@@ -392,12 +412,12 @@
         </div>
     </main>
 
-    <!-- Vote Verifier Popup --><div id="verifier-popup" class="hidden fixed inset-0 bg-gray-800 bg-opacity-70 flex items-center justify-center p-4 z-50">
+    <!-- Vote Verifier Popup (MODAL) --><div id="verifier-popup" class="hidden fixed inset-0 bg-gray-800 bg-opacity-70 flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md border-t-8 border-custom-sub">
             <h2 class="text-xl sm:text-2xl font-bold text-custom-sub mb-4 text-center">Final Vote Verification</h2>
             <p class="text-xs sm:text-sm text-gray-600 mb-6 text-center">Please review your selections before final submission. This action cannot be undone.</p>
             
-            <!-- Vote Summary Table Container (max-h-96 and overflow moved to CSS for sticky header) --><div id="vote-summary" class="text-custom-text mb-6">
+            <!-- Vote Summary Table Container (max-h-96 and overflow moved to CSS for sticky header) --><div id="vote-summary-table-container" class="text-custom-text mb-6">
                 <!-- Vote summary table will be dynamically inserted here --></div>
             
             <div class="flex justify-between space-x-4">
@@ -412,7 +432,8 @@
     </div>
     
     <!-- Nominee Information Popup (ID Card Style) --><div id="nominee-popup" class="hidden fixed inset-0 bg-gray-800 bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div id="nominee-card" class="w-full max-w-sm mx-auto rounded-xl relative overflow-hidden">
+        <!-- Increased width to max-w-lg -->
+        <div id="nominee-card" class="w-full max-w-lg mx-auto rounded-xl relative overflow-hidden">
             <!-- Top Bar for aesthetic --><div class="top-bar"></div> 
 
             <!-- Close Button Container for z-index --><div class="close-button-container">
@@ -423,26 +444,25 @@
                 </button>
             </div>
 
-            <!-- Main Card Content --><div class="bg-white p-4 pt-8 sm:p-6 sm:pt-10 relative z-10">
-                <div class="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
-                    <!-- Photo Section --><div class="flex-shrink-0 text-center">
-                        <img id="nominee-photo" class="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-full shadow-lg border-4" 
+            <!-- Main Card Content (Updated Structure) --><div class="bg-white p-4 pt-8 sm:p-6 sm:pt-10 relative z-10">
+                <!-- Image and Text Info Side-by-Side --><div class="flex items-center space-x-6">
+                    <!-- Photo Section (Now rectangular/square, w-36 on desktop) --><div class="flex-shrink-0">
+                        <img id="nominee-photo" class="w-24 h-24 sm:w-36 sm:h-36 object-cover rounded-md shadow-lg border-8 border-custom-main" 
                              alt="Nominee Photo" 
                              src="https://placehold.co/128x128/f1f1f1/1F2933?text=ID"
                              onerror="this.onerror=null;this.src='https://placehold.co/128x128/f1f1f1/1F2933?text=ID';">
                     </div>
 
-                    <!-- Info Section --><div class="flex-grow text-center sm:text-left info-section">
-                        <p class="text-sm font-medium text-custom-sub uppercase">Position</p>
-                        <h3 id="nominee-position" class="font-extrabold -mt-1 mb-2 leading-tight"></h3>
+                    <!-- Info Section (Main Text Block) --><div class="flex-grow info-section">
+                        <!-- Small Label: REMOVED QUOTES --><p class="text-xs font-semibold text-gray-500 uppercase -mb-1">POSITION</p>
+                        <!-- Large Position Title --><h3 id="nominee-position" class="font-extrabold mb-1 leading-tight"></h3>
                         
-                        <div class="space-y-1">
-                             <div class="font-bold text-custom-text" id="nominee-name"></div>
-                             <div class="font-medium text-gray-600" id="nominee-course"></div>
-                        </div>
+                        <!-- Name --><div id="nominee-name" class="font-bold text-custom-text"></div>
+                        <!-- Course --><div id="nominee-course" class="font-medium text-gray-600 mt-0.5"></div>
                     </div>
                 </div>
                 
+                <!-- Platform Details remains below the main profile block -->
                 <div class="platform-details">
                     <p class="uppercase">Platform Details</p>
                     <p id="nominee-platform"></p>
@@ -487,9 +507,13 @@
         const headerEl = document.getElementById('header');
         const votingContentEl = document.getElementById('voting-content');
         const votingForm = document.getElementById('voting-form');
+        
+        // Centralized Message Display Elements
+        const centralMessageContainer = document.getElementById('central-message-container');
         const messageDisplayEl = document.getElementById('message-display');
+
         const verifierPopup = document.getElementById('verifier-popup');
-        const voteSummaryEl = document.getElementById('vote-summary');
+        const voteSummaryEl = document.getElementById('vote-summary-table-container');
         const confirmVoteBtn = document.getElementById('confirm-vote-btn');
         const changeVoteBtn = document.getElementById('change-vote-btn');
         const submitVoteBtn = document.getElementById('submit-vote-btn');
@@ -530,24 +554,33 @@
             'Vice Chairperson': 'entry.100000002', 
             'UFC Nominee': 'entry.100000003', 
             'College Representative to the UFC': 'entry.100000004', 
-            'Councilors': 'entry.100000005' 
+            'Councilor': 'entry.100000005' // Use singular key for form logic consistency
         };
         // ------------------------------------
 
         // --- Helper Functions ---
         
         const displayMessage = (text, type) => {
+            // Remove 'hidden' from container and apply styling to the inner div
+            centralMessageContainer.classList.remove('hidden');
             messageDisplayEl.innerHTML = text;
+            
             // Ensure all color classes are removed, including the new slate ones
-            messageDisplayEl.classList.remove('hidden', 'bg-red-100', 'bg-green-100', 'bg-blue-100', 'text-red-700', 'text-green-700', 'text-blue-700', 'bg-slate-100', 'text-slate-700');
+            messageDisplayEl.classList.remove('bg-red-100', 'bg-green-100', 'bg-blue-100', 'text-red-700', 'text-green-700', 'text-blue-700', 'bg-slate-100', 'text-slate-700', 'bg-red-200', 'text-red-800');
             
             if (type === 'success') {
                 messageDisplayEl.classList.add('bg-green-100', 'text-green-700');
             } else if (type === 'error') {
-                messageDisplayEl.classList.add('bg-red-100', 'text-red-700');
+                // Use a slightly stronger error color for the custom validation message
+                messageDisplayEl.classList.add('bg-red-200', 'text-red-800'); 
             } else { // info (Now using Charcoal Gray/Slate)
                 messageDisplayEl.classList.add('bg-slate-100', 'text-slate-700');
             }
+            
+            // Auto-hide the message after 5 seconds
+            setTimeout(() => {
+                centralMessageContainer.classList.add('hidden');
+            }, 5000);
         };
 
         const setFormState = (state) => {
@@ -588,8 +621,20 @@
         };
         
         const openNomineeCard = (info) => {
-            nomineePhotoEl.src = info.photo || 'https://placehold.co/128x128/f1f1f1/1F2933?text=NO+IMAGE';
-            nomineeNameEl.textContent = info.name;
+            nomineePhotoEl.src = info.photo || 'https://placehold.co/128x128/f1f1f1/1F2933?text=ID';
+            
+            // FIX: Name formatting (SURNAME,\nGiven Names)
+            const nameParts = info.name.split(',');
+            if (nameParts.length >= 2) {
+                const surname = nameParts[0].trim() + ',';
+                const givenNames = nameParts.slice(1).join(',').trim();
+                // Use innerHTML to inject the line break and slightly lighter text for given names
+                nomineeNameEl.innerHTML = `${surname}<br><span class="text-base font-normal">${givenNames}</span>`;
+            } else {
+                // Fallback if name is not comma-separated
+                nomineeNameEl.textContent = info.name;
+            }
+
             nomineePositionEl.textContent = info.position.toUpperCase();
             nomineeCourseEl.textContent = info.course;
             nomineePlatformEl.textContent = info.platform;
@@ -602,12 +647,13 @@
 
 
         // --- Main Ballot Rendering Logic ---
+        // FIX: Changed 'Councilors' to 'Councilor'
         const positionOrder = [
             'Chairperson', 
             'Vice Chairperson', 
             'UFC Nominee', 
             'College Representative to the UFC', 
-            'Councilors'
+            'Councilor' // Updated to match user request
         ];
         
         const updateAriaChecked = (element, isChecked) => {
@@ -625,7 +671,8 @@
                     continue; 
                 }
                 
-                const isMultiSelect = (position === 'Councilors');
+                // Check if the current position is the Councilor position (singular)
+                const isMultiSelect = (position === 'Councilor');
                 
                 const instructionText = isMultiSelect 
                     ? 'For each candidate, explicitly select VOTE or ABSTAIN.' 
@@ -636,8 +683,8 @@
                         <h3 class="text-xl sm:text-2xl font-bold text-custom-sub border-b-2 border-custom-main pb-2 mb-3 sm:mb-4">${position}</h3>
                         <p class="text-xs sm:text-sm text-gray-500 mt-1 mb-3">${instructionText}</p>
                         
-                        <!-- Column Headers: Single Header Row for VOTE/ABSTAIN --><div class="grid" style="grid-template-columns: 3fr 1fr 1fr;">
-                            <span class="pl-4 text-xs font-bold text-gray-500 pb-2">Candidate Name / Information</span>
+                        <!-- Column Headers: Name changed to Candidate Name --><div class="grid" style="grid-template-columns: 3fr 1fr 1fr;">
+                            <span class="pl-4 text-xs font-bold text-gray-500 pb-2">Candidate Name</span>
                             <span class="text-center text-sm font-bold text-custom-sub pb-2">VOTE</span>
                             <span class="text-center text-sm font-bold text-custom-abstain-text pb-2">ABSTAIN</span>
                         </div>
@@ -704,6 +751,7 @@
                 
                 const position = clickedColumn.dataset.position;
                 const action = clickedColumn.dataset.action; // 'vote' or 'abstain'
+                // Use the data-multiselect attribute from the parent .vote-item
                 const isMultiSelect = clickedColumn.closest('.vote-item').dataset.multiselect === 'true';
 
                 // --- 1. Deselect other options based on race type ---
@@ -724,6 +772,9 @@
                         updateAriaChecked(oppositeColumn, false);
                     }
                     
+                    // Remove highlight upon selection
+                    currentRow.classList.remove('highlight-error');
+                    
                 } else {
                     // Single-select: Mutual exclusivity is *across the entire position*
                     const allColumnsInPosition = ballotContainer.querySelectorAll(`[data-position="${position}"]`);
@@ -740,6 +791,10 @@
                     if (!wasSelected) {
                        clickedColumn.classList.add('selected');
                        updateAriaChecked(clickedColumn, true);
+                       
+                       // Remove highlights from all rows in this position
+                       const allItemsInPosition = ballotContainer.querySelectorAll(`.vote-item[data-position="${position}"]`);
+                       allItemsInPosition.forEach(item => item.classList.remove('highlight-error'));
                     }
                 }
             });
@@ -758,33 +813,16 @@
             closeNomineeBtn.addEventListener('click', closeNomineeCard);
         };
         
-        // Helper function to generate the vote indicator circle HTML for the summary table
-        const getIndicatorHTML = (action, isSelected) => {
-            const isVote = action === 'vote';
-            const baseClass = 'selection-indicator w-3 h-3'; // Smaller indicators for summary
-            
-            let indicatorClass = baseClass;
-            
-            if (isSelected) {
-                if (isVote) {
-                    indicatorClass += ' border-custom-sub bg-custom-main'; // Gold fill
-                } else {
-                    indicatorClass += ' border-custom-abstain-dark bg-custom-abstain-border'; // Slate fill
-                }
-            } else {
-                indicatorClass += ' border-gray-300 bg-white'; // Empty white circle
-            }
-
-            // Removed mx-auto, adding flex alignment in the parent td
-            return `<div class="${indicatorClass} rounded-full flex-shrink-0"></div>`; 
-        };
-
-
         // --- Authentication and Vote Submission Logic (FIXED) ---
 
         const openVoteVerifier = (event) => {
             event.preventDefault();
             
+            // --- Pre-Validation Cleanup ---
+            document.querySelectorAll('.vote-item').forEach(item => {
+                item.classList.remove('highlight-error');
+            });
+
             // Map to store which candidates were explicitly Voted
             const votedCandidatesByPosition = {};
             // Map to store explicit ABSTAIN selections
@@ -810,59 +848,79 @@
 
             // --- Verification & Final Data Generation ---
             let validationError = false;
-            let validationMessage = '';
+            // CUSTOM MESSAGE: "Some fields have been left blank. Kindly indicate your choice for each nominee in every position by selecting either “Vote” or “Abstain.”"
+            const customValidationMessage = 'Some fields have been left blank. Kindly indicate your choice for each nominee in every position by selecting either “Vote” or “Abstain.”';
+            
             // voteDataToSubmit now holds the clean, structured data for Firestore
             voteDataToSubmit = {}; 
             
             for (const position of positionOrder) {
-                const isCouncilors = position === 'Councilors';
+                const isCouncilor = position === 'Councilor'; // Use singular form
                 const allCandidates = candidatesData[position] || [];
                 const voted = votedCandidatesByPosition[position] || [];
                 const abstained = explicitAbstainByPosition[position] || [];
                 
-                // Check #1: Single-Select Validation (Must have exactly one choice across all candidates in the race)
-                if (!isCouncilors) {
+                // Check #1: Single-Select Validation 
+                if (!isCouncilor) {
+                    // Single-select: Must have exactly one choice across all candidates in the race (0 means no choice was made across all options)
                     if (voted.length + abstained.length !== 1) {
                         validationError = true;
-                        validationMessage = `Please make **exactly one selection** (VOTE or ABSTAIN for any candidate) for the **${position}** position.`;
-                        break;
+                        // Highlight ALL candidate rows for the single-select position if it is incomplete
+                        const rowsToHighlight = ballotContainer.querySelectorAll(`.vote-item[data-position="${position}"]`);
+                        rowsToHighlight.forEach(row => row.classList.add('highlight-error'));
+                        // NOTE: Removed 'break' so that all incomplete single-select positions are highlighted
                     }
                 }
                 
-                // Check #2: Multi-Select Validation (Councilors must have an explicit choice for *every* candidate)
-                if (isCouncilors) {
-                    if (voted.length + abstained.length !== allCandidates.length) {
+                // Check #2: Multi-Select Validation (Councilor must have an explicit choice for *every* candidate)
+                if (isCouncilor) {
+                    const explicitSelections = voted.length + abstained.length;
+                    
+                    if (explicitSelections !== allCandidates.length) {
                         validationError = true;
-                        validationMessage = `You must make an **explicit choice** (VOTE or ABSTAIN) for *every* candidate for the **${position}** position.`;
-                        break;
+                        // Identify and highlight only the *missing* rows
+                        allCandidates.forEach(candidate => {
+                            const name = candidate.name;
+                            const isSelected = voted.includes(name) || abstained.includes(name);
+                            
+                            if (!isSelected) {
+                                // Find the specific row for this unselected nominee
+                                const rowToHighlight = ballotContainer.querySelector(`.vote-item[data-position="${position}"][data-name="${name}"]`);
+                                if (rowToHighlight) {
+                                    rowToHighlight.classList.add('highlight-error');
+                                }
+                            }
+                        });
+                        // Continue loop to highlight all missing Councilors if there are multiple positions
                     }
                 }
                 
-                if (validationError) continue;
-
                 // --- Data Preparation for Firestore (Clean and simple) ---
-                // Record only the names that received an explicit action (VOTE or ABSTAIN)
-                voteDataToSubmit[position] = [];
-                allCandidates.forEach(candidate => {
-                    const name = candidate.name;
-                    if (voted.includes(name)) {
-                        voteDataToSubmit[position].push({ name, status: 'VOTED' });
-                    } else if (abstained.includes(name)) {
-                        voteDataToSubmit[position].push({ name, status: 'ABSTAINED_EXPLICIT' });
-                    }
-                });
-            }
+                if (!validationError) {
+                    voteDataToSubmit[position] = [];
+                    allCandidates.forEach(candidate => {
+                        const name = candidate.name;
+                        if (voted.includes(name)) {
+                            voteDataToSubmit[position].push({ name, status: 'VOTED' });
+                        } else if (abstained.includes(name)) {
+                            voteDataToSubmit[position].push({ name, status: 'ABSTAINED' });
+                        }
+                        // Note: If single-select, only the one selected is included. Unselected are omitted.
+                        // If multi-select, the above check ensures every candidate is marked 'VOTED' or 'ABSTAINED'
+                    });
+                }
+            } // End position loop
             
             if (validationError) {
-                displayMessage(validationMessage, 'error');
+                // Display the custom validation message centrally on screen
+                displayMessage(customValidationMessage, 'error');
                 return;
             }
             
             // Clear any previous error messages if verification passed
-            messageDisplayEl.classList.add('hidden');
+            centralMessageContainer.classList.add('hidden');
 
-
-            // --- Generate Summary Table (UPDATED to use POSITION Header Row) ---
+            // --- Generate Summary Table (UPDATED: Remove parentheses, use custom-main for VOTED) ---
             let summaryHTML = `
                 <table class="vote-summary-table w-full text-sm sm:text-base border-collapse">
                     <tbody class="divide-y divide-gray-100">
@@ -871,8 +929,8 @@
             for (let i = 0; i < positionOrder.length; i++) {
                 const position = positionOrder[i];
                 const allCandidates = candidatesData[position] || [];
-                const votedNames = votedCandidatesByPosition[position] || [];
-                const abstainedNames = explicitAbstainByPosition[position] || [];
+                // Use the data prepared in voteDataToSubmit for the final summary display
+                const finalSelections = voteDataToSubmit[position] || [];
                 
                 // 1. ADD DIVIDER ROW
                 summaryHTML += `
@@ -899,31 +957,22 @@
 
                 // 4. ADD CANDIDATE ROWS (White rows as requested)
                 allCandidates.forEach(candidate => {
-                    const isVoted = votedNames.includes(candidate.name);
-                    const isExplicitlyAbstained = abstainedNames.includes(candidate.name);
+                    const selection = finalSelections.find(s => s.name === candidate.name);
                     
                     let statusText = '—'; 
                     let statusClass = 'text-gray-400';
                     
-                    if (isVoted) {
-                        statusText = 'VOTED';
-                        statusClass = 'text-custom-sub'; // Deep green
-                    } else if (isExplicitlyAbstained) {
-                        statusText = 'ABSTAINED';
-                        statusClass = 'text-custom-abstain-text'; // Slate gray
-                    } else if (position === 'Councilors') {
-                         // This is a safety check. If validation passed, all councilors should be explicitly handled.
-                         // If we are here, something went wrong, or the user is viewing an unselected candidate row.
-                         statusText = 'MISSING';
-                         statusClass = 'text-red-500';
-                    } else {
-                        // For single-select, any non-selected candidate is implicitly not voted for.
-                        statusText = '—';
-                        statusClass = 'text-gray-400';
+                    if (selection) {
+                        statusText = selection.status;
+                        if (selection.status === 'VOTED') {
+                            // Use custom-main (Gold/Yellow) for VOTED status text
+                            statusClass = 'text-custom-main'; 
+                        } else if (selection.status === 'ABSTAINED') {
+                            statusClass = 'text-custom-abstain-text'; // Slate gray
+                        }
                     }
 
-                    // Only show status text if an action was taken or it's implicitly not voted for in multi-select
-                    const displayStatus = (statusText === 'VOTED' || statusText === 'ABSTAINED') ? `(${statusText})` : statusText;
+                    const displayStatus = statusText;
                     
                     summaryHTML += `
                         <tr class="transition-colors bg-white">
@@ -998,6 +1047,12 @@
 
                 for (const position in voteDataStructured) {
                     const finalSelections = []; // This will be the verbose array for the Form
+                    
+                    // FIX: Use 'Councilor' key for look up, but 'Councilors' ID for form posting
+                    const formKey = (position === 'Councilor') ? 'Councilor' : position;
+                    const entryId = FORM_ENTRY_IDS[formKey];
+                    
+                    if (!entryId) continue;
 
                     const submissionRecords = voteDataStructured[position]; 
                     const allNamesForPosition = candidatesData[position].map(c => c.name);
@@ -1025,8 +1080,7 @@
                     }
 
                     // Append the generated finalSelections array (the verbose log) to the form data
-                    const entryId = FORM_ENTRY_IDS[position];
-                    if (entryId && Array.isArray(finalSelections) && finalSelections.length > 0) {
+                    if (Array.isArray(finalSelections) && finalSelections.length > 0) {
                         finalSelections.forEach(record => {
                             formData.append(entryId, record);
                         });
@@ -1078,8 +1132,8 @@
 
                 const rows = result.data.slice(1); 
                 const groupedCandidates = {};
-                const allInfo = {}; 
-
+                const allInfo = {}; // Corrected variable name
+                
                 rows.forEach(row => {
                     // Expecting: [Name (0), Position (1), Picture URL (2), Course | Platform Details (3)]
                     const name = (row[0] || "").trim();
@@ -1102,6 +1156,7 @@
                         };
 
                         // Store info for the popup lookup
+                        allCandidateInfo[name] = candidateInfo; // Using the global variable
                         allInfo[name] = candidateInfo;
 
                         // Group by position for the ballot
@@ -1112,7 +1167,7 @@
                     }
                 });
 
-                allCandidateInfo = allInfo;
+                window.allCandidateInfo = allInfo;
                 return groupedCandidates;
 
             } catch (error) {
@@ -1134,8 +1189,8 @@
                     setFormState('disabled');
                     return true;
                 } else {
-                    // The informational message, now using 'info' which maps to charcoal gray
-                    displayMessage('Please make your selections. For every candidate, explicitly choose VOTE or ABSTAIN.', 'info'); 
+                    // Instruction FIX: Updated to user's requested text
+                    displayMessage('Please vote or abstain for each position.', 'info'); 
                     setFormState('enabled');
                     return false;
                 }
@@ -1157,7 +1212,8 @@
                 
                 // --- MANDATORY EMAIL DOMAIN CHECK ---
                 if (user.email && !user.email.endsWith(REQUIRED_DOMAIN)) {
-                    authWarningMessageEl.innerHTML = `Access Denied: The email ${user.email} is not a required ${REQUIRED_DOMAIN} account. Please sign in with your official account.`;
+                    // If not a UP mail, display error on login card and sign out
+                    authWarningMessageEl.innerHTML = `Access Denied: **Please sign-in with UP Mail** (must end in ${REQUIRED_DOMAIN}).`; 
                     authWarningMessageEl.classList.remove('hidden');
                     // Must sign out the user immediately if the domain is incorrect
                     await signOut(auth); 
@@ -1200,10 +1256,12 @@
             onAuthStateChanged(auth, async (user) => {
                 errorMessageEl.classList.add('hidden');
                 authWarningMessageEl.classList.add('hidden');
+                centralMessageContainer.classList.add('hidden'); // Clear central message on auth change
                 
                 if (user) {
                     // Re-check domain on auth state change
                     if (user.email && !user.email.endsWith(REQUIRED_DOMAIN)) {
+                        // This should have been caught on login, but is a final guardrail.
                         if (auth.currentUser) await signOut(auth);
                         return;
                     }
