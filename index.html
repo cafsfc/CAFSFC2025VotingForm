@@ -14,7 +14,7 @@
                         'custom-main-dark': '#a08107', // Darker Gold for Hover
                         'custom-sub': '#1e5629', // Secondary Accent: Deep Forest Green (Collegiate/Official)
                         'custom-text': '#1F2933', // Near Black for general text
-                        'custom-light-gold': '#fcf8eb', // Very light gold background for selection
+                        'custom-light-gold': '#fcf8eb', // Very light gold background for selection and ID background
                         
                         // Charcoal Gray for Abstain/Info
                         'custom-abstain': '#e2e8f0', // Light Gray-Blue for Abstain/Neutral background
@@ -114,7 +114,7 @@
 
         .vote-column.selected .selection-indicator {
             border-color: #1e5629;
-            background-color: #c39f09;
+            background-color: '#c39f09';
         }
         .vote-column.selected .selection-text {
             color: #1e5629; 
@@ -211,11 +211,20 @@
             color: #1e5629;
             font-weight: 800;
         }
+        /* --- CHANGED: Nominee Name Styling (Bigger) --- */
         #nominee-name {
-            font-size: 1.25rem; /* text-xl for names */
+            font-size: 1.5rem; /* text-2xl for names */
             font-weight: 700;
             color: #1F2933;
+            line-height: 1.2;
         }
+        @media (min-width: 640px) { /* sm breakpoint */
+            #nominee-name {
+                font-size: 1.875rem; /* text-3xl for names */
+            }
+        }
+        /* ------------------------------------------- */
+        
         #nominee-course {
             font-size: 0.95rem; /* text-base for courses */
             color: #6B7280;
@@ -329,9 +338,11 @@
             #nominee-position {
                 font-size: 1.5rem; 
             }
+            /* --- CHANGED: Mobile Nominee Name Size --- */
             #nominee-name {
-                font-size: 1.1rem; 
+                font-size: 1.25rem; 
             }
+            /* --------------------------------------- */
             #nominee-course {
                 font-size: 0.85rem;
             }
@@ -355,7 +366,7 @@
 
     <!-- Header: Officiality and User ID --><header id="header" class="hidden bg-white shadow-md p-3 sm:p-4 flex flex-wrap justify-between items-center z-10 border-b-4 border-custom-sub">
         <div class="flex items-center space-x-2 sm:space-x-4">
-            <!-- Logo: NO FRAME/BORDER/ROUNDING --><img src="https://i.ibb.co/RpBzpzSk/13th.png" class="w-10 h-10 hidden sm:block" alt="CAFS Logo">
+            <!-- Logo: NO FRAME/BORDER/ROUNDING (ADDED object-contain) --><img src="https://i.ibb.co/RpBzpzSk/13th.png" class="w-10 h-10 hidden sm:block object-contain" alt="CAFS Logo">
             <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-custom-sub">13th CAFS FC Election</h1>
             <!-- User ID Display (Mandatory for multi-user apps) --><div id="user-traceability" class="hidden md:flex items-center space-x-2 text-xs p-1 px-3 bg-gray-100 rounded-full border border-gray-200">
                 <span class="font-medium text-gray-500">Voter ID:</span>
@@ -379,26 +390,35 @@
 
     <!-- Main Content Area --><main class="flex-grow flex items-center justify-center p-4">
         
-        <!-- Logged-out State (Trustworthy Card) --><div id="logged-out-state" class="bg-white rounded-xl shadow-2xl p-6 md:p-10 w-full max-w-sm sm:max-w-md text-center transform transition-all duration-300 border-t-8 border-custom-sub">
-            <!-- Logo: NO FRAME/BORDER/ROUNDING --><img src="https://i.ibb.co/RpBzpzSk/13th.png" class="w-20 h-20 mx-auto mb-4" alt="CAFS Logo">
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-custom-sub">Secure University Election</h1>
+        <!-- Logged-out State (Trustworthy Card) -->
+        <div id="logged-out-state" class="bg-white rounded-xl shadow-2xl p-6 md:p-10 w-full max-w-sm sm:max-w-md text-center transform transition-all duration-300 border-t-8 border-custom-sub">
+            <!-- Logo: NO FRAME/BORDER/ROUNDING (ADDED object-contain) --><img src="https://i.ibb.co/RpBzpzSk/13th.png" class="w-20 h-20 mx-auto mb-4 object-contain" alt="CAFS Logo">
+            
+            <!-- CHANGED: Title to 13th CAFS FC Election -->
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-custom-sub">13th CAFS FC Election</h1>
+            
             <p class="mt-3 sm:mt-4 text-base sm:text-lg text-gray-700 font-medium border-b border-custom-main pb-4">
                 Official Ballot Access
             </p>
+            
+            <!-- CHANGED: Instruction text to explicitly include UP Mail -->
             <p class="mt-4 text-xs sm:text-sm text-red-700 font-semibold bg-red-50 p-3 rounded-lg border border-red-200">
-                <span class="text-custom-sub">Authentication Required:</span> You must sign in with your @up.edu.ph email account.
+                Authentication Required: You must sign in with your **UP Mail (@up.edu.ph)** account.
             </p>
+
              <!-- Non-UP Email Warning Message --><p id="auth-warning-message" class="mt-4 text-red-600 text-sm font-semibold bg-red-100 p-3 rounded-lg border border-red-300 hidden"></p>
 
+            <!-- CHANGED: Button text to Sign-in with UP MAIL -->
             <button id="google-login-btn" class="mt-6 sm:mt-8 px-6 py-3 btn-primary-submit rounded-lg shadow-lg text-base font-semibold focus:outline-none focus:ring-4 focus:ring-custom-main/50 flex items-center justify-center mx-auto transition-colors w-full">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-3 bg-white p-0.5 rounded" alt="Google icon">
-                Sign in Securely with Google
+                Sign-in with UP MAIL
             </button>
-            <p id="error-message" class="mt-4 text-red-500 text-sm hidden"></p>
+            <!-- CHANGED: Default error message text -->
+            <p id="error-message" class="mt-4 text-red-500 text-sm hidden">Sign-in failed. Please try again.</p>
         </div>
 
         <!-- Voting Content --><div id="voting-content" class="hidden w-full max-w-4xl">
-            <h2 class="text-2xl sm:text-3xl font-extrabold text-custom-sub text-center mb-6 sm:mb-8">OFFICIAL BALLOT</h2>
+            <!-- CHANGED: Made "OFFICIAL BALLOT" much bigger --><h2 class="text-4xl sm:text-5xl font-extrabold text-custom-sub text-center mb-6 sm:mb-8">OFFICIAL BALLOT</h2>
             
             <form id="voting-form" class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 md:p-10 border-t-8 border-custom-main">
                 <!-- Ballot will be dynamically generated here --><div id="ballot-container" class="space-y-8 sm:space-y-10">
@@ -444,7 +464,7 @@
                 </button>
             </div>
 
-            <!-- Main Card Content (Updated Structure) --><div class="bg-white p-4 pt-8 sm:p-6 sm:pt-10 relative z-10">
+            <!-- Main Card Content (UPDATED: bg-white to custom-light-gold) --><div class="bg-custom-light-gold p-4 pt-8 sm:p-6 sm:pt-10 relative z-10">
                 <!-- Image and Text Info Side-by-Side --><div class="flex items-center space-x-6">
                     <!-- Photo Section (Now rectangular/square, w-36 on desktop) --><div class="flex-shrink-0">
                         <img id="nominee-photo" class="w-24 h-24 sm:w-36 sm:h-36 object-cover rounded-md shadow-lg border-8 border-custom-main" 
@@ -540,6 +560,7 @@
 
         // --- Configuration Constants ---
         const VOTES_COLLECTION = `artifacts/${appId}/public/data/votes`;
+        const AUTH_LOGS_COLLECTION = `artifacts/${appId}/public/data/auth_logs`; // NEW: For logging successful logins
         
         // ** CSV URL (Candidate Data Source) **
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTnZExJ9injJGTsk1uFOUT45te0_gXPu0BGvAhgpWwNRIKxwgV3bXW-gygrr4omsBY9luXXxpPe1lE6/pub?gid=1092490256&single=true&output=csv';
@@ -623,17 +644,17 @@
         const openNomineeCard = (info) => {
             nomineePhotoEl.src = info.photo || 'https://placehold.co/128x128/f1f1f1/1F2933?text=ID';
             
-            // FIX: Name formatting (SURNAME,\nGiven Names)
+            // --- CHANGED: Name formatting (Removed line break and extra styling) ---
             const nameParts = info.name.split(',');
+            let displayName = info.name;
             if (nameParts.length >= 2) {
-                const surname = nameParts[0].trim() + ',';
+                // Re-assemble as: SURNAME, Given Names (all on one line)
+                const surname = nameParts[0].trim();
                 const givenNames = nameParts.slice(1).join(',').trim();
-                // Use innerHTML to inject the line break and slightly lighter text for given names
-                nomineeNameEl.innerHTML = `${surname}<br><span class="text-base font-normal">${givenNames}</span>`;
-            } else {
-                // Fallback if name is not comma-separated
-                nomineeNameEl.textContent = info.name;
+                displayName = `${surname}, ${givenNames}`;
             }
+            nomineeNameEl.textContent = displayName;
+            // ------------------------------------------------------------------
 
             nomineePositionEl.textContent = info.position.toUpperCase();
             nomineeCourseEl.textContent = info.course;
@@ -811,6 +832,30 @@
             });
             
             closeNomineeBtn.addEventListener('click', closeNomineeCard);
+        };
+
+        // NEW: Function to log successful authentication to Firestore
+        const logAuthEvent = async (uid, email) => {
+            try {
+                const logDocRef = doc(db, AUTH_LOGS_COLLECTION, uid);
+                const logDoc = await getDoc(logDocRef);
+                
+                let loginCount = 1;
+
+                if (logDoc.exists()) {
+                    loginCount = (logDoc.data().loginCount || 0) + 1;
+                }
+                
+                await setDoc(logDocRef, {
+                    lastLogin: new Date(),
+                    voterEmail: email,
+                    loginCount: loginCount,
+                    // Store the display name in the log for easier audit lookup
+                    voterName: auth.currentUser?.displayName || 'Unknown User' 
+                });
+            } catch (error) {
+                console.error("Error logging authentication event:", error);
+            }
         };
         
         // --- Authentication and Vote Submission Logic (FIXED) ---
@@ -1213,19 +1258,23 @@
                 // --- MANDATORY EMAIL DOMAIN CHECK ---
                 if (user.email && !user.email.endsWith(REQUIRED_DOMAIN)) {
                     // If not a UP mail, display error on login card and sign out
-                    authWarningMessageEl.innerHTML = `Access Denied: **Please sign-in with UP Mail** (must end in ${REQUIRED_DOMAIN}).`; 
+                    // FIX: Using the exact error message requested by the user
+                    authWarningMessageEl.innerHTML = `Access Denied: **Please sign-in using UP Mail only.**`; 
                     authWarningMessageEl.classList.remove('hidden');
+                    
                     // Must sign out the user immediately if the domain is incorrect
                     await signOut(auth); 
                     return;
                 }
+                // Clear generic error message if successful login initiated
                 errorMessageEl.classList.add('hidden'); 
 
             } catch (error) {
                 console.error("Google Sign-In Error:", error);
-                let errorMessage = "Secure Sign-in failed. Please try again.";
+                // CHANGED: General error message to be more concise
+                let errorMessage = "Sign-in failed. Please try again."; 
                 if (error.code === 'auth/popup-closed-by-user') {
-                    errorMessage = "Sign-in cancelled. Please click the button to sign in.";
+                    errorMessage = "Sign-in cancelled by user. Please click the button to sign in.";
                 } else if (error.code === 'auth/cancelled-popup-request') {
                      errorMessage = "Popup blocked or closed. Try again after closing existing popups.";
                 }
@@ -1259,12 +1308,18 @@
                 centralMessageContainer.classList.add('hidden'); // Clear central message on auth change
                 
                 if (user) {
-                    // Re-check domain on auth state change
+                    // Re-check domain on auth state change (Final guardrail)
                     if (user.email && !user.email.endsWith(REQUIRED_DOMAIN)) {
-                        // This should have been caught on login, but is a final guardrail.
+                        // FIX: Using the exact error message requested by the user
+                        authWarningMessageEl.innerHTML = `Access Denied: **Please sign-in using UP Mail only.**`;
+                        authWarningMessageEl.classList.remove('hidden');
                         if (auth.currentUser) await signOut(auth);
                         return;
                     }
+
+                    // --- NEW: Log the successful authentication to Firestore ---
+                    await logAuthEvent(user.uid, user.email);
+                    // --------------------------------------------------------
                     
                     userId = user.uid;
                     loggedOutStateEl.classList.add('hidden');
@@ -1299,6 +1354,7 @@
                 
                 if (initialAuthToken) {
                     console.log("Signing in with initial custom token...");
+                    // Note: signInWithCustomToken does not enforce domain filtering as it assumes pre-validated credentials.
                     await signInWithCustomToken(auth, initialAuthToken);
                 }
 
