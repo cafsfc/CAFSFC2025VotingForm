@@ -105,19 +105,19 @@
             text-align: center;
         }
 
-        /* Active VOTE selection styling */
+        /* 3. FIX: Active VOTE selection styling (Shade it Yellow/Gold) */
         .vote-column.selected {
-            background-color: #fcf8eb; /* Custom Light Gold */
+            background-color: #c39f09; /* Custom Main Gold */
             border-top-right-radius: 0.5rem;
             border-bottom-right-radius: 0.5rem;
         }
 
         .vote-column.selected .selection-indicator {
-            border-color: #1e5629;
-            background-color: '#c39f09';
+            border-color: white; /* Indicator border becomes white */
+            background-color: white; /* Indicator fill becomes white */
         }
         .vote-column.selected .selection-text {
-            color: #1e5629; 
+            color: white; /* Text turns white for contrast */
         }
 
         /* Active ABSTAIN selection styling (Charcoal Gray) */
@@ -137,6 +137,8 @@
         
         /* Ensure candidate name is left-aligned and has padding */
         .candidate-name-container {
+            /* 4. ID Layout Fix: Added min-width 0 for flex-item shrinking */
+            min-width: 0; 
             padding-left: 1rem;
             padding-right: 0.5rem;
             height: 100%;
@@ -210,13 +212,17 @@
             margin-bottom: 0.25rem;
             color: #1e5629;
             font-weight: 800;
+            /* 4. ID Layout Fix: Ensure text wraps */
+            word-break: break-word; 
         }
-        /* --- CHANGED: Nominee Name Styling (Bigger) --- */
+        /* --- Nominee Name Styling (Bigger) --- */
         #nominee-name {
             font-size: 1.5rem; /* text-2xl for names */
             font-weight: 700;
             color: #1F2933;
             line-height: 1.2;
+            /* 4. ID Layout Fix: Ensure text wraps */
+            word-break: break-word; 
         }
         @media (min-width: 640px) { /* sm breakpoint */
             #nominee-name {
@@ -338,7 +344,7 @@
             #nominee-position {
                 font-size: 1.5rem; 
             }
-            /* --- CHANGED: Mobile Nominee Name Size --- */
+            /* --- Nominee Name Size --- */
             #nominee-name {
                 font-size: 1.25rem; 
             }
@@ -394,32 +400,30 @@
         </div>
     </header>
 
-    <!-- Main Content Area --><main class="flex-grow flex items-center justify-center p-4">
+    <!-- Main Content Area: Added flex-col to stack logo and card (Change 2) --><main class="flex-grow flex items-center justify-center p-4 flex-col">
         
+        <!-- 2. Logo 1 (cafsfc.png) positioned outside the card, top and centered -->
+        <img id="login-page-logo" src="https://placehold.co/128x128/1e5629/ffffff?text=cafsfc.png" 
+             class="w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-6 object-contain" alt="CAFS FC Logo">
+             
         <!-- Logged-out State (Trustworthy Card) -->
         <div id="logged-out-state" class="bg-white rounded-xl shadow-2xl p-6 md:p-10 w-full max-w-sm sm:max-w-md text-center transform transition-all duration-300 border-t-8 border-custom-sub">
-            <!-- Logo 1 (cafsfc.png) on sign-in page -->
-            <img src="https://placehold.co/128x128/1e5629/ffffff?text=cafsfc.png" class="w-20 h-20 mx-auto mb-4 object-contain" alt="CAFS FC Logo">
             
-            <!-- Title remains '13th CAFS FC Election' for login card -->
             <h1 class="text-2xl sm:text-3xl font-extrabold text-custom-sub">13th CAFS FC Election</h1>
             
-            <p class="mt-3 sm:mt-4 text-base sm:text-lg text-gray-700 font-medium border-b border-custom-main pb-4">
-                Official Ballot Access
-            </p>
-            
-            <!-- CHANGED: Instruction text to explicitly include UP Mail -->
-            <p class="mt-4 text-xs sm:text-sm text-red-700 font-semibold bg-red-50 p-3 rounded-lg border border-red-200">
-                Authentication Required: You must sign in with your **UP Mail (@up.edu.ph)** account.
-            </p>
+            <!-- 1. Removed "Official Ballot Access" text -->
 
-             <!-- Non-UP Email Warning Message --><p id="auth-warning-message" class="mt-4 text-red-600 text-sm font-semibold bg-red-100 p-3 rounded-lg border border-red-300 hidden"></p>
+            <!-- Non-UP Email Warning Message --><p id="auth-warning-message" class="mt-4 text-red-600 text-sm font-semibold bg-red-100 p-3 rounded-lg border border-red-300 hidden"></p>
 
             <!-- CHANGED: Button text to Sign-in with UP MAIL -->
             <button id="google-login-btn" class="mt-6 sm:mt-8 px-6 py-3 btn-primary-submit rounded-lg shadow-lg text-base font-semibold focus:outline-none focus:ring-4 focus:ring-custom-main/50 flex items-center justify-center mx-auto transition-colors w-full">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-3 bg-white p-0.5 rounded" alt="Google icon">
                 Sign-in with UP MAIL
             </button>
+            <!-- Instruction text to explicitly include UP Mail -->
+            <p class="mt-4 text-xs sm:text-sm text-red-700 font-semibold bg-red-50 p-3 rounded-lg border border-red-200">
+                Authentication Required: You must sign in with your **UP Mail (@up.edu.ph)** account.
+            </p>
             <!-- CHANGED: Default error message text -->
             <p id="error-message" class="mt-4 text-red-500 text-sm hidden">Sign-in failed. Please try again.</p>
         </div>
@@ -654,18 +658,14 @@
         const openNomineeCard = (info) => {
             nomineePhotoEl.src = info.photo || 'https://placehold.co/128x128/f1f1f1/1F2933?text=ID';
             
-            // --- CHANGED: Name formatting (Removed line break and extra styling) ---
             const nameParts = info.name.split(',');
             let displayName = info.name;
             if (nameParts.length >= 2) {
-                // Re-assemble as: SURNAME, Given Names (all on one line)
                 const surname = nameParts[0].trim();
                 const givenNames = nameParts.slice(1).join(',').trim();
                 displayName = `${surname}, ${givenNames}`;
             }
             nomineeNameEl.textContent = displayName;
-            // ------------------------------------------------------------------
-
             nomineePositionEl.textContent = info.position.toUpperCase();
             nomineeCourseEl.textContent = info.course;
             nomineePlatformEl.textContent = info.platform;
@@ -678,13 +678,12 @@
 
 
         // --- Main Ballot Rendering Logic ---
-        // FIX: Changed 'Councilors' to 'Councilor'
         const positionOrder = [
             'Chairperson', 
             'Vice Chairperson', 
             'UFC Nominee', 
             'College Representative to the UFC', 
-            'Councilor' // Updated to match user request
+            'Councilor' 
         ];
         
         const updateAriaChecked = (element, isChecked) => {
@@ -734,9 +733,11 @@
                                 </span>
                             </div>
                             <!-- VOTE Column: Added tabindex for keyboard navigation --><div class="vote-column" tabindex="0" data-action="vote" data-name="${info.name}" data-position="${position}" role="radio" aria-checked="false">
+                                <span class="selection-text">VOTE</span>
                                 <div class="selection-indicator"></div>
                             </div>
                             <!-- ABSTAIN Column: Added tabindex for keyboard navigation --><div class="abstain-column" tabindex="0" data-action="abstain" data-name="${info.name}" data-position="${position}" role="radio" aria-checked="false">
+                                <span class="selection-text">ABSTAIN</span>
                                 <div class="selection-indicator"></div>
                             </div>
                         </div>
