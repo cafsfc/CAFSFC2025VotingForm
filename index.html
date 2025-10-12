@@ -390,9 +390,9 @@
 <header id="header" class="hidden bg-white shadow-md p-3 sm:p-4 flex justify-between items-center z-10 border-b-4 border-custom-sub">
         <!-- LEFT SIDE: New header.png image spanning the left side -->
         <div class="flex items-center space-x-2 sm:space-x-4 flex-grow-0 flex-shrink-0 w-3/5 sm:w-auto">
-            <!-- Updated to use header.png -->
+            <!-- UPDATED: Increased size to h-12 sm:h-16 -->
             <img src="Header.png" 
-                 class="h-10 sm:h-12 w-auto max-w-full object-contain" 
+                 class="h-12 sm:h-16 w-auto max-w-full object-contain" 
                  alt="Header Logo">
         </div>
         
@@ -424,8 +424,9 @@
 <div id="logged-out-state" class="bg-white rounded-xl shadow-2xl p-6 md:p-10 w-full max-w-sm sm:max-w-md text-center transform transition-all duration-300 border-t-8 border-custom-sub">
             
             <!-- LOGO 2: cafsfc.png (for Sign-up page, no border/shadow) -->
+            <!-- UPDATED: Increased size to w-32 h-32 -->
             <img src="cafsfc.png" 
-                 class="w-24 h-24 mx-auto mb-6 object-contain" 
+                 class="w-32 h-32 mx-auto mb-6 object-contain" 
                  alt="CAFS FC Logo">
             
             <h1 class="text-2xl sm:text-3xl font-extrabold text-custom-sub">13th CAFS FC Election</h1>
@@ -456,8 +457,9 @@
              
             <!-- LOGO 2: 13th.png (for Ballot View, centered, no border/stretching) -->
             <div id="main-logo-2" class="mx-auto mb-6 sm:mb-8 w-full max-w-xs sm:max-w-sm flex justify-center items-center">
+                <!-- UPDATED: Increased size to max-h-32 sm:max-h-40 -->
                 <img src="13th.png" 
-                     class="h-auto max-h-24 sm:max-h-32 object-contain" 
+                     class="h-auto max-h-32 sm:max-h-40 object-contain" 
                      alt="13th Election Logo">
             </div>
              
@@ -575,8 +577,9 @@
     <script type="module">
         // Firebase CDN imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        // ADDED runTransaction for atomic vote check (Critical Fix for #3)
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, setLogLevel, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // Enable Firebase Debug Logging (Mandatory for tracing issues)
         setLogLevel('Debug');
@@ -848,7 +851,7 @@
                 // --- Handle Nominee Card Popup Click ---
                 if (clickedNameLink) {
                     event.stopPropagation(); 
-                    const candidateName = clickedNameLink.dataset.candidate-name;
+                    const candidateName = clickedNameLink.dataset.candidateName;
                     const info = allCandidateInfo[candidateName];
                     if (info) {
                         openNomineeCard(info);
@@ -1141,6 +1144,7 @@
             verifierPopup.classList.remove('hidden');
         };
         
+        // REFACTORED: Now uses a Firestore Transaction for atomic, secured write
         const handleVote = async () => {
             if (!userId) {
                 console.error("User not authenticated.");
@@ -1148,39 +1152,52 @@
                 closeVerifier();
                 return;
             }
-            
+
             showLoading(true);
 
             try {
-                if (hasUserVoted) {
-                    // Double check in case of race condition (though checked in openVoteVerifier)
-                    const message = "You cannot vote twice. Your first votes have been saved in the database.";
-                    displayMessage(message, 'error');
-                    setFormState('disabled');
-                    closeVerifier();
-                    return;
-                }
-                
                 const voteRef = doc(db, VOTES_COLLECTION, userId);
-                await setDoc(voteRef, {
-                    timestamp: new Date(),
-                    voterId: userId,
-                    // Use the clean, structured data for Firestore
-                    selections: voteDataToSubmit 
-                });
 
-                // Background process: Send a copy of the vote to the Google Form for redundancy logging.
-                // sendToGoogleForm now accepts the structured data
+                // --- ATOMIC DOUBLE VOTE CHECK using Transaction (CRITICAL FIX) ---
+                await runTransaction(db, async (transaction) => {
+                    const voteDoc = await transaction.get(voteRef);
+
+                    if (voteDoc.exists()) {
+                        // Throw a specific error to fail the transaction and be caught below.
+                        // This prevents concurrent votes from overwriting the first one.
+                        throw new Error("You have already voted. Voting twice is strictly prohibited.");
+                    }
+
+                    // If the vote document does NOT exist, proceed with the write inside the transaction.
+                    transaction.set(voteRef, {
+                        timestamp: new Date(),
+                        voterId: userId,
+                        selections: voteDataToSubmit 
+                    });
+                });
+                // --- END ATOMIC CHECK ---
+                
+                // If the transaction succeeds, mark as voted and send redundancy log
+                hasUserVoted = true; 
                 sendToGoogleForm(voteDataToSubmit, userId); 
 
-                hasUserVoted = true;
                 closeVerifier();
                 displayMessage(`Your official ballot has been securely submitted! Thank you for participating.`, 'success');
                 setFormState('disabled');
+                
             } catch (error) {
                 console.error("Error submitting vote:", error);
                 closeVerifier();
-                displayMessage("Critical Error: Failed to submit vote to the secure ledger. Please retry.", 'error');
+                
+                // Check for the specific double-vote error message thrown in the transaction
+                if (error.message === "You have already voted. Voting twice is strictly prohibited.") {
+                     // Set hasUserVoted to true and disable the form to lock the UI
+                     hasUserVoted = true;
+                     setFormState('disabled');
+                     displayMessage(error.message, 'error');
+                } else {
+                     displayMessage("Critical Error: Failed to submit vote to the secure ledger. Please retry.", 'error');
+                }
             } finally {
                 showLoading(false);
             }
@@ -1489,4 +1506,3 @@
     </script>
 </body>
 </html>
-
