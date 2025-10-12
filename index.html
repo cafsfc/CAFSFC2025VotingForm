@@ -207,7 +207,7 @@
         }
         /* Nominee Photo (Fixed to rectangle with slight corner round) */
         #nominee-photo {
-            border-width: 8px; /* INCREASED BORDER FOR VISIBILITY */
+            border-width: 4px; /* Reduced border thickness */
             border-color: #c39f09; /* custom-main */
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
             border-radius: 0.375rem; /* Slightly rounded rectangle */
@@ -323,6 +323,8 @@
             .candidate-name-link {
                 width: 100%;
                 font-size: 0.875rem; 
+                word-break: break-word; /* Ensure text fits */
+                overflow-wrap: break-word; /* Ensure text fits */
             }
             .selection-text {
                 font-size: 0.65rem; 
@@ -388,7 +390,8 @@
 <header id="header" class="hidden bg-white shadow-md p-3 sm:p-4 flex justify-between items-center z-10 border-b-4 border-custom-sub">
         <!-- LEFT SIDE: New header.png image spanning the left side -->
         <div class="flex items-center space-x-2 sm:space-x-4 flex-grow-0 flex-shrink-0 w-3/5 sm:w-auto">
-            <img src="https://placehold.co/600x60/1e5629/ffffff?text=header.png" 
+            <!-- Updated to use header.png -->
+            <img src="header.png" 
                  class="h-10 sm:h-12 w-auto max-w-full object-contain" 
                  alt="Header Logo">
         </div>
@@ -420,8 +423,8 @@
 
 <div id="logged-out-state" class="bg-white rounded-xl shadow-2xl p-6 md:p-10 w-full max-w-sm sm:max-w-md text-center transform transition-all duration-300 border-t-8 border-custom-sub">
             
-            <!-- LOGO 2: cafsfc.png (for Sign-up page) -->
-            <img src="https://placehold.co/200x200/1e5629/ffffff?text=cafsfc.png" 
+            <!-- LOGO 2: cafsfc.png (for Sign-up page, no border/shadow) -->
+            <img src="cafsfc.png" 
                  class="w-24 h-24 mx-auto mb-6 object-contain" 
                  alt="CAFS FC Logo">
             
@@ -451,10 +454,10 @@
 
 <div id="voting-content" class="hidden w-full max-w-4xl">
              
-            <!-- LOGO 2: 13th.png (Made BIG, for Ballot View) -->
-            <div id="main-logo-2" class="mx-auto mb-8 p-4 rounded-xl border-4 border-custom-main w-full max-w-sm sm:max-w-md bg-white flex justify-center items-center">
-                <img src="https://placehold.co/300x150/ffffff/1e5629?text=13th.png" 
-                     class="w-full h-auto max-h-32 object-contain" 
+            <!-- LOGO 2: 13th.png (for Ballot View, centered, no border/stretching) -->
+            <div id="main-logo-2" class="mx-auto mb-6 sm:mb-8 w-full max-w-xs sm:max-w-sm flex justify-center items-center">
+                <img src="13th.png" 
+                     class="h-auto max-h-24 sm:max-h-32 object-contain" 
                      alt="13th Election Logo">
             </div>
              
@@ -533,7 +536,8 @@
                     
 
 <div class="flex-shrink-0">
-                        <img id="nominee-photo" class="w-24 h-24 sm:w-36 sm:h-36 object-cover rounded-md shadow-lg border-8 border-custom-main" 
+                        <!-- Nominee Photo: Reduced border width -->
+                        <img id="nominee-photo" class="w-24 h-24 sm:w-36 sm:h-36 object-cover rounded-md shadow-lg border-4 border-custom-main" 
                              alt="Nominee Photo" 
                              src="https://placehold.co/128x128/f1f1f1/1F2933?text=ID"
                              onerror="this.onerror=null;this.src='https://placehold.co/128x128/f1f1f1/1F2933?text=ID';">
@@ -703,13 +707,15 @@
         
         const showLoading = (isLoading) => {
             if (isLoading) {
-                submitVoteBtn.textContent = 'Processing Secure Submission...';
-                submitVoteBtn.disabled = true;
-                submitVoteBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                // Show loading for submission
+                confirmVoteBtn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-3 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing Secure Submission...';
+                confirmVoteBtn.disabled = true;
+                confirmVoteBtn.classList.add('opacity-50', 'cursor-not-allowed');
             } else {
-                submitVoteBtn.textContent = 'Review and Submit Vote';
-                submitVoteBtn.disabled = false;
-                submitVoteBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                // Hide loading
+                confirmVoteBtn.textContent = 'Confirm & Submit';
+                confirmVoteBtn.disabled = false;
+                confirmVoteBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         };
 
@@ -842,7 +848,7 @@
                 // --- Handle Nominee Card Popup Click ---
                 if (clickedNameLink) {
                     event.stopPropagation(); 
-                    const candidateName = clickedNameLink.dataset.candidateName;
+                    const candidateName = clickedNameLink.dataset.candidate-name;
                     const info = allCandidateInfo[candidateName];
                     if (info) {
                         openNomineeCard(info);
@@ -942,9 +948,19 @@
         
         // --- Authentication and Vote Submission Logic (FIXED) ---
 
-        const openVoteVerifier = (event) => {
+        // MADE ASYNC for the double-vote check
+        const openVoteVerifier = async (event) => {
             event.preventDefault();
             
+            // --- 4. DOUBLE VOTE CHECK ---
+            // Re-check immediately before opening the verification popup
+            if (hasUserVoted) {
+                 const message = "You cannot vote twice. Your first votes have been saved in the database.";
+                 displayMessage(message, 'error');
+                 setFormState('disabled');
+                 return; // Stop processing and showing the verifier
+            }
+
             // --- Pre-Validation Cleanup ---
             document.querySelectorAll('.vote-item').forEach(item => {
                 item.classList.remove('highlight-error');
@@ -1137,10 +1153,11 @@
 
             try {
                 if (hasUserVoted) {
-                    displayMessage('You have already submitted your ballot. Thank a you for voting!', 'success');
+                    // Double check in case of race condition (though checked in openVoteVerifier)
+                    const message = "You cannot vote twice. Your first votes have been saved in the database.";
+                    displayMessage(message, 'error');
                     setFormState('disabled');
                     closeVerifier();
-                    showLoading(false);
                     return;
                 }
                 
@@ -1335,6 +1352,12 @@
             const provider = new GoogleAuthProvider();
             authWarningMessageEl.classList.add('hidden'); 
             
+            // --- Added Loading State on Sign-In Button (Point 3) ---
+            googleLoginBtn.disabled = true;
+            const originalButtonContent = googleLoginBtn.innerHTML;
+            googleLoginBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Authenticating...';
+
+
             try {
                 const result = await signInWithPopup(auth, provider);
                 const user = result.user;
@@ -1364,6 +1387,14 @@
                 }
                 errorMessageEl.textContent = errorMessage;
                 errorMessageEl.classList.remove('hidden');
+            } finally {
+                // Restore button content
+                googleLoginBtn.disabled = false;
+                googleLoginBtn.innerHTML = originalButtonContent;
+                // Re-setting the icon content here to avoid issues with the variable capture above.
+                if (!auth.currentUser || (auth.currentUser.email && !auth.currentUser.email.endsWith(REQUIRED_DOMAIN))) {
+                    googleLoginBtn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-3 bg-white p-0.5 rounded" alt="Google icon"> Sign-in with UP MAIL';
+                }
             }
         };
 
@@ -1416,6 +1447,7 @@
                     userPhotoEl.src = user.photoURL || 'https://placehold.co/32x32/f1f1f1/1F2933?text=U';
                     userIdDisplay.textContent = user.uid;
 
+                    // Check for previous vote status
                     await checkIfVoted(user.uid);
 
                 } else {
@@ -1457,4 +1489,3 @@
     </script>
 </body>
 </html>
-
