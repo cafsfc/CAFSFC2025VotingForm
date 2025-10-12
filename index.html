@@ -385,30 +385,28 @@
 
     
 
-<header id="header" class="hidden bg-white shadow-md p-3 sm:p-4 flex flex-wrap justify-between items-center z-10 border-b-4 border-custom-sub">
-        <div class="flex items-center space-x-2 sm:space-x-4">
-            
-            <!-- LOGO 1: cafsfc.png -->
-            <img src="https://placehold.co/128x128/1e5629/ffffff?text=cafsfc.png" class="w-10 h-10 hidden sm:block object-contain" alt="CAFS FC Logo">
-            
-
-<h1 class="text-lg sm:text-xl md:text-2xl font-bold text-custom-sub leading-tight">
-                College of Agriculture and Food Science<br>
-                <span class="text-base sm:text-lg md:text-xl font-semibold">Freshman Council</span>
-            </h1>
+<header id="header" class="hidden bg-white shadow-md p-3 sm:p-4 flex justify-between items-center z-10 border-b-4 border-custom-sub">
+        <!-- LEFT SIDE: New header.png image spanning the left side -->
+        <div class="flex items-center space-x-2 sm:space-x-4 flex-grow-0 flex-shrink-0 w-3/5 sm:w-auto">
+            <img src="https://placehold.co/600x60/1e5629/ffffff?text=header.png" 
+                 class="h-10 sm:h-12 w-auto max-w-full object-contain" 
+                 alt="Header Logo">
         </div>
         
-        
-
-<div class="flex items-center space-x-2 sm:space-x-4 mt-2 sm:mt-0">
+        <!-- RIGHT SIDE: Profile and Icon Logout Button -->
+        <div class="flex items-center space-x-2 sm:space-x-4">
             <div id="user-profile" class="relative flex items-center space-x-2">
                 <div class="text-xs text-gray-500 hidden md:block text-right">
                     <span id="user-name" class="font-medium text-custom-text block text-sm"></span>
                     <span id="user-email" class="font-mono text-xs block -mt-1"></span>
                 </div>
                 <img id="user-photo" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full shadow-sm cursor-pointer border border-gray-300" alt="User photo" onerror="this.onerror=null; this.src='https://placehold.co/32x32/f1f1f1/1F2933?text=U';">
-                <button id="logout-btn" class="ml-2 px-3 py-1 bg-custom-main text-custom-sub font-medium rounded-lg shadow-md hover:bg-custom-main-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-main text-sm">
-                    Log Out
+                
+                <!-- Logout Button as Icon -->
+                <button id="logout-btn" class="ml-2 p-1.5 bg-custom-main text-custom-sub rounded-lg shadow-md hover:bg-custom-main-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-main text-sm" title="Log Out">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
                 </button>
             </div>
         </div>
@@ -418,16 +416,14 @@
 
 <main class="flex-grow flex items-center justify-center p-4 flex-col">
         
-        <!-- LOGO 2: 13th.png (Made BIG) -->
-        <div id="main-logo-2" class="mx-auto mb-8 p-4 rounded-xl border-4 border-custom-main w-full max-w-sm sm:max-w-md bg-white flex justify-center items-center">
-            <img src="https://placehold.co/300x150/ffffff/1e5629?text=13th.png" 
-                 class="w-full h-auto max-h-32 object-contain" 
-                 alt="13th Election Logo">
-        </div>
-             
         
 
 <div id="logged-out-state" class="bg-white rounded-xl shadow-2xl p-6 md:p-10 w-full max-w-sm sm:max-w-md text-center transform transition-all duration-300 border-t-8 border-custom-sub">
+            
+            <!-- LOGO 2: cafsfc.png (for Sign-up page) -->
+            <img src="https://placehold.co/200x200/1e5629/ffffff?text=cafsfc.png" 
+                 class="w-24 h-24 mx-auto mb-6 object-contain" 
+                 alt="CAFS FC Logo">
             
             <h1 class="text-2xl sm:text-3xl font-extrabold text-custom-sub">13th CAFS FC Election</h1>
             
@@ -454,6 +450,14 @@
         
 
 <div id="voting-content" class="hidden w-full max-w-4xl">
+             
+            <!-- LOGO 2: 13th.png (Made BIG, for Ballot View) -->
+            <div id="main-logo-2" class="mx-auto mb-8 p-4 rounded-xl border-4 border-custom-main w-full max-w-sm sm:max-w-md bg-white flex justify-center items-center">
+                <img src="https://placehold.co/300x150/ffffff/1e5629?text=13th.png" 
+                     class="w-full h-auto max-h-32 object-contain" 
+                     alt="13th Election Logo">
+            </div>
+             
             
 
 <div id="user-traceability" class="mx-auto p-3 mb-6 sm:mb-8 text-center bg-custom-light-gold rounded-lg shadow-md border border-custom-main/50 w-full max-w-xl">
@@ -538,9 +542,8 @@
                     
 
 <div class="flex-grow info-section">
-                        
-
-<p class="text-xs font-semibold text-gray-500 uppercase -mb-1">POSITION</p>
+                        <!-- CHANGE: POSITION to NOMINATED POSITION -->
+                        <p class="text-xs font-semibold text-gray-500 uppercase -mb-1">NOMINATED POSITION</p>
                         
 
 <h3 id="nominee-position" class="font-extrabold mb-1 leading-tight"></h3>
