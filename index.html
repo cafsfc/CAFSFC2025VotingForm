@@ -12,7 +12,7 @@
             theme: {
                 extend: {
                     colors: {
-                        'custom-main': '#c39f09', // Primary Accent: Warm Gold (used for VOTED status)
+                        'custom-main': '#c39f09', // Primary Accent: Warm Gold (used for VOTED status, progress bar)
                         'custom-main-dark': '#a08107', // Darker Gold for Hover
                         'custom-sub': '#1e5629', // Secondary Accent: Deep Forest Green (Collegiate/Official)
                         'custom-text': '#1F2933', // Near Black for general text
@@ -353,16 +353,16 @@
 
     
 <header id="header" class="hidden bg-white shadow-md p-3 sm:p-4 flex justify-between items-center z-10 border-b-4 border-custom-sub">
-        <!-- LEFT SIDE: New header.png image spanning the left side -->
-        <div class="flex items-center space-x-2 sm:space-x-4 flex-grow-0 flex-shrink-0 w-3/5 sm:w-auto">
-            <!-- UPDATED: Increased size to h-12 sm:h-16 -->
+        
+<div class="flex items-center space-x-2 sm:space-x-4 flex-grow-0 flex-shrink-0 w-3/5 sm:w-auto">
+            
             <img src="Header.png" 
                  class="h-12 sm:h-16 w-auto max-w-full object-contain" 
                  alt="Header Logo">
         </div>
         
-        <!-- RIGHT SIDE: Profile and Icon Logout Button -->
-        <div class="flex items-center space-x-2 sm:space-x-4">
+        
+<div class="flex items-center space-x-2 sm:space-x-4">
             <div id="user-profile" class="relative flex items-center space-x-2">
                 <div class="text-xs text-gray-500 hidden md:block text-right">
                     <span id="user-name" class="font-medium text-custom-text block text-sm"></span>
@@ -370,8 +370,8 @@
                 </div>
                 <img id="user-photo" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full shadow-sm cursor-pointer border border-gray-300" alt="User photo" onerror="this.onerror=null; this.src='https://placehold.co/32x32/f1f1f1/1F2933?text=U';">
                 
-                <!-- Logout Button as Icon -->
-                <button id="logout-btn" class="ml-2 p-1.5 bg-custom-main text-custom-sub rounded-lg shadow-md hover:bg-custom-main-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-main text-sm" title="Log Out">
+                
+<button id="logout-btn" class="ml-2 p-1.5 bg-custom-main text-custom-sub rounded-lg shadow-md hover:bg-custom-main-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-main text-sm" title="Log Out">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
                     </svg>
@@ -381,37 +381,63 @@
     </header>
 
     
-<main class="flex-grow flex items-center justify-center p-4 flex-col">
+<main class="flex-grow flex items-start justify-center p-4 flex-col sm:pt-8">
         
-        <!-- 1. CAFSFC LOGO: Only for Sign-In Screen -->
+        <!-- CAFSFC Logo: Only for Sign-In Screen -->
         <img id="cafs-logo-signin" src="cafsfc.png" 
              class="w-48 h-48 sm:w-56 sm:h-56 mx-auto object-contain -mb-2 sm:-mb-4 relative z-10" 
              alt="CAFS FC Logo for Sign-in">
 
         
-<div id="logged-out-state" class="bg-white rounded-xl shadow-2xl p-6 md:p-10 w-full max-w-sm sm:max-w-md text-center transform transition-all duration-300 border-t-8 border-custom-sub">
+<div class="w-full max-w-sm sm:max-w-md mx-auto">
             
-            
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-custom-sub">13th CAFS FC Election</h1>
-            
-            
+<div id="logged-out-state" class="bg-white rounded-xl shadow-2xl p-6 md:p-10 w-full text-center transform transition-all duration-300 border-t-8 border-custom-sub">
+                
+                
+<h1 class="text-2xl sm:text-3xl font-extrabold text-custom-sub">13th CAFS FC Election</h1>
+                
+                
 <p id="auth-warning-message" class="mt-4 text-red-600 text-sm font-semibold bg-red-100 p-3 rounded-lg border border-red-300 hidden"></p>
 
-            
+                
 <button id="google-login-btn" class="mt-6 sm:mt-8 px-6 py-3 btn-primary-submit rounded-lg shadow-lg text-base font-semibold focus:outline-none focus:ring-4 focus:ring-custom-main/50 flex items-center justify-center mx-auto transition-colors w-full">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-3 bg-white p-0.5 rounded" alt="Google icon">
-                Sign-in with UP MAIL
-            </button>
-            
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-3 bg-white p-0.5 rounded" alt="Google icon">
+                    Sign-in with UP MAIL
+                </button>
+                
 <p class="mt-4 text-xs sm:text-sm text-red-700 font-semibold bg-red-50 p-3 rounded-lg border border-red-200">
-                Authentication Required: You must sign in with your **UP Mail (@up.edu.ph)** account.
-            </p>
-            
+                    Authentication Required: You must sign in with your **UP Mail (@up.edu.ph)** account.
+                </p>
+                
 <p id="error-message" class="mt-4 text-red-500 text-sm hidden">Sign-in failed. Please try again.</p>
+            </div>
+
+            
+            <!-- 1. VOTER TURNOUT DASHBOARD -->
+<div id="turnout-dashboard" class="mt-8 p-4 sm:p-6 bg-gray-100 rounded-xl shadow-lg w-full">
+                <h2 class="text-lg sm:text-xl font-bold text-custom-sub text-center mb-4">🗳️ VOTER TURNOUT</h2>
+
+                <!-- Total Turnout Bar -->
+                <div class="mb-4">
+                    <div class="flex justify-between items-end mb-1">
+                        <span class="text-sm font-semibold text-gray-700">Total Turnout: <span id="total-turnout-count" class="font-bold">...</span></span>
+                        <span id="total-turnout-text" class="text-base font-extrabold text-custom-sub">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3 shadow-inner">
+                        <div id="total-turnout-bar" class="h-3 rounded-full bg-custom-main transition-all duration-700 ease-out" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Degree Program Turnout -->
+                <div id="course-turnout-container" class="space-y-3 pt-3 border-t border-gray-300">
+                    <!-- Progress bars will be injected here -->
+                </div>
+            </div>
         </div>
 
+
         
-<div id="voting-content" class="hidden w-full max-w-4xl">
+<div id="voting-content" class="hidden w-full max-w-4xl pt-8">
              
             <!-- NEW: 13th.png Logo for the Voting Content Area -->
             <img src="13th.png" 
@@ -424,7 +450,27 @@
                 <code id="user-id-display" class="font-mono text-custom-text text-sm sm:text-base font-semibold ml-2">...</code>
             </div>
 
-            <form id="voting-form" class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 md:p-10 border-t-8 border-custom-main">
+            <!-- 2. VOTER INFORMATION VALIDATION STEP -->
+<div id="voter-info-section" class="bg-white rounded-xl shadow-md p-6 mb-6 border border-custom-main/30 mx-auto w-full max-w-xl">
+                <h2 class="text-lg font-bold text-custom-sub mb-4">Voter Information</h2>
+                <p class="text-sm text-gray-600 mb-4">Please confirm your student details to activate the ballot.</p>
+                <label class="block mb-3">
+                    <span class="font-medium text-gray-700">Student Number</span>
+                    <input id="student-number" type="text" class="mt-1 block w-full border border-gray-300 rounded-lg p-3 focus:ring-custom-sub focus:border-custom-sub transition" placeholder="e.g., 2021-12345" required>
+                </label>
+                <label class="block mb-4">
+                    <span class="font-medium text-gray-700">Degree Program</span>
+                    <select id="degree-program" class="mt-1 block w-full border border-gray-300 rounded-lg p-3 focus:ring-custom-sub focus:border-custom-sub transition" required>
+                        <option value="">Select your course</option>
+                        <option value="BS Agriculture">Bachelor of Science in Agriculture</option>
+                        <option value="BS Agricultural Biotechnology">Bachelor of Science in Agricultural Biotechnology</option>
+                        <option value="BS Food Science and Technology">Bachelor of Science in Food Science and Technology</option>
+                    </select>
+                </label>
+                <button id="proceed-to-ballot" class="w-full py-2 bg-custom-main text-custom-sub rounded-lg font-semibold hover:bg-custom-main-dark transition shadow">Proceed to Ballot</button>
+            </div>
+            
+            <form id="voting-form" class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 md:p-10 border-t-8 border-custom-main opacity-50 pointer-events-none">
                 
 <div id="ballot-container" class="space-y-8 sm:space-y-10">
                     <p class="text-center text-gray-500">Loading official candidate data...</p>
@@ -438,10 +484,10 @@
     </main>
 
     
-<!-- 3. Verification Popup (Scrollable Content) -->
+<!-- Verification Popup -->
 <div id="verifier-popup" class="hidden fixed inset-0 bg-gray-800 bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <!-- Added flex-col and max-h-screen for scrolling support -->
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md border-t-8 border-custom-sub flex flex-col max-h-[90vh]">
+        
+<div class="bg-white rounded-xl shadow-2xl w-full max-w-md border-t-8 border-custom-sub flex flex-col max-h-[90vh]">
             
             <!-- Header (Fixed) -->
             <div class="p-6 pb-0 flex-shrink-0">
@@ -459,7 +505,7 @@
                 <button id="change-vote-btn" class="w-1/2 py-2 text-sm sm:text-base border border-slate-300 rounded-lg text-custom-text font-medium hover:bg-slate-100 transition-colors">
                     Edit Ballot
                 </button>
-                <button id="confirm-vote-btn" class="w-1/2 py-2 text-sm sm:text-base bg-custom-main text-custom-sub rounded-lg font-bold hover:bg-custom-main-dark transition-colors">
+                <button id="confirm-vote-btn" class="w-1/2 py-2 text-sm sm:text-base bg-custom-main text-custom-sub rounded-lg font-bold hover:bg-custom-main-dark transition">
                     Confirm & Submit
                 </button>
             </div>
@@ -467,10 +513,9 @@
     </div>
     
     
-<!-- 2. Nominee Popup (Solid Backgrounds) -->
+<!-- Nominee Popup -->
 <div id="nominee-popup" class="hidden fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
         
-<!-- Added bg-white to the main card container for solid background -->
 <div id="nominee-card" class="w-full max-w-lg mx-auto rounded-xl relative overflow-hidden bg-white">
             
 <div class="top-bar"></div> 
@@ -539,11 +584,24 @@
              authDomain: "votingmachine-c8e34.firebaseapp.com",
              projectId: "votingmachine-c8e34",
              storageBucket: "votingmachine-c8e34.appspot.com",
-             messagingSenderId: "175934636307",
              appId: "1:175934636307:web:717f4a5ba28789f13f5ae6"
         };
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         // ----------------------------------------------
+
+        // --- MOCK VOTER TURNOUT DATA (Feature 1) ---
+        const totalVoters = 1000;
+        const votersPerCourse = {
+            "BS Agriculture": 500,
+            "BS Agricultural Biotechnology": 300,
+            "BS Food Science and Technology": 200,
+        };
+        const votes = {
+            "BS Agriculture": 220,
+            "BS Agricultural Biotechnology": 100,
+            "BS Food Science and Technology": 80,
+        };
+        // -------------------------------------------
 
         // --- UI Element Selectors ---
         const cafsLogoSigninEl = document.getElementById('cafs-logo-signin'); // 1. New Logo Selector
@@ -579,6 +637,12 @@
         const nomineePositionEl = document.getElementById('nominee-position');
         const nomineeCourseEl = document.getElementById('nominee-course');
         const nomineePlatformEl = document.getElementById('nominee-platform');
+
+        // --- VOTER INFO VALIDATION STEP (Feature 2) ---
+        const voterInfoSection = document.getElementById('voter-info-section');
+        const proceedToBallotBtn = document.getElementById("proceed-to-ballot");
+        const studentNumberInput = document.getElementById("student-number");
+        const degreeProgramInput = document.getElementById("degree-program");
 
 
         let auth, db, userId;
@@ -1099,7 +1163,11 @@
 
             try {
                 const voteRef = doc(db, VOTES_COLLECTION, userId);
-
+                
+                // 3. Capture the required student number and degree program before submitting
+                const studentNumber = studentNumberInput.value.trim();
+                const degreeProgram = degreeProgramInput.value.trim();
+                
                 // --- ATOMIC DOUBLE VOTE CHECK using Transaction (CRITICAL FIX) ---
                 await runTransaction(db, async (transaction) => {
                     const voteDoc = await transaction.get(voteRef);
@@ -1114,6 +1182,8 @@
                     transaction.set(voteRef, {
                         timestamp: new Date(),
                         voterId: userId,
+                        studentNumber: studentNumber, // Save student data in the secure ledger
+                        degreeProgram: degreeProgram, // Save student data in the secure ledger
                         selections: voteDataToSubmit 
                     });
                 });
@@ -1150,6 +1220,10 @@
             try {
                 const formData = new FormData();
                 formData.append(FORM_ENTRY_IDS['voterId'], userId);
+                
+                // Append student details to redundancy form (Feature 2)
+                formData.append('entry.1234567890', studentNumberInput.value.trim()); // Mock SN entry ID
+                formData.append('entry.0987654321', degreeProgramInput.value.trim()); // Mock Course entry ID
 
                 for (const position in voteDataStructured) {
                     const finalSelections = [];
@@ -1293,10 +1367,15 @@
                 if (hasUserVoted) {
                     displayMessage('You have already submitted your official ballot. Your vote is secured.', 'success');
                     setFormState('disabled');
+                    // Hide info section, but keep form disabled and show content
+                    voterInfoSection.classList.add('hidden');
+                    votingForm.classList.remove("opacity-50", "pointer-events-none");
                     return true;
                 } else {
-                    // Instruction FIX: Updated to user's requested text
-                    displayMessage('Please vote or abstain for each position.', 'info'); 
+                    // Show info section, keep form disabled
+                    voterInfoSection.classList.remove('hidden');
+                    votingForm.classList.add("opacity-50", "pointer-events-none");
+                    displayMessage('Please complete your voter information to proceed to the ballot.', 'info'); 
                     setFormState('enabled');
                     return false;
                 }
@@ -1307,12 +1386,73 @@
                     return false;
             }
         };
+        
+        // --- FEATURE 1: VOTER TURNOUT DASHBOARD LOGIC ---
+        const renderTurnoutDashboard = () => {
+            const totalVotes = Object.values(votes).reduce((a, b) => a + b, 0);
+            const turnoutPercent = ((totalVotes / totalVoters) * 100).toFixed(1);
+            
+            // 1. Total Turnout
+            document.getElementById("total-turnout-count").textContent = `${totalVotes} out of ${totalVoters} voters`;
+            document.getElementById("total-turnout-bar").style.width = `${turnoutPercent}%`;
+            document.getElementById("total-turnout-text").textContent = `${turnoutPercent}%`;
+            
+            // 2. Course Turnout
+            const courseContainer = document.getElementById("course-turnout-container");
+            let courseHTML = '';
+            
+            for (const course in votersPerCourse) {
+                const totalCourseVoters = votersPerCourse[course];
+                const courseVotes = votes[course] || 0;
+                const coursePercent = ((courseVotes / totalCourseVoters) * 100).toFixed(1);
+                
+                courseHTML += `
+                    <div>
+                        <div class="flex justify-between items-end mb-1">
+                            <span class="text-xs font-medium text-gray-600">${course}</span>
+                            <span class="text-sm font-bold text-custom-main-dark">${courseVotes} / ${totalCourseVoters} (${coursePercent}%)</span>
+                        </div>
+                        <div class="w-full bg-gray-300 rounded-full h-2 shadow-sm">
+                            <div class="h-2 rounded-full bg-custom-main transition-all duration-700 ease-out" style="width: ${coursePercent}%;"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            courseContainer.innerHTML = courseHTML;
+        };
+        // --- END FEATURE 1 ---
+
+        // --- FEATURE 2: VOTER INFO VALIDATION LOGIC ---
+        const handleProceedToBallot = () => {
+            const sn = studentNumberInput.value.trim();
+            const course = degreeProgramInput.value.trim();
+            
+            if (sn.length > 0 && course.length > 0) {
+                // Validation passed: Enable form and hide section
+                votingForm.classList.remove("opacity-50", "pointer-events-none");
+                voterInfoSection.classList.add("hidden");
+                displayMessage("Voter information confirmed. You may now cast your vote.", 'success');
+            } else {
+                // Validation failed: Use displayMessage (as requested, replacing alert)
+                displayMessage("Please provide both your Student Number and select your Degree Program before proceeding.", 'error');
+                
+                // Add visual indicators
+                if (!sn) studentNumberInput.classList.add('border-red-500', 'ring-red-500'); else studentNumberInput.classList.remove('border-red-500', 'ring-red-500');
+                if (!course) degreeProgramInput.classList.add('border-red-500', 'ring-red-500'); else degreeProgramInput.classList.remove('border-red-500', 'ring-red-500');
+            }
+        };
+        
+        // Remove error classes when typing/changing
+        studentNumberInput.addEventListener('input', () => studentNumberInput.classList.remove('border-red-500', 'ring-red-500'));
+        degreeProgramInput.addEventListener('change', () => degreeProgramInput.classList.remove('border-red-500', 'ring-red-500'));
+        
+        // --- END FEATURE 2 ---
 
         const handleGoogleLogin = async () => {
             const provider = new GoogleAuthProvider();
             authWarningMessageEl.classList.add('hidden'); 
             
-            // --- Added Loading State on Sign-In Button (Point 3) ---
+            // --- Added Loading State on Sign-In Button ---
             googleLoginBtn.disabled = true;
             const originalButtonContent = googleLoginBtn.innerHTML;
             googleLoginBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Authenticating...';
@@ -1376,6 +1516,8 @@
             votingForm.addEventListener('submit', openVoteVerifier);
             confirmVoteBtn.addEventListener('click', handleVote);
             changeVoteBtn.addEventListener('click', closeVerifier);
+            // Feature 2: Attach listener for the new Proceed button
+            proceedToBallotBtn.addEventListener('click', handleProceedToBallot);
         };
 
         const setupAuthStateListener = () => {
@@ -1397,6 +1539,8 @@
 
                     // --- 1. CAFSFC Logo Visibility: Hide when logged in ---
                     cafsLogoSigninEl.classList.add('hidden');
+                    // --- 1. Turnout Dashboard: Hide when logged in (Optional, but cleaner) ---
+                    document.getElementById('turnout-dashboard').classList.add('hidden');
                     // --------------------------------------------------------
                     
                     // --- NEW: Log the successful authentication to Firestore ---
@@ -1414,7 +1558,7 @@
                     userPhotoEl.src = user.photoURL || 'https://placehold.co/32x32/f1f1f1/1F2933?text=U';
                     userIdDisplay.textContent = user.uid;
 
-                    // Check for previous vote status
+                    // Check for previous vote status (handles state for Feature 2 as well)
                     await checkIfVoted(user.uid);
 
                 } else {
@@ -1426,6 +1570,8 @@
                     
                     // --- 1. CAFSFC Logo Visibility: Show when logged out ---
                     cafsLogoSigninEl.classList.remove('hidden');
+                    // --- 1. Turnout Dashboard: Show when logged out ---
+                    document.getElementById('turnout-dashboard').classList.remove('hidden');
                     // --------------------------------------------------------
                 }
             });
@@ -1433,6 +1579,9 @@
 
         const initializeFirebase = async () => {
             try {
+                // Feature 1: Render dashboard on initialization
+                renderTurnoutDashboard();
+                
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
