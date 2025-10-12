@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>13th CAFS FC Election Ballot</title>
+    <title>OFFICIAL BALLOT</title>
     
+
 <script src="https://cdn.tailwindcss.com"></script>
     
+
 <script>
         tailwind.config = {
             theme: {
@@ -205,7 +207,7 @@
         }
         /* Nominee Photo (Fixed to rectangle with slight corner round) */
         #nominee-photo {
-            border-width: 4px; /* Reduced border thickness */
+            border-width: 8px; /* INCREASED BORDER FOR VISIBILITY */
             border-color: #c39f09; /* custom-main */
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
             border-radius: 0.375rem; /* Slightly rounded rectangle */
@@ -264,6 +266,36 @@
             font-style: normal; 
         }
         
+        /* --- Vote Summary Table Styling --- */
+        #vote-summary-table-container {
+            max-height: 24rem; 
+            overflow-y: auto;
+            position: relative; 
+            border: 1px solid #E5E7EB;
+            border-radius: 0.5rem;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            background-color: white;
+        }
+        
+        .vote-summary-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: #f7f7f7; 
+            box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .vote-summary-table th, .vote-summary-table td {
+            padding: 0.5rem 0.5rem; 
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .vote-summary-table tbody tr {
+            transition: background-color 0.15s;
+            background-color: white !important;
+        }
+        
         /* --- Inline and Popup Message Styling (Centralized) --- */
         #central-message-container {
             position: fixed;
@@ -291,8 +323,6 @@
             .candidate-name-link {
                 width: 100%;
                 font-size: 0.875rem; 
-                word-break: break-word; /* Ensure text fits */
-                overflow-wrap: break-word; /* Ensure text fits */
             }
             .selection-text {
                 font-size: 0.65rem; 
@@ -347,79 +377,85 @@
 <body class="bg-gray-50 min-h-screen flex flex-col">
 
     
+
 <div id="central-message-container" class="hidden">
         <div id="message-display" class="px-4 py-3 rounded-lg text-sm sm:text-base text-center font-medium shadow-lg transition-colors duration-300"></div>
     </div>
 
+
     
-<header id="header" class="hidden bg-white shadow-md p-3 sm:p-4 flex justify-between items-center z-10 border-b-4 border-custom-sub">
-        <!-- LEFT SIDE: New header.png image spanning the left side -->
-        <div class="flex items-center space-x-2 sm:space-x-4 flex-grow-0 flex-shrink-0 w-3/5 sm:w-auto">
-            <!-- UPDATED: Increased size to h-12 sm:h-16 -->
-            <img src="Header.png" 
-                 class="h-12 sm:h-16 w-auto max-w-full object-contain" 
-                 alt="Header Logo">
+
+<header id="header" class="hidden bg-white shadow-md p-3 sm:p-4 flex flex-wrap justify-between items-center z-10 border-b-4 border-custom-sub">
+        <div class="flex items-center space-x-2 sm:space-x-4">
+            
+            <!-- LOGO 1: cafsfc.png -->
+            <img src="https://placehold.co/128x128/1e5629/ffffff?text=cafsfc.png" class="w-10 h-10 hidden sm:block object-contain" alt="CAFS FC Logo">
+            
+
+<h1 class="text-lg sm:text-xl md:text-2xl font-bold text-custom-sub leading-tight">
+                College of Agriculture and Food Science<br>
+                <span class="text-base sm:text-lg md:text-xl font-semibold">Freshman Council</span>
+            </h1>
         </div>
         
-        <!-- RIGHT SIDE: Profile and Icon Logout Button -->
-        <div class="flex items-center space-x-2 sm:space-x-4">
+        
+
+<div class="flex items-center space-x-2 sm:space-x-4 mt-2 sm:mt-0">
             <div id="user-profile" class="relative flex items-center space-x-2">
                 <div class="text-xs text-gray-500 hidden md:block text-right">
                     <span id="user-name" class="font-medium text-custom-text block text-sm"></span>
                     <span id="user-email" class="font-mono text-xs block -mt-1"></span>
                 </div>
                 <img id="user-photo" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full shadow-sm cursor-pointer border border-gray-300" alt="User photo" onerror="this.onerror=null; this.src='https://placehold.co/32x32/f1f1f1/1F2933?text=U';">
-                
-                <!-- Logout Button as Icon -->
-                <button id="logout-btn" class="ml-2 p-1.5 bg-custom-main text-custom-sub rounded-lg shadow-md hover:bg-custom-main-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-main text-sm" title="Log Out">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-                    </svg>
+                <button id="logout-btn" class="ml-2 px-3 py-1 bg-custom-main text-custom-sub font-medium rounded-lg shadow-md hover:bg-custom-main-dark transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-main text-sm">
+                    Log Out
                 </button>
             </div>
         </div>
     </header>
 
     
+
 <main class="flex-grow flex items-center justify-center p-4 flex-col">
+        
+        <!-- LOGO 2: 13th.png (Made BIG) -->
+        <div id="main-logo-2" class="mx-auto mb-8 p-4 rounded-xl border-4 border-custom-main w-full max-w-sm sm:max-w-md bg-white flex justify-center items-center">
+            <img src="https://placehold.co/300x150/ffffff/1e5629?text=13th.png" 
+                 class="w-full h-auto max-h-32 object-contain" 
+                 alt="13th Election Logo">
+        </div>
+             
+        
 
-<div id="logged-out-state" class="flex flex-col items-center w-full max-w-sm sm:max-w-md">
+<div id="logged-out-state" class="bg-white rounded-xl shadow-2xl p-6 md:p-10 w-full max-w-sm sm:max-w-md text-center transform transition-all duration-300 border-t-8 border-custom-sub">
+            
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-custom-sub">13th CAFS FC Election</h1>
+            
+            
 
-    <!-- CAFSFC Logo (Top, Minimal Spacing) -->
-    <img src="cafsfc.png"
-         class="mx-auto mb-3 h-auto w-40 sm:w-52 max-w-full"
-         alt="CAFS FC Logo">
-            
-  <!-- Sign-in Card -->
-    <div class="bg-white rounded-xl shadow-2xl p-6 md:p-10 text-center w-full border-t-8 border-custom-sub">
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-custom-sub">
-            13th CAFS FC Election
-        </h1>
-            
-            
 <p id="auth-warning-message" class="mt-4 text-red-600 text-sm font-semibold bg-red-100 p-3 rounded-lg border border-red-300 hidden"></p>
 
             
+
 <button id="google-login-btn" class="mt-6 sm:mt-8 px-6 py-3 btn-primary-submit rounded-lg shadow-lg text-base font-semibold focus:outline-none focus:ring-4 focus:ring-custom-main/50 flex items-center justify-center mx-auto transition-colors w-full">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-3 bg-white p-0.5 rounded" alt="Google icon">
                 Sign-in with UP MAIL
             </button>
             
+
 <p class="mt-4 text-xs sm:text-sm text-red-700 font-semibold bg-red-50 p-3 rounded-lg border border-red-200">
-                Authentication Required: You must sign in with your <strong> UP Mail (@up.edu.ph) </strong>account.
+                Authentication Required: You must sign in with your **UP Mail (@up.edu.ph)** account.
             </p>
             
+
 <p id="error-message" class="mt-4 text-red-500 text-sm hidden">Sign-in failed. Please try again.</p>
         </div>
 
         
+
 <div id="voting-content" class="hidden w-full max-w-4xl">
-    
-            <img src="13th.png" 
-                 class="w-32 h-32 sm:w-40 sm:h-40 mx-auto object-contain mb-6 relative z-10" 
-                 alt="13th CAFS FC Logo">
-             
             
+
 <div id="user-traceability" class="mx-auto p-3 mb-6 sm:mb-8 text-center bg-custom-light-gold rounded-lg shadow-md border border-custom-main/50 w-full max-w-xl">
                 <span class="font-bold text-custom-sub text-sm sm:text-base">VOTER ID:</span>
                 <code id="user-id-display" class="font-mono text-custom-text text-sm sm:text-base font-semibold ml-2">...</code>
@@ -427,6 +463,7 @@
 
             <form id="voting-form" class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 md:p-10 border-t-8 border-custom-main">
                 
+
 <div id="ballot-container" class="space-y-8 sm:space-y-10">
                     <p class="text-center text-gray-500">Loading official candidate data...</p>
                 </div>
@@ -439,95 +476,100 @@
     </main>
 
     
-<div id="verifier-popup" 
-     class="hidden fixed inset-0 bg-gray-800 bg-opacity-70 flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md border-t-8 border-custom-sub 
-                max-h-[90vh] overflow-hidden flex flex-col">
 
-        <!-- Header -->
-        <div class="flex-shrink-0 p-6 border-b border-gray-200">
-            <h2 class="text-xl sm:text-2xl font-bold text-custom-sub mb-2 text-center">
-                Final Vote Verification
-            </h2>
-            <p class="text-xs sm:text-sm text-gray-600 text-center">
-                Please review your selections before final submission. This action cannot be undone.
-            </p>
-        </div>
+<div id="verifier-popup" class="hidden fixed inset-0 bg-gray-800 bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md border-t-8 border-custom-sub">
+            <h2 class="text-xl sm:text-2xl font-bold text-custom-sub mb-4 text-center">Final Vote Verification</h2>
+            <p class="text-xs sm:text-sm text-gray-600 mb-6 text-center">Please review your selections before final submission. This action cannot be undone.</p>
+            
+            
 
-        <!-- Scrollable summary -->
-        <div id="vote-summary-table-container" 
-             class="flex-grow overflow-y-auto px-6 py-4 text-custom-text">
-        </div>
+<div id="vote-summary-table-container" class="text-custom-text mb-6">
+                
 
-        <!-- Footer -->
-        <div class="flex-shrink-0 flex justify-between space-x-4 p-4 border-t border-gray-200 bg-gray-50">
-            <button id="change-vote-btn" 
-                    class="w-1/2 py-2 text-sm sm:text-base border border-slate-300 rounded-lg text-custom-text font-medium hover:bg-slate-100 transition-colors">
-                Edit Ballot
-            </button>
-            <button id="confirm-vote-btn" 
-                    class="w-1/2 py-2 text-sm sm:text-base bg-custom-main text-custom-sub rounded-lg font-bold hover:bg-custom-main-dark transition-colors">
-                Confirm & Submit
-            </button>
+</div>
+            
+            <div class="flex justify-between space-x-4">
+                <button id="change-vote-btn" class="w-1/2 py-2 text-sm sm:text-base border border-slate-300 rounded-lg text-custom-text font-medium hover:bg-slate-100 transition-colors">
+                    Edit Ballot
+                </button>
+                <button id="confirm-vote-btn" class="w-1/2 py-2 text-sm sm:text-base bg-custom-main text-custom-sub rounded-lg font-bold hover:bg-custom-main-dark transition-colors">
+                    Confirm & Submit
+                </button>
+            </div>
         </div>
     </div>
-</div>
     
-<!-- Nominee Card Popup (Redesigned for clarity and mobile-fit) -->
-<div id="nominee-popup" 
-     class="hidden fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
+    
 
-    <div id="nominee-card" 
-         class="bg-white rounded-2xl shadow-2xl w-full max-w-lg relative overflow-hidden border-t-8 border-custom-sub max-h-[90vh] flex flex-col">
+<div id="nominee-popup" class="hidden fixed inset-0 bg-gray-800 bg-opacity-70 flex items-center justify-center p-4 z-50">
+        
 
-        <!-- Header Bar -->
-        <div class="bg-custom-sub text-white text-center py-3 px-6 flex justify-between items-center">
-            <h2 class="text-lg sm:text-xl font-extrabold tracking-wide">Nominee Details</h2>
-            <button id="close-nominee-btn" class="p-1 rounded-md hover:bg-custom-main/20 transition" aria-label="Close">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
+<div id="nominee-card" class="w-full max-w-lg mx-auto rounded-xl relative overflow-hidden">
+            
 
-        <!-- Scrollable Content -->
-        <div class="flex-grow overflow-y-auto px-6 py-6 bg-custom-light-gold">
+<div class="top-bar"></div> 
 
-            <!-- Nominee Info Section -->
-            <div class="flex flex-col sm:flex-row sm:space-x-6 items-center sm:items-start">
-                <img id="nominee-photo"
-                     class="w-28 h-28 sm:w-36 sm:h-36 object-cover rounded-lg border-4 border-custom-main shadow-md mb-4 sm:mb-0"
-                     alt="Nominee Photo"
-                     src="https://placehold.co/128x128/f1f1f1/1F2933?text=ID"
-                     onerror="this.onerror=null;this.src='https://placehold.co/128x128/f1f1f1/1F2933?text=ID';">
+            
 
-                <div class="flex flex-col items-center sm:items-start text-center sm:text-left space-y-1">
-                    <p class="text-xs font-semibold text-gray-500 uppercase">Nominated Position</p>
-                    <h3 id="nominee-position" class="text-2xl sm:text-3xl font-extrabold text-custom-sub leading-tight"></h3>
-                    <p id="nominee-name" class="text-lg sm:text-xl font-bold text-custom-text"></p>
-                    <p id="nominee-course" class="text-sm text-gray-600 font-medium"></p>
+<div class="close-button-container">
+                <button id="close-nominee-btn" class="text-gray-200 hover:text-white transition-colors p-1" aria-label="Close">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            
+
+<div class="bg-custom-light-gold p-4 pt-8 sm:p-6 sm:pt-10 relative z-10">
+                
+
+<div class="flex items-center space-x-6">
+                    
+
+<div class="flex-shrink-0">
+                        <img id="nominee-photo" class="w-24 h-24 sm:w-36 sm:h-36 object-cover rounded-md shadow-lg border-8 border-custom-main" 
+                             alt="Nominee Photo" 
+                             src="https://placehold.co/128x128/f1f1f1/1F2933?text=ID"
+                             onerror="this.onerror=null;this.src='https://placehold.co/128x128/f1f1f1/1F2933?text=ID';">
+                    </div>
+
+                    
+
+<div class="flex-grow info-section">
+                        
+
+<p class="text-xs font-semibold text-gray-500 uppercase -mb-1">POSITION</p>
+                        
+
+<h3 id="nominee-position" class="font-extrabold mb-1 leading-tight"></h3>
+                        
+                        
+
+<div id="nominee-name" class="font-bold text-custom-text"></div>
+                        
+
+<div id="nominee-course" class="font-medium text-gray-600 mt-0.5"></div>
+                    </div>
+                </div>
+                
+                
+
+<div class="platform-details">
+                    <p class="uppercase">Platform Details</p>
+                    <p id="nominee-platform"></p>
                 </div>
             </div>
-
-            <!-- Divider -->
-            <div class="border-t border-gray-300 my-6"></div>
-
-            <!-- Platform Section -->
-            <div class="space-y-2">
-                <p class="text-xs font-bold text-custom-sub uppercase tracking-wide">Platform Details</p>
-                <p id="nominee-platform" class="text-sm text-gray-700 leading-relaxed text-justify"></p>
-            </div>
         </div>
     </div>
-</div>
 
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
     <script type="module">
         // Firebase CDN imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        // ADDED runTransaction for atomic vote check (Critical Fix for #3)
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, setLogLevel, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // Enable Firebase Debug Logging (Mandatory for tracing issues)
         setLogLevel('Debug');
@@ -536,7 +578,7 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
              // NOTE: Replace YOUR_API_KEY_PLACEHOLDER with your actual key if testing locally.
-             apiKey: "AIzaSyBdj6ePKM_3YEQTQlaZk9kKrNoMgqsjcjA", 
+             apiKey: "YOUR_API_KEY_PLACEHOLDER", 
              authDomain: "votingmachine-c8e34.firebaseapp.com",
              projectId: "votingmachine-c8e34",
              storageBucket: "votingmachine-c8e34.appspot.com",
@@ -597,17 +639,16 @@
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTnZExJ9injJGTsk1uFOUT45te0_gXPu0BGvAhgpWwNRIKxwgV3bXW-gygrr4omsBY9luXXxpPe1lE6/pub?gid=1092490256&single=true&output=csv';
         
         // IMPORTANT: The GOOGLE_FORM_URL and FORM_ENTRY_IDS must be updated to match the final form used for redundancy logging.
-        // --- UPDATED GOOGLE FORM URL ---
-        const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSf9S0ksmz3OSCfcLHgaux1vGXfrDPR1Nl3Aa-Fe7soKM0Uvgg/formResponse';
+        const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLS-PLACEHOLDER-FOR-NEW-GOOGLE-FORM/formResponse';
         
-        // --- UPDATED GOOGLE FORM ENTRY IDS ---
+        // --- GOOGLE FORM ENTRY IDS (PLACEHOLDERS) ---
         const FORM_ENTRY_IDS = {
-            'voterId': 'entry.1533979100', 
-            'Chairperson': 'entry.759707648', 
-            'Vice Chairperson': 'entry.192266479', 
-            'College Representative to the UFC': 'entry.809194796', 
-            'UFC Nominee': 'entry.1055485089', 
-            'Councilor': 'entry.692317949' 
+            'voterId': 'entry.237072485', 
+            'Chairperson': 'entry.100000001', 
+            'Vice Chairperson': 'entry.100000002', 
+            'UFC Nominee': 'entry.100000003', 
+            'College Representative to the UFC': 'entry.100000004', 
+            'Councilor': 'entry.100000005' // Use singular key for form logic consistency
         };
         // ------------------------------------
 
@@ -659,15 +700,13 @@
         
         const showLoading = (isLoading) => {
             if (isLoading) {
-                // Show loading for submission
-                confirmVoteBtn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-3 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing Secure Submission...';
-                confirmVoteBtn.disabled = true;
-                confirmVoteBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                submitVoteBtn.textContent = 'Processing Secure Submission...';
+                submitVoteBtn.disabled = true;
+                submitVoteBtn.classList.add('opacity-50', 'cursor-not-allowed');
             } else {
-                // Hide loading
-                confirmVoteBtn.textContent = 'Confirm & Submit';
-                confirmVoteBtn.disabled = false;
-                confirmVoteBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                submitVoteBtn.textContent = 'Review and Submit Vote';
+                submitVoteBtn.disabled = false;
+                submitVoteBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         };
 
@@ -741,6 +780,7 @@
                         <p class="text-xs sm:text-sm text-gray-500 mt-1 mb-3">${instructionText}</p>
                         
                         
+
 <div class="space-y-3 pt-3 sm:pt-4">
                 `;
                 
@@ -750,17 +790,20 @@
                         <div class="vote-item transition-all" 
                              data-name="${info.name}" data-position="${position}" data-multiselect="${isMultiSelect}">
                             
+
 <div class="candidate-name-container">
                                 <span class="candidate-name-link text-sm sm:text-base text-wrap" data-candidate-name="${info.name}">
                                     ${info.name}
                                 </span>
                             </div>
                             
+
 <div class="vote-column" tabindex="0" data-action="vote" data-name="${info.name}" data-position="${position}" role="radio" aria-checked="false">
                                 <span class="selection-text">VOTE</span>
                                 <div class="selection-indicator"></div>
                             </div>
                             
+
 <div class="abstain-column" tabindex="0" data-action="abstain" data-name="${info.name}" data-position="${position}" role="radio" aria-checked="false">
                                 <span class="selection-text">ABSTAIN</span>
                                 <div class="selection-indicator"></div>
@@ -896,19 +939,9 @@
         
         // --- Authentication and Vote Submission Logic (FIXED) ---
 
-        // MADE ASYNC for the double-vote check
-        const openVoteVerifier = async (event) => {
+        const openVoteVerifier = (event) => {
             event.preventDefault();
             
-            // --- 4. DOUBLE VOTE CHECK ---
-            // Re-check immediately before opening the verification popup
-            if (hasUserVoted) {
-                 const message = "You cannot vote twice. Your first votes have been saved in the database.";
-                 displayMessage(message, 'error');
-                 setFormState('disabled');
-                 return; // Stop processing and showing the verifier
-            }
-
             // --- Pre-Validation Cleanup ---
             document.querySelectorAll('.vote-item').forEach(item => {
                 item.classList.remove('highlight-error');
@@ -1026,11 +1059,13 @@
                 // 1. ADD DIVIDER ROW
                 summaryHTML += `
                     
+
 <tr class="position-group-separator">
                         <td colspan="2" class="p-0 border-t-4 border-gray-200"></td>
                     </tr>
                     
                     
+
 <tr class="bg-green-100 text-custom-sub">
                         <td colspan="2" class="py-2 px-3 font-extrabold text-sm sm:text-base tracking-wider border-b border-custom-sub/50">
                             ${position.toUpperCase()}
@@ -1038,6 +1073,7 @@
                     </tr>
                     
                     
+
 <tr>
                          <td class="py-2 px-3 font-bold text-gray-500 w-2/3 text-xs sm:text-sm">Name</td>
                          <td class="py-2 text-center font-bold text-gray-500 w-1/3 text-xs sm:text-sm">Status</td>
@@ -1086,7 +1122,6 @@
             verifierPopup.classList.remove('hidden');
         };
         
-        // REFACTORED: Now uses a Firestore Transaction for atomic, secured write
         const handleVote = async () => {
             if (!userId) {
                 console.error("User not authenticated.");
@@ -1094,97 +1129,83 @@
                 closeVerifier();
                 return;
             }
-
+            
             showLoading(true);
 
             try {
-                const voteRef = doc(db, VOTES_COLLECTION, userId);
-
-                // --- ATOMIC DOUBLE VOTE CHECK using Transaction (CRITICAL FIX) ---
-                await runTransaction(db, async (transaction) => {
-                    const voteDoc = await transaction.get(voteRef);
-
-                    if (voteDoc.exists()) {
-                        // Throw a specific error to fail the transaction and be caught below.
-                        // This prevents concurrent votes from overwriting the first one.
-                        throw new Error("You have already voted. Voting twice is strictly prohibited.");
-                    }
-
-                    // If the vote document does NOT exist, proceed with the write inside the transaction.
-                    transaction.set(voteRef, {
-                        timestamp: new Date(),
-                        voterId: userId,
-                        selections: voteDataToSubmit 
-                    });
-                });
-                // --- END ATOMIC CHECK ---
+                if (hasUserVoted) {
+                    displayMessage('You have already submitted your ballot. Thank a you for voting!', 'success');
+                    setFormState('disabled');
+                    closeVerifier();
+                    showLoading(false);
+                    return;
+                }
                 
-                // If the transaction succeeds, mark as voted and send redundancy log
-                hasUserVoted = true; 
+                const voteRef = doc(db, VOTES_COLLECTION, userId);
+                await setDoc(voteRef, {
+                    timestamp: new Date(),
+                    voterId: userId,
+                    // Use the clean, structured data for Firestore
+                    selections: voteDataToSubmit 
+                });
+
+                // Background process: Send a copy of the vote to the Google Form for redundancy logging.
+                // sendToGoogleForm now accepts the structured data
                 sendToGoogleForm(voteDataToSubmit, userId); 
 
+                hasUserVoted = true;
                 closeVerifier();
                 displayMessage(`Your official ballot has been securely submitted! Thank you for participating.`, 'success');
                 setFormState('disabled');
-                
             } catch (error) {
                 console.error("Error submitting vote:", error);
                 closeVerifier();
-                
-                // Check for the specific double-vote error message thrown in the transaction
-                if (error.message === "You have already voted. Voting twice is strictly prohibited.") {
-                     // Set hasUserVoted to true and disable the form to lock the UI
-                     hasUserVoted = true;
-                     setFormState('disabled');
-                     displayMessage(error.message, 'error');
-                } else {
-                     displayMessage("Critical Error: Failed to submit vote to the secure ledger. Please retry.", 'error');
-                }
+                displayMessage("Critical Error: Failed to submit vote to the secure ledger. Please retry.", 'error');
             } finally {
                 showLoading(false);
             }
         };
 
-        // --- MODIFIED: sendToGoogleForm for [SURNAME]_1/[SURNAME]_0 format ---
         const sendToGoogleForm = async (voteDataStructured, userId) => {
             try {
                 const formData = new FormData();
                 formData.append(FORM_ENTRY_IDS['voterId'], userId);
 
                 for (const position in voteDataStructured) {
-                    const finalSelections = [];
+                    const finalSelections = []; // This will be the verbose array for the Form
                     
-                    // Use the position key for the form entry ID lookup
-                    const entryId = FORM_ENTRY_IDS[position];
+                    // FIX: Use 'Councilor' key for look up, but 'Councilors' ID for form posting
+                    const formKey = (position === 'Councilor') ? 'Councilor' : position;
+                    const entryId = FORM_ENTRY_IDS[formKey];
                     
                     if (!entryId) continue;
 
                     const submissionRecords = voteDataStructured[position]; 
+                    const allNamesForPosition = candidatesData[position].map(c => c.name);
                     
-                    submissionRecords.forEach(record => {
-                        // 1. Extract and format Surname
-                        const name = record.name;
-                        // Name format is "SURNAME, Given Name(s)". Split by comma, take the first part, trim, and uppercase.
-                        const surname = name.split(',')[0].trim().toUpperCase(); 
-                        
-                        let statusCode;
-
-                        // 2. Determine Status Code
-                        if (record.status === 'VOTED') {
-                            statusCode = '_1';
-                        } else if (record.status === 'ABSTAINED') {
-                            statusCode = '_0';
-                        } else {
-                            // Safety return if status is unexpected
-                            return; 
+                    // Filter the names that were explicitly VOTED
+                    const votedNames = submissionRecords
+                        .filter(r => r.status === 'VOTED')
+                        .map(r => r.name);
+                    
+                    // 2. Add ABN: Surname for all candidates who were NOT voted for
+                    allNamesForPosition.forEach(name => {
+                        if (!votedNames.includes(name)) {
+                            // A candidate who was not Voted for is recorded as ABN: Surname
+                            const surname = name.split(',')[0].trim();
+                            finalSelections.push(`ABN: ${surname}`);
                         }
-                        
-                        // 3. Create the final required string format
-                        finalSelections.push(`${surname}${statusCode}`);
                     });
 
-                    // Append the generated finalSelections (e.g., ["FLORES_1", "DELACRUZ_0"]) to the form data
-                    // Google Forms handles multiple values for the same entry ID as multiple selections (checkboxes/multiselect)
+                    // 1. Add Voted candidates (after ABN to ensure ABSTAIN message comes after actual votes)
+                    finalSelections.unshift(...votedNames);
+                    
+                    // 3. Add explicit ABSTAIN marker if no candidates were voted for
+                    if (votedNames.length === 0 && finalSelections.length === allNamesForPosition.length) { // Ensure all candidates processed as ABN
+                        finalSelections.push("ABSTAIN (No Vote Cast for Candidate)");
+                    }
+
+                    // Append the generated finalSelections array (the verbose log) to the form data
                     if (Array.isArray(finalSelections) && finalSelections.length > 0) {
                         finalSelections.forEach(record => {
                             formData.append(entryId, record);
@@ -1214,7 +1235,6 @@
                 console.error("Final Error: Failed to submit data to Google Form after retries:", error);
             }
         };
-        // --- END MODIFIED sendToGoogleForm ---
         
         // --- CSV Fetch and Parse Logic ---
         const fetchCandidates = async () => {
@@ -1312,27 +1332,19 @@
             const provider = new GoogleAuthProvider();
             authWarningMessageEl.classList.add('hidden'); 
             
-            // --- Added Loading State on Sign-In Button (Point 3) ---
-            googleLoginBtn.disabled = true;
-            const originalButtonContent = googleLoginBtn.innerHTML;
-            googleLoginBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Authenticating...';
-
-
             try {
                 const result = await signInWithPopup(auth, provider);
                 const user = result.user;
                 
                 // --- MANDATORY EMAIL DOMAIN CHECK ---
                 if (user.email && !user.email.endsWith(REQUIRED_DOMAIN)) {
-                    // NEW: Use displayMessage for a prominent error popup
-                    displayMessage("Access Denied: Please use a valid UP Mail Account.", 'error'); 
+                    // If not a UP mail, display error on login card and sign out
+                    // FIX: Using the exact error message requested by the user
+                    authWarningMessageEl.innerHTML = `Access Denied: **Please sign-in using UP Mail only.**`; 
+                    authWarningMessageEl.classList.remove('hidden');
                     
                     // Must sign out the user immediately if the domain is incorrect
                     await signOut(auth); 
-                    
-                    // Ensure the card warning message is hidden if we use the central one
-                    authWarningMessageEl.classList.add('hidden');
-                    
                     return;
                 }
                 // Clear generic error message if successful login initiated
@@ -1349,14 +1361,6 @@
                 }
                 errorMessageEl.textContent = errorMessage;
                 errorMessageEl.classList.remove('hidden');
-            } finally {
-                // Restore button content
-                googleLoginBtn.disabled = false;
-                googleLoginBtn.innerHTML = originalButtonContent;
-                // Re-setting the icon content here to avoid issues with the variable capture above.
-                if (!auth.currentUser || (auth.currentUser.email && !auth.currentUser.email.endsWith(REQUIRED_DOMAIN))) {
-                    googleLoginBtn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-3 bg-white p-0.5 rounded" alt="Google icon"> Sign-in with UP MAIL';
-                }
             }
         };
 
@@ -1387,10 +1391,9 @@
                 if (user) {
                     // Re-check domain on auth state change (Final guardrail)
                     if (user.email && !user.email.endsWith(REQUIRED_DOMAIN)) {
-                        // NEW: Use displayMessage for a prominent error popup
-                        displayMessage(`Access Denied: Please use a valid UP Mail Account.`, 'error');
-                        
-                        authWarningMessageEl.classList.add('hidden');
+                        // FIX: Using the exact error message requested by the user
+                        authWarningMessageEl.innerHTML = `Access Denied: **Please sign-in using UP Mail only.**`;
+                        authWarningMessageEl.classList.remove('hidden');
                         if (auth.currentUser) await signOut(auth);
                         return;
                     }
@@ -1410,7 +1413,6 @@
                     userPhotoEl.src = user.photoURL || 'https://placehold.co/32x32/f1f1f1/1F2933?text=U';
                     userIdDisplay.textContent = user.uid;
 
-                    // Check for previous vote status
                     await checkIfVoted(user.uid);
 
                 } else {
@@ -1452,5 +1454,3 @@
     </script>
 </body>
 </html>
-
-
