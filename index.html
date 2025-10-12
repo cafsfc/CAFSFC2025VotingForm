@@ -390,7 +390,7 @@
     <header id="header" class="hidden bg-white shadow-md p-3 sm:p-4 flex flex-wrap justify-between items-center z-10 border-b-4 border-custom-sub">
         <div class="flex items-center space-x-2 sm:space-x-4">
             
-            <img src="cafsfc.png" class="w-10 h-10 hidden sm:block object-contain" alt="CAFS FC Logo">
+            <img src="cafsfc.png" class="w-12 h-12 hidden sm:block object-contain" alt="CAFS FC Logo">
             
             <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-custom-sub leading-tight">
                 College of Agriculture and Food Science<br>
@@ -418,13 +418,14 @@
         
         <div id="main-logo-2" class="mx-auto mb-8 w-full max-w-sm sm:max-w-md bg-gray-50 flex justify-center items-center">
             <img src="13th.png" 
-                 class="max-w-xs h-auto max-h-32 object-contain" 
-                 alt="13th 
+                 class="max-w-xs h-auto max-h-40 object-contain" alt="13th 
  Election Logo">
         </div>
              
         
         <div id="logged-out-state" class="bg-white rounded-xl shadow-2xl p-6 md:p-10 w-full max-w-sm sm:max-w-md text-center transform transition-all duration-300 border-t-8 border-custom-sub">
+            
+            <img src="cafsfc.png" class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 object-contain" alt="CAFS FC Logo">
             
             <h1 class="text-2xl sm:text-3xl font-extrabold text-custom-sub">13th CAFS FC Election</h1>
             
@@ -448,16 +449,20 @@
         
         <div id="voting-content" class="hidden w-full max-w-4xl">
             
+            <div id="ballot-header-logo" class="mx-auto my-6 sm:my-8 text-center">
+                <img src="header.png" 
+                     class="max-w-xs h-auto max-h-16 object-contain mx-auto" 
+                     alt="Ballot Header Logo">
+            </div>
+
             <div id="user-traceability" class="mx-auto p-3 mb-6 sm:mb-8 text-center bg-custom-light-gold rounded-lg shadow-md border border-custom-main/50 w-full max-w-xl">
                 <span class="font-bold text-custom-sub text-sm sm:text-base">VOTER ID:</span>
-                <code id="user-id-display" class="font-mono text-custom-text text-sm sm:text-base font-semibold ml-2">...</code>
-            </div>
+                <code id="user-id-display" class="font-mono text-custom-text text-sm sm:text-base font-semibold ml-2">-- Google Account ID --</code> </div>
 
             <form id="voting-form" class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 md:p-10 border-t-8 border-custom-main">
                 
                 <div id="ballot-container" class="space-y-8 sm:space-y-10">
-                    <p class="text-center text-gray-500">Loading official candidate data...</p>
-                </div>
+                    <p class="text-center text-gray-500">Loading official candidate data...</p> </div>
                 
  
                 <button id="submit-vote-btn" type="submit" class="mt-8 sm:mt-10 w-full py-3 btn-primary-submit rounded-lg shadow-xl hover:bg-custom-sub/90 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-sub/50 text-base sm:text-lg">
@@ -561,7 +566,7 @@
         const firebaseConfig = typeof __firebase_config !== 'undefined' ?
  JSON.parse(__firebase_config) : {
              // NOTE: Replace YOUR_API_KEY_PLACEHOLDER with your actual key if testing locally.
-             apiKey: "AIzaSyBdj6ePKM_3YEQTQlaZk9kKrNoMgqsjcjA", 
+             apiKey: "YOUR_API_KEY_PLACEHOLDER", 
              authDomain: "votingmachine-c8e34.firebaseapp.com",
              projectId: "votingmachine-c8e34",
              storageBucket: "votingmachine-c8e34.appspot.com",
@@ -603,7 +608,7 @@
         const nomineeCourseEl = document.getElementById('nominee-course');
         const nomineePlatformEl = document.getElementById('nominee-platform');
         
-        // CHANGE 3: Global Loading Elements
+        // Global Loading Elements
         const globalLoadingOverlay = document.getElementById('global-loading-overlay');
         const loadingMessageEl = document.getElementById('loading-message');
 
@@ -658,7 +663,7 @@
             }, 5000);
         };
         
-        // CHANGE 3: Global Loading Function
+        // Global Loading Function (Request 5: Apply loading on any google sign-in attempt)
         const showGlobalLoading = (isLoading, message = 'Processing...') => {
             if (isLoading) {
                 loadingMessageEl.textContent = message;
@@ -912,24 +917,28 @@
             closeNomineeBtn.addEventListener('click', closeNomineeCard);
         };
 
-        // NEW: Function to log successful authentication to Firestore
+        // NEW: Function to log successful authentication to Firestore (Request 5 Fix)
         const logAuthEvent = async (uid, email) => {
             try {
                 const logDocRef = doc(db, AUTH_LOGS_COLLECTION, uid);
-                const logDoc = await getDoc(logDocRef);
                 
                 let loginCount = 1;
-                if (logDoc.exists()) {
-                    loginCount = (logDoc.data().loginCount || 0) + 1;
-                }
-
-                await setDoc(logDocRef, {
+                let logDocData = {
                     lastLogin: new Date(),
                     voterEmail: email,
-                    loginCount: loginCount,
-                    // Store the display name in the log for easier audit lookup
+                    loginCount: 1,
                     voterName: auth.currentUser?.displayName || 'Unknown User'
-                });
+                };
+                
+                // Check for existing document to increment counter
+                const logDoc = await getDoc(logDocRef);
+                if (logDoc.exists()) {
+                    loginCount = (logDoc.data().loginCount || 0) + 1;
+                    logDocData.loginCount = loginCount;
+                }
+
+                // Log the successful authentication
+                await setDoc(logDocRef, logDocData);
             } catch (error) {
                 console.error("Error logging authentication event:", error);
             }
@@ -1113,7 +1122,7 @@
 
         const submitVote = async () => {
             showLoading(true); // Shows button loading text
-            showGlobalLoading(true, 'Submitting vote securely...'); // CHANGE 3: Shows global overlay
+            showGlobalLoading(true, 'Submitting vote securely...'); // Shows global overlay
             
             // 1. Prepare data for the first (redundancy) log to Google Forms
             // This sends a simple key-value pair for the vote result
@@ -1159,7 +1168,7 @@
                 // CHANGE 4: Updated message text
                 displayMessage('You cannot vote twice. Your first votes had been saved in the database', 'error');
                 showLoading(false);
-                showGlobalLoading(false); // CHANGE 3: Hide global loading
+                showGlobalLoading(false); // Hide global loading
                 setFormState('disabled');
                 return;
             }
@@ -1224,13 +1233,14 @@
                 displayMessage('An error occurred during submission. Please contact the election committee with your Voter ID for verification.', 'error');
             } finally {
                 showLoading(false);
-                showGlobalLoading(false); // CHANGE 3: Hide global loading
+                showGlobalLoading(false); // Hide global loading
             }
         };
 
         // --- Data Fetching ---
         
         const fetchCandidates = async () => {
+            // Request 7: Load candidates data
             return new Promise((resolve, reject) => {
                 Papa.parse(CSV_URL, {
                     download: true,
@@ -1302,13 +1312,13 @@
         };
         
         const signInWithGoogle = async () => {
-            // Check for custom auth token presence
             if (initialAuthToken) {
                  displayMessage("Cannot use Google Sign-in. Custom authentication token is active.", 'error');
                  return;
             }
             
-            showGlobalLoading(true, 'Verifying UP Mail account...'); // CHANGE 3: Start global loading
+            // Request 5: Apply loading immediately
+            showGlobalLoading(true, 'Connecting to Google...');
 
             const provider = new GoogleAuthProvider();
             provider.setCustomParameters({
@@ -1321,21 +1331,26 @@
                 
                 // 1. Enforce domain filtering
                 if (!user.email.endsWith(REQUIRED_DOMAIN)) {
-                    await signOut(auth); // Immediately log out non-UP Mail users
+                    // Request 5: If not UP Mail, sign out immediately, DO NOT log to AUTH_LOGS, and return error.
+                    await signOut(auth); 
                     authWarningMessageEl.innerHTML = `
                         <span class="font-bold">Access Denied:</span> Your account 
                         <span class="font-mono text-xs">${user.email}</span> 
                         is not a valid **UP Mail (${REQUIRED_DOMAIN})** account.
                     `;
                     authWarningMessageEl.classList.remove('hidden');
+                    errorMessageEl.classList.add('hidden'); // Clear generic error
+                    
+                    // Hide loading overlay here since auth fails
+                    showGlobalLoading(false); 
                     return;
                 }
                 
-                // Domain is correct, proceed with login
+                // Domain is correct (UP Mail), proceed with login and logging
                 authWarningMessageEl.classList.add('hidden');
                 errorMessageEl.classList.add('hidden');
 
-                // 2. Log the successful authentication event
+                // 2. Log the successful authentication event (Request 5: Register in authentication firebase)
                 await logAuthEvent(user.uid, user.email);
 
                 // UI will be updated by the onAuthStateChanged listener
@@ -1351,13 +1366,10 @@
                     errorMessageEl.textContent = `Sign-in failed: ${error.message}. Please try again.`;
                     errorMessageEl.classList.remove('hidden');
                 }
-            } finally {
-                // If the user is still null/undefined after the process, hide loading here.
-                // If sign-in was successful, the onAuthStateChanged listener handles the final hiding.
-                if (auth.currentUser === null || auth.currentUser === undefined) {
-                     showGlobalLoading(false); // CHANGE 3: Hide global loading on sign-in failure
-                }
+                
+                showGlobalLoading(false); // Hide loading overlay on sign-in failure
             }
+            // Note: If sign-in is successful, loading is hidden in the onAuthStateChanged listener
         };
 
         const setupAuthStateListener = () => {
@@ -1365,9 +1377,10 @@
                 if (user) {
                     // --- User is signed in ---
                     
-                    // Ensure the user's ID is set for global access and display
+                    // Request 6: Voter ID is the Google Account ID (user.uid)
                     userId = user.uid; 
-                    userIdDisplay.textContent = userId.substring(0, 8); // Display first 8 characters
+                    // Request 3: Display the full Google Account ID
+                    userIdDisplay.textContent = userId; 
                     
                     // Check if the user has already voted
                     const voteDocRef = doc(db, VOTES_COLLECTION, userId);
@@ -1391,7 +1404,7 @@
                         setFormState('enabled');
                     }
                     
-                    showGlobalLoading(false); // CHANGE 3: Hide global loading after successful sign-in and checks
+                    showGlobalLoading(false); // Hide global loading after successful sign-in and checks
                     
                 } else {
                     // --- User is signed out ---
@@ -1416,7 +1429,7 @@
                     await signInWithCustomToken(auth, initialAuthToken);
                 }
 
-                // Load candidates from the CSV before setting up the UI
+                // Request 7: Load candidates from the CSV before setting up the UI
                 candidatesData = await fetchCandidates();
                 renderBallot(candidatesData);
                 
@@ -1433,4 +1446,3 @@
     </script>
 </body>
 </html>
-
