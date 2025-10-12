@@ -443,7 +443,10 @@
         
 <div id="voting-content" class="hidden w-full max-w-4xl">
              
-            <!-- LOGO 2 (13th.png) REMOVED FROM BALLOT AREA -->
+            <!-- NEW: 13th.png Logo for the Voting Content Area -->
+            <img src="13th.png" 
+                 class="w-32 h-32 sm:w-40 sm:h-40 mx-auto object-contain mb-6 relative z-10" 
+                 alt="13th CAFS FC Logo">
              
             
 <div id="user-traceability" class="mx-auto p-3 mb-6 sm:mb-8 text-center bg-custom-light-gold rounded-lg shadow-md border border-custom-main/50 w-full max-w-xl">
@@ -614,16 +617,17 @@
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTnZExJ9injJGTsk1uFOUT45te0_gXPu0BGvAhgpWwNRIKxwgV3bXW-gygrr4omsBY9luXXxpPe1lE6/pub?gid=1092490256&single=true&output=csv';
         
         // IMPORTANT: The GOOGLE_FORM_URL and FORM_ENTRY_IDS must be updated to match the final form used for redundancy logging.
-        const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLS-PLACEHOLDER-FOR-NEW-GOOGLE-FORM/formResponse';
+        // --- UPDATED GOOGLE FORM URL ---
+        const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSf9S0ksmz3OSCfcLHgaux1vGXfrDPR1Nl3Aa-Fe7soKM0Uvgg/formResponse';
         
-        // --- GOOGLE FORM ENTRY IDS (PLACEHOLDERS) ---
+        // --- UPDATED GOOGLE FORM ENTRY IDS ---
         const FORM_ENTRY_IDS = {
-            'voterId': 'entry.237072485', 
-            'Chairperson': 'entry.100000001', 
-            'Vice Chairperson': 'entry.100000002', 
-            'UFC Nominee': 'entry.100000003', 
-            'College Representative to the UFC': 'entry.100000004', 
-            'Councilor': 'entry.100000005' // Use singular key for form logic consistency
+            'voterId': 'entry.1533979100', 
+            'Chairperson': 'entry.759707648', 
+            'Vice Chairperson': 'entry.192266479', 
+            'College Representative to the UFC': 'entry.809194796', 
+            'UFC Nominee': 'entry.1055485089', 
+            'Councilor': 'entry.692317949' 
         };
         // ------------------------------------
 
@@ -1161,46 +1165,46 @@
             }
         };
 
+        // --- MODIFIED: sendToGoogleForm for [SURNAME]_1/[SURNAME]_0 format ---
         const sendToGoogleForm = async (voteDataStructured, userId) => {
             try {
                 const formData = new FormData();
                 formData.append(FORM_ENTRY_IDS['voterId'], userId);
 
                 for (const position in voteDataStructured) {
-                    const finalSelections = []; // This will be the verbose array for the Form
+                    const finalSelections = [];
                     
-                    // FIX: Use 'Councilor' key for look up, but 'Councilors' ID for form posting
-                    const formKey = (position === 'Councilor') ? 'Councilor' : position;
-                    const entryId = FORM_ENTRY_IDS[formKey];
+                    // Use the position key for the form entry ID lookup
+                    const entryId = FORM_ENTRY_IDS[position];
                     
                     if (!entryId) continue;
 
                     const submissionRecords = voteDataStructured[position]; 
-                    const allNamesForPosition = candidatesData[position].map(c => c.name);
                     
-                    // Filter the names that were explicitly VOTED
-                    const votedNames = submissionRecords
-                        .filter(r => r.status === 'VOTED')
-                        .map(r => r.name);
-                    
-                    // 2. Add ABN: Surname for all candidates who were NOT voted for
-                    allNamesForPosition.forEach(name => {
-                        if (!votedNames.includes(name)) {
-                            // A candidate who was not Voted for is recorded as ABN: Surname
-                            const surname = name.split(',')[0].trim();
-                            finalSelections.push(`ABN: ${surname}`);
+                    submissionRecords.forEach(record => {
+                        // 1. Extract and format Surname
+                        const name = record.name;
+                        // Name format is "SURNAME, Given Name(s)". Split by comma, take the first part, trim, and uppercase.
+                        const surname = name.split(',')[0].trim().toUpperCase(); 
+                        
+                        let statusCode;
+
+                        // 2. Determine Status Code
+                        if (record.status === 'VOTED') {
+                            statusCode = '_1';
+                        } else if (record.status === 'ABSTAINED') {
+                            statusCode = '_0';
+                        } else {
+                            // Safety return if status is unexpected
+                            return; 
                         }
+                        
+                        // 3. Create the final required string format
+                        finalSelections.push(`${surname}${statusCode}`);
                     });
 
-                    // 1. Add Voted candidates (after ABN to ensure ABSTAIN message comes after actual votes)
-                    finalSelections.unshift(...votedNames);
-                    
-                    // 3. Add explicit ABSTAIN marker if no candidates were voted for
-                    if (votedNames.length === 0 && finalSelections.length === allNamesForPosition.length) { // Ensure all candidates processed as ABN
-                        finalSelections.push("ABSTAIN (No Vote Cast for Candidate)");
-                    }
-
-                    // Append the generated finalSelections array (the verbose log) to the form data
+                    // Append the generated finalSelections (e.g., ["FLORES_1", "DELACRUZ_0"]) to the form data
+                    // Google Forms handles multiple values for the same entry ID as multiple selections (checkboxes/multiselect)
                     if (Array.isArray(finalSelections) && finalSelections.length > 0) {
                         finalSelections.forEach(record => {
                             formData.append(entryId, record);
@@ -1230,6 +1234,7 @@
                 console.error("Final Error: Failed to submit data to Google Form after retries:", error);
             }
         };
+        // --- END MODIFIED sendToGoogleForm ---
         
         // --- CSV Fetch and Parse Logic ---
         const fetchCandidates = async () => {
