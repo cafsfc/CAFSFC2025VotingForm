@@ -383,8 +383,8 @@
     
 <main class="flex-grow flex items-center justify-center p-4 flex-col">
         
-        <!-- CAFSFC LOGO: Only for Sign-In -->
-        <img src="cafsfc.png" 
+        <!-- 1. CAFSFC LOGO: Only for Sign-In Screen -->
+        <img id="cafs-logo-signin" src="cafsfc.png" 
              class="w-48 h-48 sm:w-56 sm:h-56 mx-auto object-contain -mb-2 sm:-mb-4 relative z-10" 
              alt="CAFS FC Logo for Sign-in">
 
@@ -438,17 +438,24 @@
     </main>
 
     
+<!-- 3. Verification Popup (Scrollable Content) -->
 <div id="verifier-popup" class="hidden fixed inset-0 bg-gray-800 bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md border-t-8 border-custom-sub">
-            <h2 class="text-xl sm:text-2xl font-bold text-custom-sub mb-4 text-center">Final Vote Verification</h2>
-            <p class="text-xs sm:text-sm text-gray-600 mb-6 text-center">Please review your selections before final submission. This action cannot be undone.</p>
+        <!-- Added flex-col and max-h-screen for scrolling support -->
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md border-t-8 border-custom-sub flex flex-col max-h-[90vh]">
             
+            <!-- Header (Fixed) -->
+            <div class="p-6 pb-0 flex-shrink-0">
+                <h2 class="text-xl sm:text-2xl font-bold text-custom-sub mb-2 text-center">Final Vote Verification</h2>
+                <p class="text-xs sm:text-sm text-gray-600 mb-4 text-center">Please review your selections before final submission. This action cannot be undone.</p>
+            </div>
             
-<div id="vote-summary-table-container" class="text-custom-text mb-6">
-                
-</div>
+            <!-- Scrollable Content Area -->
+            <div id="vote-summary-table-container" class="text-custom-text px-6 overflow-y-auto flex-grow min-h-0 mb-4">
+                <!-- Content will be generated here -->
+            </div>
             
-            <div class="flex justify-between space-x-4">
+            <!-- Footer/Buttons (Fixed) -->
+            <div class="flex justify-between space-x-4 p-6 pt-0 flex-shrink-0">
                 <button id="change-vote-btn" class="w-1/2 py-2 text-sm sm:text-base border border-slate-300 rounded-lg text-custom-text font-medium hover:bg-slate-100 transition-colors">
                     Edit Ballot
                 </button>
@@ -460,9 +467,11 @@
     </div>
     
     
-<div id="nominee-popup" class="hidden fixed inset-0 bg-gray-800 bg-opacity-70 flex items-center justify-center p-4 z-50">
+<!-- 2. Nominee Popup (Solid Backgrounds) -->
+<div id="nominee-popup" class="hidden fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
         
-<div id="nominee-card" class="w-full max-w-lg mx-auto rounded-xl relative overflow-hidden">
+<!-- Added bg-white to the main card container for solid background -->
+<div id="nominee-card" class="w-full max-w-lg mx-auto rounded-xl relative overflow-hidden bg-white">
             
 <div class="top-bar"></div> 
 
@@ -537,6 +546,7 @@
         // ----------------------------------------------
 
         // --- UI Element Selectors ---
+        const cafsLogoSigninEl = document.getElementById('cafs-logo-signin'); // 1. New Logo Selector
         const loggedOutStateEl = document.getElementById('logged-out-state');
         const googleLoginBtn = document.getElementById('google-login-btn');
         const logoutBtn = document.getElementById('logout-btn');
@@ -1385,6 +1395,10 @@
                         return;
                     }
 
+                    // --- 1. CAFSFC Logo Visibility: Hide when logged in ---
+                    cafsLogoSigninEl.classList.add('hidden');
+                    // --------------------------------------------------------
+                    
                     // --- NEW: Log the successful authentication to Firestore ---
                     await logAuthEvent(user.uid, user.email);
                     // --------------------------------------------------------
@@ -1409,6 +1423,10 @@
                     loggedOutStateEl.classList.remove('hidden');
                     votingContentEl.classList.add('hidden');
                     headerEl.classList.add('hidden');
+                    
+                    // --- 1. CAFSFC Logo Visibility: Show when logged out ---
+                    cafsLogoSigninEl.classList.remove('hidden');
+                    // --------------------------------------------------------
                 }
             });
         };
