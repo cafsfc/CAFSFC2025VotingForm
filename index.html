@@ -43,26 +43,45 @@
     .logo-13th { width:260px; height:260px; object-fit:contain; }
     @media(max-width:640px){ .logo-header{height:48px} .logo-cafs{width:150px;height:150px} .logo-13th{width:160px;height:160px} }
 
-    /* Top message (fixed) */
+    /* central message */
     #central-message-container { position: fixed; top: 12px; left:50%; transform:translateX(-50%); z-index:120; width:calc(100% - 32px); max-width:720px; display:none; }
     #message-display { border-radius:10px; padding:12px 16px; text-align:center; font-weight:700; box-shadow:0 8px 20px rgba(0,0,0,0.08); }
 
-    .center-viewport { min-height: calc(100vh - 128px); display:flex; align-items:center; justify-content:center; padding-top:16px; padding-bottom:16px; }
+    /* top layout: center vertically on wide screens */
+    main.page-wrap { min-height: calc(100vh - 48px); display:flex; align-items:center; justify-content:center; padding:20px 0; }
+    .top-inner { width:100%; max-width:1180px; display:flex; align-items:center; justify-content:center; gap:20px; padding:0 16px; box-sizing:border-box; }
+
+    /* when wide: left sign-up and right turnout, centered vertically */
+    .left-panel { flex: 1 1 520px; max-width:620px; display:flex; align-items:center; justify-content:center; }
+    .right-panel { width:420px; flex:0 0 420px; }
+
+    @media(max-width:1024px){
+      .right-panel { width:360px; flex: 0 0 360px; }
+    }
+
+    @media(max-width:880px){
+      /* stack panels on narrow screens */
+      .top-inner { flex-direction:column; align-items:stretch; }
+      .left-panel, .right-panel { width:100%; max-width:100%; flex:none; }
+      .right-panel { margin-top: 12px; }
+    }
 
     /* Turnout */
     .turnout-card { border-radius:12px; padding:14px; background:linear-gradient(180deg,white, #FEFEFE); border:1px solid rgba(30,86,41,0.06); }
     .progress-bg { background:#eef2f4; border-radius:9999px; height:12px; overflow:hidden; }
     .progress-fill { height:100%; transition:width .8s ease; background: linear-gradient(90deg,#c39f09,#a08107); box-shadow: inset 0 -2px 4px rgba(0,0,0,0.04); }
 
-    /* ballot */
-    .vote-item { cursor:default; transition:all .18s; border:1px solid #E5E7EB; background:#fff; padding:.5rem; border-radius:12px; display:flex; gap:8px; align-items:center; min-height:4.6rem; }
-    .vote-column,.abstain-column{cursor:pointer;padding:.4rem .6rem;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px; min-width:84px}
+    /* ballot / candidate */
+    .vote-item { cursor:default; transition:all .18s; border:1px solid #E5E7EB; background:#fff; padding:.6rem; border-radius:12px; display:flex; gap:10px; align-items:center; min-height:4.6rem; }
+    .vote-column,.abstain-column{cursor:pointer;padding:.45rem .6rem;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px; min-width:84px}
     .selection-indicator{height:1.4rem;width:1.4rem;border-radius:9999px;border:3px solid #cbd5e1;background:transparent;transition:all .12s;}
     .vote-column.selected .selection-indicator{background:#c39f09;border-color:#c39f09;}
     .abstain-column.selected .selection-indicator{background:#64748B;border-color:#475569;}
-    .candidate-name-container{min-width:0;padding-left:0.75rem;padding-right:.5rem;display:flex;align-items:center;flex:1}
-    .candidate-name-link{text-decoration:underline;cursor:pointer;color:#1e5629;font-weight:600;display:block;overflow-wrap:break-word;line-height:1.1}
-    .candidate-name { font-weight:600; color:var(--text); display:block; overflow-wrap:break-word; word-break:break-word; }
+    .candidate-name-container{min-width:0;padding-left:0.5rem;padding-right:.5rem;display:flex;flex-direction:column;align-items:flex-start;flex:1}
+    .candidate-name-link{cursor:pointer;color:#1e5629;font-weight:700;display:block;line-height:1.05}
+    .candidate-course{font-style:italic;font-weight:500;color:#4b5563; margin-top:0.1rem;}
+    .candidate-compact{display:flex;flex-direction:column;gap:0;}
+
     .selection-text { font-size:.75rem; font-weight:700; letter-spacing:.4px; color:#374151; margin-bottom:6px; }
 
     .highlight-error{border-color:#ef4444!important;box-shadow:0 0 0 2px rgba(239,68,68,.12);border-width:2px!important}
@@ -78,7 +97,7 @@
 
     /* MOBILE ADJUSTMENTS */
     @media(max-width:640px){
-      .vote-item{flex-direction:row; gap:8px; padding:.4rem; min-height:3.8rem}
+      .vote-item{flex-direction:row; gap:8px; padding:.45rem; min-height:3.8rem}
       .selection-indicator{height:1rem;width:1rem;border-width:2px}
       .candidate-name-link{font-size:0.98rem}
       .vote-column, .abstain-column { min-width:64px; padding:.35rem .5rem }
@@ -91,8 +110,11 @@
       .selection-text{margin:0; font-size:.8rem}
     }
 
-    /* Prevent horizontal overflow from long names - allow wrapping */
-    .no-overflow { overflow-wrap: break-word; word-break: break-word; -webkit-hyphens: auto; -ms-hyphens: auto; hyphens: auto; }
+    /* text overflow helpers: single-line ellipsis on very small screens but keep full in title */
+    .one-line-ellipsis { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    @media(min-width:640px){
+      .one-line-ellipsis{ white-space:normal; overflow:visible; text-overflow:unset; }
+    }
 
     /* small helpers */
     .badge { font-weight:700; font-size:0.85rem; padding:.25rem .5rem; border-radius:9999px; display:inline-flex; align-items:center; gap:.4rem }
@@ -100,19 +122,38 @@
 </head>
 <body>
 
-  <!-- Top message -->
+  <!-- Top central message -->
   <div id="central-message-container">
     <div id="message-display"></div>
   </div>
 
-  <!-- Warning popup -->
-  <div id="warning-popup" class="fixed inset-0 hidden z-50 flex items-center justify-center">
+  <!-- Guidelines popup (shows EVERY time on load) -->
+  <div id="guidelines-modal" class="fixed inset-0 z-60 hidden items-center justify-center p-4">
     <div class="absolute inset-0 modal-backdrop"></div>
-    <div class="relative bg-white rounded-xl shadow-2xl w-11/12 max-w-md">
-      <div class="bg-custom-sub text-white px-4 py-3 rounded-t-xl font-bold text-center">⚠️ Notice</div>
-      <div class="p-5 text-custom-text text-center font-medium">Hello this is a warning.</div>
-      <div class="p-4 text-center">
-        <button id="close-warning-btn" class="px-4 py-2 rounded-lg font-bold bg-custom-main text-custom-sub hover:bg-custom-main-dark transition">OK</button>
+    <div class="relative w-full max-w-3xl bg-white rounded-xl overflow-hidden shadow-2xl">
+      <div class="p-6 border-b">
+        <h2 class="text-xl font-bold text-custom-sub">General Reminders &amp; Guidelines</h2>
+        <p class="text-sm text-gray-600 mt-1">Please read before proceeding to the voting portal.</p>
+      </div>
+      <div class="p-6 max-h-[60vh] overflow-y-auto text-sm text-gray-800 space-y-3">
+        <p><strong>Browser recommendation.</strong> For optimal performance and full access to all features, we recommend using <strong>Google Chrome</strong> when accessing this website.</p>
+
+        <p><strong>Data privacy and confidentiality.</strong> This system collects the information necessary to process votes and maintain election records. All collected information will be treated confidentially and handled in accordance with applicable data protection guidelines.</p>
+
+        <p><strong>Single vote rule.</strong> Each eligible student may cast only one (1) vote per election. The system is designed to prevent duplicate voting. Attempts to bypass or manipulate this rule may result in invalidation of the votes involved and disciplinary action.</p>
+
+        <p><strong>Finality of vote.</strong> Once a vote is successfully submitted it is final and cannot be withdrawn, modified, or submitted again.</p>
+
+        <p><strong>Voting period and deadlines.</strong> Votes must be cast within the official voting window announced by the Election Committee. Submissions after the deadline will not be accepted or counted.</p>
+
+        <p><strong>Confidentiality of ballot.</strong> Sharing screenshots, recordings, or any details of your ballot or voting credentials is strictly prohibited to preserve the integrity and confidentiality of the election.</p>
+
+        <p><strong>Assistance and support.</strong> For concerns or inquiries about the voting process, contact the Election Committee or an outgoing Freshman Council member prior to the close of voting.</p>
+
+        <p class="pt-2 border-t text-sm"><strong>Who is allowed to vote.</strong> Eligible voters include freshmen, shiftees, and transferees of the College of Agriculture and Food Science who are officially enrolled for the First Semester of A.Y. 2025–2026.</p>
+      </div>
+      <div class="p-4 flex justify-end gap-3 border-t">
+        <button id="guidelines-understand" class="px-4 py-2 rounded-lg bg-custom-main text-custom-sub font-bold">I understand</button>
       </div>
     </div>
   </div>
@@ -139,92 +180,91 @@
     </div>
   </header>
 
-  <!-- TOP: login + turnout -->
-  <main class="container-max mt-8 mb-8">
-    <div id="top-block" class="flex flex-col sm:flex-row gap-6 items-stretch">
+  <!-- TOP: login + turnout; centered vertically -->
+  <main class="page-wrap">
+    <div class="top-inner container-max">
 
-      <!-- Login card -->
-      <article id="login-card" class="bg-white sm:w-1/2 rounded-xl card-shadow p-6 md:p-8 border-t-8 border-custom-sub flex flex-col items-center justify-center">
-        <img id="cafs-logo-signin" src="cafsfc.png" alt="CAFS logo" class="logo-cafs mb-4">
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-custom-sub text-center">13th CAFS FC Election</h1>
-        <p id="auth-warning-message" class="mt-3 hidden text-red-600 text-sm font-semibold bg-red-50 p-2 rounded-md"></p>
+      <!-- Left: login (or signup) card -->
+      <div class="left-panel">
+        <article id="login-card" class="bg-white rounded-xl card-shadow p-6 md:p-8 border-t-8 border-custom-sub w-full max-w-md flex flex-col items-center justify-center">
+          <img id="cafs-logo-signin" src="cafsfc.png" alt="CAFS logo" class="logo-cafs mb-4">
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-custom-sub text-center">13th CAFS FC Election</h1>
+          <p id="auth-warning-message" class="mt-3 hidden text-red-600 text-sm font-semibold bg-red-50 p-2 rounded-md"></p>
 
-        <button id="google-login-btn" class="mt-6 px-6 py-3 w-full sm:w-auto btn-primary rounded-lg shadow-lg font-semibold flex items-center justify-center">
-          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-3 bg-white p-0.5 rounded" alt="google"> Sign-in with UP MAIL
-        </button>
+          <button id="google-login-btn" class="mt-6 px-6 py-3 w-full sm:w-auto btn-primary rounded-lg shadow-lg font-semibold flex items-center justify-center">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-3 bg-white p-0.5 rounded" alt="google"> Sign-in with UP MAIL
+          </button>
 
-        <p class="mt-4 text-xs sm:text-sm text-red-700 font-semibold bg-red-50 p-3 rounded-lg border border-red-200 text-center">
-          Authentication Required: You must sign in with your <strong>UP Mail (@up.edu.ph)</strong> account.
-        </p>
+          <p class="mt-4 text-xs sm:text-sm text-red-700 font-semibold bg-red-50 p-3 rounded-lg border border-red-200 text-center">
+            Authentication Required: You must sign in with your <strong>UP Mail (@up.edu.ph)</strong> account.
+          </p>
 
-        <p id="error-message" class="mt-4 text-red-500 text-sm hidden">Sign-in failed. Please try again.</p>
-      </article>
+          <p id="error-message" class="mt-4 text-red-500 text-sm hidden">Sign-in failed. Please try again.</p>
+        </article>
+      </div>
 
-      <!-- Turnout -->
-      <aside id="turnout-dashboard" class="bg-white sm:w-1/2 rounded-xl card-shadow p-5 flex flex-col gap-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-lg font-bold text-custom-sub flex items-center gap-2">🗳️ Voter Turnout</h2>
-            <div class="text-xs text-gray-500">Updated live</div>
-          </div>
-          <div class="text-right">
-            <div class="badge bg-custom-light-gold text-custom-sub border border-custom-main/10">Official</div>
-          </div>
-        </div>
-
-        <div class="turnout-card">
-          <div class="flex items-baseline justify-between mb-3 gap-3">
+      <!-- Right: turnout panel -->
+      <aside id="turnout-dashboard" class="right-panel">
+        <div class="turnout-card card-shadow">
+          <div class="flex items-center justify-between mb-3">
             <div>
+              <h2 class="text-lg font-bold text-custom-sub flex items-center gap-2">🗳️ Voter Turnout</h2>
+              <div class="text-xs text-gray-500">Updated live</div>
+            </div>
+            <div class="text-right">
+              <div class="badge bg-custom-light-gold text-custom-sub border border-custom-main/10">Official</div>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <div class="flex items-baseline justify-between mb-2">
               <div class="text-sm text-gray-600">Total Turnout</div>
               <div id="total-turnout-text" class="text-2xl font-bold text-custom-sub">--%</div>
             </div>
-            <div class="hidden sm:flex items-center text-xs text-gray-500">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-custom-main" viewBox="0 0 20 20" fill="currentColor"><path d="M13 7H7v6h6V7z"/><path fill-rule="evenodd" d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7.414A2 2 0 0016.586 6L13 2.414A2 2 0 0011.586 2H5z" clip-rule="evenodd"/></svg>
-              <span>Since poll opened</span>
+            <div class="progress-bg w-full rounded-full">
+              <div id="total-turnout-bar" class="progress-fill" style="width:0%"></div>
             </div>
           </div>
-          <div class="progress-bg w-full rounded-full">
-            <div id="total-turnout-bar" class="progress-fill" style="width:0%"></div>
+
+          <div class="grid grid-cols-1 gap-3">
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <div class="text-sm text-gray-700">BS Agriculture</div>
+                <div id="agri-percent" class="font-bold text-custom-sub">--%</div>
+              </div>
+              <div class="progress-bg w-full rounded-full">
+                <div id="agri-bar" class="progress-fill" style="width:0%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <div class="text-sm text-gray-700">BS Agricultural Biotechnology</div>
+                <div id="biotech-percent" class="font-bold text-custom-sub">--%</div>
+              </div>
+              <div class="progress-bg w-full rounded-full">
+                <div id="biotech-bar" class="progress-fill" style="width:0%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <div class="text-sm text-gray-700">BS Food Science and Technology</div>
+                <div id="food-percent" class="font-bold text-custom-sub">--%</div>
+              </div>
+              <div class="progress-bg w-full rounded-full">
+                <div id="food-bar" class="progress-fill" style="width:0%"></div>
+              </div>
+            </div>
           </div>
+
         </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div class="turnout-card">
-            <div class="flex justify-between items-center mb-2">
-              <div class="text-sm text-gray-700">BS Agriculture</div>
-              <div id="agri-percent" class="font-bold text-custom-sub">--%</div>
-            </div>
-            <div class="progress-bg w-full rounded-full">
-              <div id="agri-bar" class="progress-fill" style="width:0%"></div>
-            </div>
-          </div>
-
-          <div class="turnout-card">
-            <div class="flex justify-between items-center mb-2">
-              <div class="text-sm text-gray-700">BS Agricultural Biotechnology</div>
-              <div id="biotech-percent" class="font-bold text-custom-sub">--%</div>
-            </div>
-            <div class="progress-bg w-full rounded-full">
-              <div id="biotech-bar" class="progress-fill" style="width:0%"></div>
-            </div>
-          </div>
-
-          <div class="turnout-card sm:col-span-2">
-            <div class="flex justify-between items-center mb-2">
-              <div class="text-sm text-gray-700">BS Food Science and Technology</div>
-              <div id="food-percent" class="font-bold text-custom-sub">--%</div>
-            </div>
-            <div class="progress-bg w-full rounded-full">
-              <div id="food-bar" class="progress-fill" style="width:0%"></div>
-            </div>
-          </div>
-        </div>
-
       </aside>
+
     </div>
   </main>
 
-  <!-- Voting -->
+  <!-- Voting area (hidden until login) -->
   <section id="voting-wrapper" class="hidden w-full max-w-4xl mx-auto px-4 mb-16">
     <div class="center-viewport">
       <div id="voting-canvas" class="w-full bg-white rounded-xl card-shadow p-6 md:p-10 border-t-8 border-custom-main animate-fadeIn">
@@ -316,7 +356,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, runTransaction, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     setLogLevel('Debug');
 
@@ -332,7 +372,7 @@
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTnZExJ9injJGTsk1uFOUT45te0_gXPu0BGvAhgpWwNRIKxwgV3bXW-gygrr4omsBY9luXXxpPe1lE6/pub?output=csv';
     const GOOGLE_FORM_URL = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSf9S0ksmz3OSCfcLHgaux1vGXfrDPR1Nl3Aa-Fe7soKM0Uvgg/formResponse';
 
-    // ====== EXACT FORM ENTRY IDS YOU PROVIDED ======
+    // ====== FORM ENTRY IDS ======
     const FORM_ENTRY_IDS = {
       'Degree Program': 'entry.1688313048',
       'Student Number': 'entry.1533979100',
@@ -347,12 +387,13 @@
     // ====== DOM ======
     const msgContainer = document.getElementById('central-message-container');
     const msgDisplay = document.getElementById('message-display');
-    const warningPopup = document.getElementById('warning-popup');
-    const closeWarningBtn = document.getElementById('close-warning-btn');
+
+    const guidelinesModal = document.getElementById('guidelines-modal');
+    const guidelinesUnderstand = document.getElementById('guidelines-understand');
 
     const googleLoginBtn = document.getElementById('google-login-btn');
     const loginCard = document.getElementById('login-card');
-    const topBlock = document.getElementById('top-block');
+    const topBlock = document.querySelector('main.page-wrap');
     const votingWrapper = document.getElementById('voting-wrapper');
     const header = document.getElementById('header');
     const userNameEl = document.getElementById('user-name');
@@ -364,7 +405,7 @@
     const studentNumberError = document.getElementById('student-number-error');
     const degreeProgramInput = document.getElementById('degree-program');
     const proceedToBallotBtn = document.getElementById('proceed-to-ballot');
-    const voterInfoSection = document.getElementById('voter-info-section'); // ADDED per checklist
+    const voterInfoSection = document.getElementById('voter-info-section');
 
     const votingForm = document.getElementById('voting-form');
     const ballotContainer = document.getElementById('ballot-container');
@@ -410,10 +451,10 @@
       if (type === 'success') msgDisplay.classList.add('bg-green-100','text-green-700');
       else if (type === 'error') msgDisplay.classList.add('bg-red-200','text-red-800');
       else msgDisplay.classList.add('bg-slate-100','text-slate-700');
-      setTimeout(()=>{ msgContainer.style.display = 'none'; }, 5000);
+      setTimeout(()=>{ msgContainer.style.display = 'none'; }, 4500);
     };
 
-    // spreadsheet helper
+    // spreadsheet helpers
     const cellToIndex = (cell) => {
       const match = cell.match(/^([A-Z]+)(\d+)$/i);
       if (!match) return null;
@@ -530,6 +571,7 @@
 
     const updateAriaChecked = (el,isChecked) => el.setAttribute('aria-checked', isChecked ? 'true':'false');
 
+    // Render ballot with improved candidate card layout (name bold, course italic, no gap)
     const renderBallot = (candidates) => {
       let html = '';
       for (const pos of positionOrder) {
@@ -540,13 +582,17 @@
         }
         const isMulti = pos === 'Councilor';
         const instruction = isMulti ? 'For each candidate select Vote or Abstain.' : 'Select exactly one (Vote or Abstain).';
-        html += `<div class="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200"><h3 class="text-lg font-bold text-custom-sub mb-2">${pos}</h3><p class="text-xs text-gray-500 mb-2">${instruction}</p><div class="space-y-3">`;
+        html += `<div class="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200"><h3 class="text-xl md:text-2xl font-extrabold text-custom-sub mb-2">${pos}</h3><p class="text-xs text-gray-500 mb-2">${instruction}</p><div class="space-y-3">`;
         list.forEach(info=>{
+          // Candidate name displayed bold, course italic, no extra spacing
+          const safeCourse = info.course ? `<span class="candidate-course" title="${info.course}">${info.course}</span>` : '';
           html += `
             <div class="vote-item" data-name="${info.name}" data-position="${pos}" data-multiselect="${isMulti}">
-              <div class="candidate-name-container no-overflow">
-                <span class="candidate-name candidate-name-link" data-candidate-name="${info.name}">${info.name}</span>
+              <div class="candidate-name-container candidate-compact">
+                <span class="candidate-name-link one-line-ellipsis" data-candidate-name="${info.name}" title="${info.name}">${info.name}${info.course ? ' • ' : ''}${info.course ? '' : ''}</span>
+                ${info.course ? `<span class="candidate-course">${info.course}</span>` : ''}
               </div>
+
               <div class="vote-column" tabindex="0" data-action="vote" data-name="${info.name}" data-position="${pos}" role="radio" aria-checked="false">
                 <span class="selection-text">VOTE</span>
                 <div class="selection-indicator" aria-hidden="true"></div>
@@ -654,37 +700,39 @@
             userPhotoEl.src = user.photoURL || 'https://placehold.co/32x32/f1f1f1/1F2933?text=U';
             userIdDisplay.textContent = user.uid;
 
-            // UI switch
-            loginCard.classList.add('animate-fadeOut');
-            topBlock.classList.add('animate-fadeOut');
-            setTimeout(()=>{
-              topBlock.style.display = 'none';
-              header.classList.remove('hidden');
-              votingWrapper.classList.remove('hidden');
-            }, 500);
+            // UI switch: hide top signup, show header + voting
+            topBlock.style.display = 'none';
+            header.classList.remove('hidden');
+            votingWrapper.classList.remove('hidden');
 
             await logAuthEvent(user.uid, user.email);
             await prefillVoterInfoIfExists(user.uid);
             await checkIfVotedAndSetup(user.uid);
           } else {
             userId = null;
+            // show login/signup area, hide voting/header
             header.classList.add('hidden');
             votingWrapper.classList.add('hidden');
-            topBlock.style.display = 'block';
+            topBlock.style.display = 'flex';
           }
         });
 
-        // warning popup once per session
-        if (!sessionStorage.getItem('warningShown')) warningPopup.classList.remove('hidden');
-        closeWarningBtn.addEventListener('click', ()=>{ warningPopup.classList.add('hidden'); sessionStorage.setItem('warningShown','1'); });
+        // show guidelines modal every load
+        showGuidelinesModal();
 
         // attach UI handlers
         googleLoginBtn.addEventListener('click', handleGoogleLogin);
-        document.getElementById('logout-btn').addEventListener('click', async ()=>{ try { await signOut(auth); } catch(e){ console.error(e); }});
+        document.getElementById('logout-btn').addEventListener('click', handleLogout);
         proceedToBallotBtn.addEventListener('click', handleProceedToBallot);
         votingForm.addEventListener('submit', openVoteVerifier);
         confirmVoteBtn.addEventListener('click', handleVote);
         changeVoteBtn.addEventListener('click', ()=>verifierPopup.classList.add('hidden'));
+
+        // guidelines modal
+        guidelinesUnderstand.addEventListener('click', ()=> { closeGuidelinesModal(); });
+
+        // basic anti-screenshot/anti-copy deterrents
+        installCopyDeterrents();
 
       } catch (err) {
         console.error('initApp err', err);
@@ -692,6 +740,20 @@
       }
     };
 
+    // Guidelines modal show/hide (shows every page load)
+    const showGuidelinesModal = () => {
+      guidelinesModal.classList.remove('hidden');
+      guidelinesModal.classList.add('flex');
+      // prevent interaction with page below
+      document.body.style.overflow = 'hidden';
+    };
+    const closeGuidelinesModal = () => {
+      guidelinesModal.classList.add('hidden');
+      guidelinesModal.classList.remove('flex');
+      document.body.style.overflow = '';
+    };
+
+    // login
     const handleGoogleLogin = async () => {
       const provider = new GoogleAuthProvider();
       googleLoginBtn.disabled = true;
@@ -714,7 +776,23 @@
       }
     };
 
-    // prefill existing voter info and auto skip
+    // logout handler (explicit): sign out and go back to sign-up
+    const handleLogout = async () => {
+      try {
+        if (auth) await signOut(auth);
+      } catch (err) {
+        console.warn('logout err', err);
+      } finally {
+        header.classList.add('hidden');
+        votingWrapper.classList.add('hidden');
+        topBlock.style.display = 'flex';
+        // clear any local state
+        hasUserVoted = false;
+        userId = null;
+      }
+    };
+
+    // prefill existing voter info and auto skip if already provided
     const prefillVoterInfoIfExists = async (uid) => {
       try {
         const ref = doc(db, VOTER_INFO_COLLECTION, uid);
@@ -845,6 +923,7 @@
       }
     };
 
+    // handleVote: on success, sign out and bring back to sign-up (no auto-login)
     const handleVote = async () => {
       if (!userId) { showCentralMessage('Not authenticated.', 'error'); return; }
       showLoading(true);
@@ -876,11 +955,24 @@
         } catch (err) { console.warn('mark voted failed', err); }
 
         hasUserVoted = true;
+
         // send redundancy with voter info
         await sendToGoogleForm(voteDataToSubmit, userId);
+
         verifierPopup.classList.add('hidden');
         showCentralMessage('Your official ballot has been securely submitted!', 'success');
-        setFormState('disabled');
+
+        // SIGN OUT the user to avoid automatic re-login and return to signup page
+        try {
+          if (auth) await signOut(auth);
+        } catch(e) { console.warn('signout after vote failed', e); }
+
+        // reset UI to sign-up page
+        header.classList.add('hidden');
+        votingWrapper.classList.add('hidden');
+        topBlock.style.display = 'flex';
+        hasUserVoted = false;
+        userId = null;
       } catch (err) {
         console.error('submit vote err', err);
         if (err.message && err.message.includes('already voted')) {
@@ -977,7 +1069,43 @@
       } catch(err){ console.error('checkIfVoted err', err); }
     };
 
-    // boot app (single call)
+    // Anti-copy & anti-screenshot deterrents (standard)
+    function installCopyDeterrents(){
+      // disable right-click
+      document.addEventListener('contextmenu', (e)=>{ e.preventDefault(); showCentralMessage('Right-click is disabled on this site.', 'error'); }, {passive:false});
+
+      // disable certain keys
+      document.addEventListener('keydown', (e)=>{
+        // PrintScreen
+        if (e.key === 'PrintScreen') {
+          e.preventDefault();
+          showCentralMessage('Screenshot is discouraged.', 'error');
+          return false;
+        }
+        // disable common shortcuts: Ctrl+S, Ctrl+P, Ctrl+Shift+S, Ctrl+Shift+I / F12
+        if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 's' || e.key.toLowerCase() === 'p' || (e.shiftKey && e.key.toLowerCase() === 's'))) {
+          e.preventDefault(); showCentralMessage('This action is disabled for security reasons.', 'error');
+        }
+        // devtools shortcuts
+        if ((e.ctrlKey && e.shiftKey && (e.key.toLowerCase() === 'i' || e.key.toLowerCase() === 'j')) || e.key === 'F12') {
+          e.preventDefault(); showCentralMessage('Opening developer tools is restricted.', 'error');
+        }
+      }, {passive:false});
+
+      // disable select/copy
+      document.addEventListener('copy', (e)=>{ e.preventDefault(); showCentralMessage('Copying is disabled.', 'error'); });
+      document.addEventListener('cut', (e)=>{ e.preventDefault(); showCentralMessage('Cutting is disabled.', 'error'); });
+      document.addEventListener('selectstart', (e)=>{ /* allow small selections for accessibility, don't fully block */ });
+
+      // detect visibility change (e.g. user switches apps)
+      document.addEventListener('visibilitychange', ()=> {
+        if (document.visibilityState === 'hidden') {
+          console.log('Page hidden — possible screen capture or tab switch.');
+        }
+      });
+    }
+
+    // boot
     initApp();
 
   </script>
