@@ -208,32 +208,30 @@
           </div>
 
           <!-- Voter Info (strict student number enforced) -->
-          <div id="voter-info-section" class="w-full max-w-xl">
-            <h2 class="text-lg font-bold text-custom-sub mb-3">Voter Information</h2>
-            <p class="text-sm text-gray-600 mb-3">Provide your details to activate the ballot. Student number must be in <strong>20xx-xxxxx</strong> format.</p>
+<div id="voter-info-section" class="w-full max-w-xl">
+  <h2 class="text-lg font-bold text-custom-sub mb-3">Voter Information</h2>
+  <p class="text-sm text-gray-600 mb-3">
+    Provide your details to activate the ballot. Student number must be in <strong>20xx-xxxxx</strong> format.
+  </p>
 
-            <label class="block mb-3">
-              <span class="font-medium text-gray-700">Student Number</span>
-              <input id="student-number" type="text" pattern="^20\\d{2}-\\d{5}$" inputmode="numeric" placeholder="e.g., 2021-12345" class="mt-1 block w-full border border-gray-300 rounded-lg p-3" />
-              <p id="student-number-error" class="text-xs text-red-600 mt-1 hidden">Student number must match <code>20xx-xxxxx</code>.</p>
-            </label>
+  <label class="block mb-3">
+    <span class="font-medium text-gray-700">Student Number</span>
+    <input id="student-number" type="text" pattern="^20\\d{2}-\\d{5}$" inputmode="numeric" placeholder="e.g., 2021-12345" class="mt-1 block w-full border border-gray-300 rounded-lg p-3" />
+    <p id="student-number-error" class="text-xs text-red-600 mt-1 hidden">Student number must match <code>20xx-xxxxx</code>.</p>
+  </label>
 
-            <label class="block mb-4">
-              <span class="font-medium text-gray-700">Degree Program</span>
-              <select id="degree-program" class="mt-1 block w-full border border-gray-300 rounded-lg p-3">
-                <option value="">Select your course</option>
-                <option value="BS Agriculture">Bachelor of Science in Agriculture</option>
-                <option value="BS Agricultural Biotechnology">Bachelor of Science in Agricultural Biotechnology</option>
-                <option value="BS Food Science and Technology">Bachelor of Science in Food Science and Technology</option>
-              </select>
-            </label>
+  <label class="block mb-4">
+    <span class="font-medium text-gray-700">Degree Program</span>
+    <select id="degree-program" class="mt-1 block w-full border border-gray-300 rounded-lg p-3">
+      <option value="">Select your course</option>
+      <option value="BS Agriculture">Bachelor of Science in Agriculture</option>
+      <option value="BS Agricultural Biotechnology">Bachelor of Science in Agricultural Biotechnology</option>
+      <option value="BS Food Science and Technology">Bachelor of Science in Food Science and Technology</option>
+    </select>
+  </label>
 
-            <div class="flex gap-3">
-              <button id="proceed-to-ballot" class="flex-1 py-3 btn-primary rounded-lg">Proceed to Ballot</button>
-              <button id="save-info-btn" class="flex-1 py-3 border rounded-lg">Save Info</button>
-            </div>
-          </div>
-
+  <button id="proceed-to-ballot" class="w-full py-3 btn-primary rounded-lg">Proceed to Ballot</button>
+</div>
           <!-- Ballot (hidden until proceed) -->
           <form id="voting-form" class="w-full mt-6 opacity-50 pointer-events-none">
             <div id="ballot-container" class="space-y-4">
@@ -739,23 +737,42 @@
     });
 
     /* ---------------- Proceed to ballot (hide info) ---------------- */
-    const handleProceedToBallot = () => {
-      const sn = studentNumberInput.value.trim();
-      const course = degreeProgramInput.value.trim();
-      if (!validateStudentNumber(sn)) {
-        studentNumberError.classList.remove('hidden');
-        studentNumberInput.classList.add('input-error');
-        return;
-      }
-      if (!course) {
-        showCentralMessage('Please select your course.', 'error');
-        return;
-      }
-      // Hide voter info and enable ballot
-      voterInfoSection.style.display = 'none';
-      votingForm.classList.remove('opacity-50'); votingForm.classList.remove('pointer-events-none');
-      showCentralMessage('Voter information confirmed. You may now cast your vote.', 'success');
-    };
+const handleProceedToBallot = async () => {
+  if (!auth || !auth.currentUser) {
+    showCentralMessage('Not authenticated.', 'error');
+    return;
+  }
+
+  const uid = auth.currentUser.uid;
+  const sn = studentNumberInput.value.trim();
+  const course = degreeProgramInput.value.trim();
+
+  // Validate inputs
+  if (!validateStudentNumber(sn)) {
+    studentNumberError.classList.remove('hidden');
+    studentNumberInput.classList.add('input-error');
+    return;
+  }
+  if (!course) {
+    showCentralMessage('Please select your course.', 'error');
+    return;
+  }
+
+  try {
+    // Save info automatically to Firestore
+    const docRef = doc(db, VOTER_INFO_COLLECTION, uid);
+    await setDoc(docRef, { studentNumber: sn, course, updatedAt: new Date() }, { merge: true });
+
+    // Hide info section and unlock ballot
+    voterInfoSection.style.display = 'none';
+    votingForm.classList.remove('opacity-50');
+    votingForm.classList.remove('pointer-events-none');
+    showCentralMessage('Voter information saved. You may now cast your vote.', 'success');
+  } catch (err) {
+    console.error('Proceed to ballot error:', err);
+    showCentralMessage('Failed to save information. Please try again.', 'error');
+  }
+};
 
     /* ---------------- Fetch candidates from CSV and render ballot ---------------- */
     const loadCandidatesFromCSV = async () => {
@@ -1012,3 +1029,4 @@
   </script>
 </body>
 </html>
+
