@@ -88,7 +88,7 @@
     .btn-primary{background:#1e5629;color:#fff;font-weight:700}
     .btn-primary:hover{background:#0d3413}
 
-    .modal-backdrop{background:rgba(0,0,0,0.7)}
+    .modal-backdrop{background:rgba(0,0,0,0.6);backdrop-filter: blur(4px);}
     .input-error{border-color:#ef4444!important;box-shadow:0 0 0 3px rgba(239,68,68,0.06);}
 
     header{box-sizing:border-box;width:100%}
@@ -131,26 +131,50 @@
   <div id="guidelines-modal" class="fixed inset-0 z-60 hidden items-center justify-center p-4">
     <div class="absolute inset-0 modal-backdrop"></div>
     <div class="relative w-full max-w-3xl bg-white rounded-xl overflow-hidden shadow-2xl">
-      <div class="p-6 border-b">
+      <div class="p-6 border-b bg-gradient-to-r from-custom-main/10 to-transparent">
         <h2 class="text-xl font-bold text-custom-sub">General Reminders &amp; Guidelines</h2>
         <p class="text-sm text-gray-600 mt-1">Please read before proceeding to the voting portal.</p>
       </div>
-      <div class="p-6 max-h-[60vh] overflow-y-auto text-sm text-gray-800 space-y-3">
-        <p><strong>Browser recommendation.</strong> For optimal performance and full access to all features, we recommend using <strong>Google Chrome</strong> when accessing this website.</p>
+      <div class="p-6 max-h-[60vh] overflow-y-auto text-sm text-gray-800 space-y-4">
+        <div>
+          <strong>Browser recommendation.</strong>
+          <p class="mt-1">For optimal performance and full access to all features, we recommend using <strong>Google Chrome</strong> when accessing this website.</p>
+        </div>
 
-        <p><strong>Data privacy and confidentiality.</strong> This system collects the information necessary to process votes and maintain election records. All collected information will be treated confidentially and handled in accordance with applicable data protection guidelines.</p>
+        <div>
+          <strong>Data privacy and confidentiality.</strong>
+          <p class="mt-1">This system collects the information necessary to process votes and maintain election records. All collected information will be treated confidentially and handled in accordance with applicable data protection guidelines.</p>
+        </div>
 
-        <p><strong>Single vote rule.</strong> Each eligible student may cast only one (1) vote per election. The system is designed to prevent duplicate voting. Attempts to bypass or manipulate this rule may result in invalidation of the votes involved and disciplinary action.</p>
+        <div>
+          <strong>Single vote rule.</strong>
+          <p class="mt-1">Each eligible student may cast only one (1) vote per election. The system is designed to prevent duplicate voting. Attempts to bypass or manipulate this rule may result in invalidation of the votes involved and disciplinary action.</p>
+        </div>
 
-        <p><strong>Finality of vote.</strong> Once a vote is successfully submitted it is final and cannot be withdrawn, modified, or submitted again.</p>
+        <div>
+          <strong>Finality of vote.</strong>
+          <p class="mt-1">Once a vote is successfully submitted it is final and cannot be withdrawn, modified, or submitted again.</p>
+        </div>
 
-        <p><strong>Voting period and deadlines.</strong> Votes must be cast within the official voting window announced by the Election Committee. Submissions after the deadline will not be accepted or counted.</p>
+        <div>
+          <strong>Voting period and deadlines.</strong>
+          <p class="mt-1">Votes must be cast within the official voting window announced by the Election Committee. Submissions after the deadline will not be accepted or counted.</p>
+        </div>
 
-        <p><strong>Confidentiality of ballot.</strong> Sharing screenshots, recordings, or any details of your ballot or voting credentials is strictly prohibited to preserve the integrity and confidentiality of the election.</p>
+        <div>
+          <strong>Confidentiality of ballot.</strong>
+          <p class="mt-1">Sharing screenshots, recordings, or any details of your ballot or voting credentials is strictly prohibited to preserve the integrity and confidentiality of the election.</p>
+        </div>
 
-        <p><strong>Assistance and support.</strong> For concerns or inquiries about the voting process, contact the Election Committee or an outgoing Freshman Council member prior to the close of voting.</p>
+        <div>
+          <strong>Assistance and support.</strong>
+          <p class="mt-1">For concerns or inquiries about the voting process, contact the Election Committee or an outgoing Freshman Council member prior to the close of voting.</p>
+        </div>
 
-        <p class="pt-2 border-t text-sm"><strong>Who is allowed to vote.</strong> Eligible voters include freshmen, shiftees, and transferees of the College of Agriculture and Food Science who are officially enrolled for the First Semester of A.Y. 2025–2026.</p>
+        <div class="pt-2 border-t">
+          <strong>Who is allowed to vote.</strong>
+          <p class="mt-1">Eligible voters include freshmen, shiftees, and transferees of the College of Agriculture and Food Science who are officially enrolled for the First Semester of A.Y. 2025–2026.</p>
+        </div>
       </div>
       <div class="p-4 flex justify-end gap-3 border-t">
         <button id="guidelines-understand" class="px-4 py-2 rounded-lg bg-custom-main text-custom-sub font-bold">I understand</button>
@@ -442,6 +466,9 @@
     const AUTH_LOGS_COLLECTION = `artifacts/${appId}/public/data/auth_logs`;
     const VOTER_INFO_COLLECTION = `artifacts/${appId}/public/data/voters`;
 
+    // manual sign-in guard: only proceed when user initiated login via button
+    let manualSignInTriggered = false;
+
     // ====== helpers ======
     const showCentralMessage = (text, type='info') => {
       msgContainer.style.display = 'block';
@@ -589,7 +616,7 @@
           html += `
             <div class="vote-item" data-name="${info.name}" data-position="${pos}" data-multiselect="${isMulti}">
               <div class="candidate-name-container candidate-compact">
-                <span class="candidate-name-link one-line-ellipsis" data-candidate-name="${info.name}" title="${info.name}">${info.name}${info.course ? ' • ' : ''}${info.course ? '' : ''}</span>
+                <span class="candidate-name-link one-line-ellipsis" data-candidate-name="${info.name}" title="${info.name}">${info.name}</span>
                 ${info.course ? `<span class="candidate-course">${info.course}</span>` : ''}
               </div>
 
@@ -687,18 +714,26 @@
         // pre-load candidates
         await loadCandidatesFromCSV();
 
+        // IMPORTANT: onAuthStateChanged is still registered but will only allow transition
+        // when the sign-in was initiated by clicking the login button (manualSignInTriggered).
         onAuthStateChanged(auth, async (user) => {
           if (user) {
-            if (user.email && !user.email.endsWith(REQUIRED_DOMAIN)) {
-              showCentralMessage('Please sign in with UP Mail (@up.edu.ph).', 'error');
-              await signOut(auth);
+            // If user arrives without manual trigger, sign them out to prevent auto-login
+            if (!manualSignInTriggered) {
+              try {
+                await signOut(auth);
+              } catch(e){ console.warn('auto signout failed', e); }
               return;
             }
+            // If manual sign-in triggered, allow UI to proceed
             userId = user.uid;
             userNameEl.textContent = user.displayName || '';
             userEmailEl.textContent = user.email || '';
             userPhotoEl.src = user.photoURL || 'https://placehold.co/32x32/f1f1f1/1F2933?text=U';
             userIdDisplay.textContent = user.uid;
+
+            // Reset manual trigger after handling
+            manualSignInTriggered = false;
 
             // UI switch: hide top signup, show header + voting
             topBlock.style.display = 'none';
@@ -717,11 +752,14 @@
           }
         });
 
-        // show guidelines modal every load
+        // show guidelines modal every load and disable login until acknowledged
         showGuidelinesModal();
 
         // attach UI handlers
         googleLoginBtn.addEventListener('click', handleGoogleLogin);
+        // disable login button until user accepts guidelines
+        googleLoginBtn.disabled = true;
+
         document.getElementById('logout-btn').addEventListener('click', handleLogout);
         proceedToBallotBtn.addEventListener('click', handleProceedToBallot);
         votingForm.addEventListener('submit', openVoteVerifier);
@@ -746,15 +784,28 @@
       guidelinesModal.classList.add('flex');
       // prevent interaction with page below
       document.body.style.overflow = 'hidden';
+      // ensure login is disabled until user acknowledges
+      googleLoginBtn.disabled = true;
     };
     const closeGuidelinesModal = () => {
       guidelinesModal.classList.add('hidden');
       guidelinesModal.classList.remove('flex');
       document.body.style.overflow = '';
+      // enable login button
+      googleLoginBtn.disabled = false;
     };
 
     // login
     const handleGoogleLogin = async () => {
+      // ensure user acknowledged guidelines
+      if (guidelinesModal && !guidelinesModal.classList.contains('hidden')) {
+        showCentralMessage('Please read and accept the guidelines first.', 'error');
+        return;
+      }
+
+      // set manual trigger so onAuthStateChanged allows UI flow
+      manualSignInTriggered = true;
+
       const provider = new GoogleAuthProvider();
       googleLoginBtn.disabled = true;
       const original = googleLoginBtn.innerHTML;
@@ -767,8 +818,10 @@
           await signOut(auth);
           return;
         }
+        // successful sign-in will be handled by onAuthStateChanged (manualSignInTriggered true)
       } catch (err) {
         console.error('google login err', err);
+        manualSignInTriggered = false;
         showCentralMessage('Sign-in failed. Please try again.', 'error');
       } finally {
         googleLoginBtn.disabled = false;
@@ -1076,7 +1129,7 @@
 
       // disable certain keys
       document.addEventListener('keydown', (e)=>{
-        // PrintScreen
+        // PrintScreen (some browsers may not report this; still handle)
         if (e.key === 'PrintScreen') {
           e.preventDefault();
           showCentralMessage('Screenshot is discouraged.', 'error');
@@ -1095,7 +1148,8 @@
       // disable select/copy
       document.addEventListener('copy', (e)=>{ e.preventDefault(); showCentralMessage('Copying is disabled.', 'error'); });
       document.addEventListener('cut', (e)=>{ e.preventDefault(); showCentralMessage('Cutting is disabled.', 'error'); });
-      document.addEventListener('selectstart', (e)=>{ /* allow small selections for accessibility, don't fully block */ });
+      // allow selectionstart for accessibility but don't permit copying
+      document.addEventListener('selectstart', (e)=>{ /* no full block to keep accessibility */ });
 
       // detect visibility change (e.g. user switches apps)
       document.addEventListener('visibilitychange', ()=> {
