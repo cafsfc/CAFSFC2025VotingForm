@@ -47,14 +47,20 @@
     #central-message-container { position: fixed; top: 12px; left:50%; transform:translateX(-50%); z-index:120; width:calc(100% - 32px); max-width:720px; display:none; }
     #message-display { border-radius:10px; padding:12px 16px; text-align:center; font-weight:700; box-shadow:0 8px 20px rgba(0,0,0,0.08); }
 
-    /* top layout */
+    /* top layout: center vertically on wide screens */
     main.page-wrap { min-height: calc(100vh - 48px); display:flex; align-items:center; justify-content:center; padding:20px 0; }
     .top-inner { width:100%; max-width:1180px; display:flex; align-items:center; justify-content:center; gap:20px; padding:0 16px; box-sizing:border-box; }
 
+    /* when wide: left sign-up and right turnout, centered vertically */
     .left-panel { flex: 1 1 520px; max-width:620px; display:flex; align-items:center; justify-content:center; }
     .right-panel { width:420px; flex:0 0 420px; }
 
+    @media(max-width:1024px){
+      .right-panel { width:360px; flex: 0 0 360px; }
+    }
+
     @media(max-width:880px){
+      /* stack panels on narrow screens */
       .top-inner { flex-direction:column; align-items:stretch; }
       .left-panel, .right-panel { width:100%; max-width:100%; flex:none; }
       .right-panel { margin-top: 12px; }
@@ -89,19 +95,46 @@
     header .container-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px}
     header img{display:block;max-width:100%;height:auto}
 
-    /* photo viewer */
-    #photo-viewer { display:none; }
-    #voting-ended-modal { display:none; }
-
-    /* disable interactions when voting ended */
-    .voting-ended-disable * { pointer-events: none !important; user-select: none !important; opacity: 0.6; }
-
+    /* MOBILE ADJUSTMENTS */
     @media(max-width:640px){
-      .vote-item{flex-direction:row; gap:8px; padding:.45rem; min-height:3.8rem}
-      .selection-indicator{height:1rem;width:1rem;border-width:2px}
-      .candidate-name-link{font-size:0.98rem}
-      .vote-column, .abstain-column { min-width:64px; padding:.35rem .5rem }
+      .vote-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+        padding: .6rem;
+      }
+      .candidate-name-container {
+        width: 100%;
+        margin-bottom: 0.25rem;
+      }
+      .vote-column, .abstain-column {
+        min-width: 48%;
+        width: 48%;
+        padding: .5rem 0;
+      }
+      .vote-item .vote-column, .vote-item .abstain-column {
+        display: inline-flex;
+        justify-content: center;
+      }
+      .vote-item .vote-column + .abstain-column {
+        margin-left: 2%;
+      }
     }
+
+    /* VERY NARROW: stack controls to avoid overflow */
+    @media(max-width:420px){
+      .vote-item{flex-direction:column; align-items:stretch; gap:8px; padding:.5rem}
+      .candidate-name-container{padding-left:.5rem;padding-right:.5rem}
+      .vote-column,.abstain-column{flex-direction:row; justify-content:space-between; gap:8px; width:100%; min-width:0; padding:.6rem}
+      .selection-text{margin:0; font-size:.8rem}
+    }
+
+    /* ensure modal remains interactive even when disabling rest of UI */
+    .voting-ended-disable * { pointer-events: none !important; user-select: none !important; }
+    #voting-ended-modal, #voting-notyet-modal { pointer-events: auto !important; opacity: 1 !important; z-index: 99999 !important; }
+
+    /* small helpers */
+    .badge { font-weight:700; font-size:0.85rem; padding:.25rem .5rem; border-radius:9999px; display:inline-flex; align-items:center; gap:.4rem }
   </style>
 </head>
 <body>
@@ -120,46 +153,14 @@
         <p class="text-sm text-gray-600 mt-1">Please read before proceeding to the voting portal.</p>
       </div>
       <div class="p-6 max-h-[60vh] overflow-y-auto text-sm text-gray-800 space-y-4">
-        <div>
-          <strong>BROWSER RECOMMENDATION</strong>
-          <p class="mt-1">For optimal performance and full access to all features, we recommend using <strong>Google Chrome</strong> when accessing this website.</p>
-        </div>
-
-        <div>
-          <strong>WHO IS ALLOWED TO VOTE?</strong>
-          <p class="mt-1">Eligible voters include freshmen, shiftees, and transferees of the College of Agriculture and Food Science who are officially enrolled for the First Semester of A.Y. 2025–2026.</p>
-        </div>
-
-        <div>
-          <strong>DATA PRIVACY AND CONFIDENTIALITY</strong>
-          <p class="mt-1">This system collects the information necessary to process votes and maintain election records. All collected information will be treated confidentially and handled in accordance with applicable data protection guidelines.</p>
-        </div>
-
-        <div>
-          <strong>SINGLE VOTE RULE</strong>
-          <p class="mt-1">Each eligible student may cast only one (1) vote per election. The system is designed to prevent duplicate voting. Attempts to bypass or manipulate this rule may result in invalidation of the votes involved.</p>
-        </div>
-
-        <div>
-          <strong>FINALITY OF VOTE</strong>
-          <p class="mt-1">Once a vote is successfully submitted it is final and cannot be withdrawn, modified, or submitted again.</p>
-        </div>
-
-        <div>
-          <strong>VOTING PERIOD AND DEADLINE</strong>
-          <p class="mt-1">Votes must be cast within the official voting window announced by the Election Committee. Submissions after the deadline will not be accepted or counted.</p>
-        </div>
-
-        <div>
-          <strong>CONFIDENTIALITY OF BALLOT</strong>
-          <p class="mt-1">Sharing screenshots, recordings, or any details of your ballot or voting credentials is strictly prohibited to preserve the integrity and confidentiality of the election.</p>
-        </div>
-
-        <div>
-          <strong>ASSISTANCE AND SUPPORT</strong>
-          <p class="mt-1">For concerns or inquiries about the voting process, contact the Election Committee or an outgoing Freshman Council member prior to the close of voting.</p>
-        </div>
-
+        <div><strong>BROWSER RECOMMENDATION</strong><p class="mt-1">For optimal performance and full access to all features, we recommend using <strong>Google Chrome</strong>.</p></div>
+        <div><strong>WHO IS ALLOWED TO VOTE?</strong><p class="mt-1">Eligible voters include freshmen, shiftees, and transferees of the College of Agriculture and Food Science officially enrolled for the First Semester of A.Y. 2025–2026.</p></div>
+        <div><strong>DATA PRIVACY</strong><p class="mt-1">Collected information is handled per applicable data protection guidelines.</p></div>
+        <div><strong>SINGLE VOTE RULE</strong><p class="mt-1">Each eligible student may cast only one (1) vote.</p></div>
+        <div><strong>FINALITY OF VOTE</strong><p class="mt-1">Votes are final once submitted.</p></div>
+        <div><strong>VOTING PERIOD AND DEADLINE</strong><p class="mt-1">Votes must be cast within the official voting window announced by the Election Committee.</p></div>
+        <div><strong>CONFIDENTIALITY OF BALLOT</strong><p class="mt-1">Do not share screenshots or voting credentials.</p></div>
+        <div><strong>ASSISTANCE</strong><p class="mt-1">Contact the Election Committee for questions before close of voting.</p></div>
       </div>
       <div class="p-4 flex justify-end gap-3 border-t">
         <button id="guidelines-understand" class="px-4 py-2 rounded-lg bg-custom-main text-custom-sub font-bold">I understand</button>
@@ -167,15 +168,8 @@
     </div>
   </div>
 
-  <!-- Voting Ended Modal (CAFS-themed) -->
-  <div id="voting-ended-modal" class="fixed inset-0 z-70 hidden items-center justify-center p-4">
-    <div class="absolute inset-0 modal-backdrop"></div>
-    <div class="relative w-full max-w-2xl bg-white rounded-xl overflow-hidden shadow-2xl border-t-8 border-custom-sub p-8 text-center">
-      <h2 class="text-2xl font-extrabold text-custom-sub mb-4">THE VOTING PERIOD HAS CONCLUDED.</h2>
-      <p class="text-gray-700 mb-6">Wait for the official vote results to be posted in the <strong>CAFS FC Facebook Page</strong>.</p>
-      <button id="voting-ended-close" class="px-5 py-2 rounded-lg bg-custom-main text-custom-sub font-bold">OK</button>
-    </div>
-  </div>
+  <!-- Voting Ended Modal (inserted/controlled by JS) -->
+  <!-- Voting Not Yet Started Modal (inserted/controlled by JS) -->
 
   <!-- Header -->
   <header id="header" class="hidden bg-white rounded-b-lg card-shadow border-b-4 border-custom-sub">
@@ -321,7 +315,6 @@
 
           <!-- Ballot -->
           <form id="voting-form" class="w-full mt-6 opacity-50 pointer-events-none">
-            <!-- INSTRUCTIONS: formal -->
             <div class="bg-yellow-50 border-l-4 border-custom-main p-4 rounded-md mb-4 text-sm text-gray-700">
               <strong>INSTRUCTIONS:</strong> Please select either “Vote” or “Abstain” for each candidate. Click a candidate’s name to view their basic information. For fuller details regarding candidates’ platforms and plans of action, please consult the official <a href="https://www.facebook.com/CAFSFC" target="_blank" class="text-custom-sub font-semibold underline hover:text-custom-main-dark">CAFS Freshman Council Facebook Page</a>.
             </div>
@@ -352,7 +345,6 @@
             <p class="text-xs font-semibold text-gray-500 uppercase -mb-1">NOMINATED POSITION</p>
             <h3 id="nominee-position" class="font-extrabold mb-1 leading-tight"></h3>
             <div id="nominee-name" class="font-bold text-custom-text"></div>
-            <div id="nominee-course" class="font-medium text-gray-600 mt-1"></div>
             <div id="nominee-platform" class="mt-3 text-sm text-gray-700"></div>
           </div>
         </div>
@@ -361,16 +353,16 @@
   </div>
 
   <!-- Photo viewer -->
-  <div id="photo-viewer" class="hidden fixed inset-0 z-[999] flex items-center justify-center p-4">
-    <div class="absolute inset-0 bg-black/80"></div>
-    <button id="close-photo-viewer" class="absolute top-4 right-6 z-50 text-white text-3xl font-bold hover:text-gray-300">&times;</button>
+  <div id="photo-viewer" class="hidden fixed inset-0 bg-black/80 z-[999] flex items-center justify-center p-4">
+    <div class="absolute inset-0"></div>
+    <button id="close-photo-viewer" class="absolute top-4 right-6 text-white text-3xl font-bold hover:text-gray-300">&times;</button>
     <img id="photo-viewer-img" src="" alt="Candidate Photo" class="relative max-h-[90vh] max-w-[90vw] rounded-lg shadow-2xl border-4 border-custom-main">
   </div>
 
   <!-- Verifier popup -->
   <div id="verifier-popup" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div class="absolute inset-0 bg-gray-800 bg-opacity-70"></div>
-    <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md border-t-8 border-custom-sub overflow-y-auto max-h-[90vh]">
+    <div class="absolute inset-0 bg-gray-800/70"></div>
+    <div class="relative bg-white rounded-xl w-full max-w-md border-t-8 border-custom-sub shadow-2xl overflow-y-auto max-h-[90vh]">
       <div class="p-6 pb-0">
         <h2 class="text-xl font-bold text-custom-sub mb-2 text-center">Final Vote Verification</h2>
         <p class="text-xs text-gray-600 mb-4 text-center">Please review your selections before final submission.</p>
@@ -392,7 +384,7 @@
     import { getFirestore, doc, getDoc, setDoc, runTransaction, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     setLogLevel('Debug');
 
-    // ====== CONFIG ======
+    // ====== CONFIG (use your real firebase config if different) ======
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
       apiKey: "AIzaSyBdj6ePKM_3YEQTQlaZk9kKrNoMgqsjcjA",
@@ -401,10 +393,13 @@
       storageBucket: "votingmachine-c8e34.appspot.com",
       appId: "1:175934636307:web:717f4a5ba28789f13f5ae6"
     };
+
+    // CSV that contains turnout + candidate + voting period cells
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTnZExJ9injJGTsk1uFOUT45te0_gXPu0BGvAhgpWwNRIKxwgV3bXW-gygrr4omsBY9luXXxpPe1lE6/pub?output=csv';
+
+    // Google Form redundancy URL
     const GOOGLE_FORM_URL = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSf9S0ksmz3OSCfcLHgaux1vGXfrDPR1Nl3Aa-Fe7soKM0Uvgg/formResponse';
 
-    // ====== FORM ENTRY IDS ======
     const FORM_ENTRY_IDS = {
       'Degree Program': 'entry.1688313048',
       'Student Number': 'entry.1533979100',
@@ -416,7 +411,7 @@
       'Councilor': 'entry.692317949'
     };
 
-    // ====== DOM ======
+    // ====== DOM elements ======
     const msgContainer = document.getElementById('central-message-container');
     const msgDisplay = document.getElementById('message-display');
 
@@ -447,7 +442,6 @@
     const nomineePhotoEl = document.getElementById('nominee-photo');
     const nomineeNameEl = document.getElementById('nominee-name');
     const nomineePositionEl = document.getElementById('nominee-position');
-    const nomineeCourseEl = document.getElementById('nominee-course');
     const nomineePlatformEl = document.getElementById('nominee-platform');
 
     const photoViewer = document.getElementById('photo-viewer');
@@ -468,10 +462,7 @@
     const foodPercentEl = document.getElementById('food-percent');
     const foodBar = document.getElementById('food-bar');
 
-    const votingEndedModal = document.getElementById('voting-ended-modal');
-    const votingEndedClose = document.getElementById('voting-ended-close');
-
-    // ====== state ======
+    // state
     let auth, db, userId = null;
     let candidatesData = {};
     let allCandidateInfo = {};
@@ -482,14 +473,13 @@
     const AUTH_LOGS_COLLECTION = `artifacts/${appId}/public/data/auth_logs`;
     const VOTER_INFO_COLLECTION = `artifacts/${appId}/public/data/voters`;
 
-    // manual sign-in guard
     let manualSignInTriggered = false;
 
-    // voting period
+    // Voting period
     let votingDeadline = null;
     let votingStart = null;
 
-    // ====== helpers ======
+    // helpers
     const showCentralMessage = (text, type='info') => {
       msgContainer.style.display = 'block';
       msgDisplay.textContent = text;
@@ -501,7 +491,6 @@
       setTimeout(()=>{ msgContainer.style.display = 'none'; }, 4500);
     };
 
-    // spreadsheet helpers
     const cellToIndex = (cell) => {
       const match = cell.match(/^([A-Z]+)(\d+)$/i);
       if (!match) return null;
@@ -525,7 +514,7 @@
       return s === '' ? NaN : Number(s);
     };
 
-    // ====== turnout ======
+    // Turnout fetch + update
     const fetchTurnoutFromCSV = async () => {
       try {
         const resp = await fetch(CSV_URL);
@@ -534,7 +523,7 @@
         const parsed = Papa.parse(txt, { skipEmptyLines:false });
         const rows = parsed.data;
 
-        // also update voting period each fetch
+        // update voting period if present
         updateVotingPeriodFromRows(rows);
 
         const expected = {
@@ -569,7 +558,6 @@
         biotechBar.style.width = `${Math.min(100,biotechPct)}%`;
         foodPercentEl.textContent = `${foodPct}%`;
         foodBar.style.width = `${Math.min(100,foodPct)}%`;
-
       } catch (err) {
         console.error('turnout fetch err', err);
         showCentralMessage('Unable to load turnout data.', 'error');
@@ -595,7 +583,6 @@
         const parsed = Papa.parse(txt, { skipEmptyLines:true });
         const rows = parsed.data;
 
-        // update voting period from this CSV as well
         updateVotingPeriodFromRows(rows);
 
         const grouped = {};
@@ -607,10 +594,10 @@
           const photo = (row[2]||'').trim();
           const coursePlatform = (row[3]||'').trim();
           if (!name || !position) continue;
+          // previously split course|platform; we will not display course in ballot
           const parts = coursePlatform.split(' | ');
-          const course = parts[0] || '';
           const platform = parts.slice(1).join(' | ') || '';
-          const info = { name, position, photo, course, platform };
+          const info = { name, position, photo, platform };
           allInfo[name] = info;
           if (!grouped[position]) grouped[position]=[];
           grouped[position].push(info);
@@ -618,6 +605,7 @@
         candidatesData = grouped;
         allCandidateInfo = allInfo;
         renderBallot(grouped);
+        preloadCandidateImages(); // <-- preload images right after candidates load
       } catch (err) {
         console.error('load candidates err', err);
         showCentralMessage('Unable to load candidate list.', 'error');
@@ -626,7 +614,7 @@
 
     const updateAriaChecked = (el,isChecked) => el.setAttribute('aria-checked', isChecked ? 'true':'false');
 
-    // Render ballot with improved candidate card layout (name bold, course italic, no gap)
+    // Render ballot (course removed)
     const renderBallot = (candidates) => {
       let html = '';
       for (const pos of positionOrder) {
@@ -639,12 +627,10 @@
         const instruction = isMulti ? 'For each candidate select Vote or Abstain.' : 'Select exactly one (Vote or Abstain).';
         html += `<div class="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200"><h3 class="text-xl md:text-2xl font-extrabold text-custom-sub mb-2">${pos}</h3><p class="text-xs text-gray-500 mb-2">${instruction}</p><div class="space-y-3">`;
         list.forEach(info=>{
-          const safeCourse = info.course ? `<span class="candidate-course" title="${info.course}">${info.course}</span>` : '';
           html += `
             <div class="vote-item" data-name="${info.name}" data-position="${pos}" data-multiselect="${isMulti}">
               <div class="candidate-name-container candidate-compact">
                 <span class="candidate-name-link one-line-ellipsis" data-candidate-name="${info.name}" title="${info.name}">${info.name}</span>
-                ${safeCourse}
               </div>
 
               <div class="vote-column" tabindex="0" data-action="vote" data-name="${info.name}" data-position="${pos}" role="radio" aria-checked="false">
@@ -714,7 +700,6 @@
       nomineePhotoEl.src = info.photo || 'https://placehold.co/128x128/f1f1f1/1F2933?text=ID';
       nomineeNameEl.textContent = info.name;
       nomineePositionEl.textContent = (info.position || '').toUpperCase();
-      nomineeCourseEl.textContent = info.course || '';
       nomineePlatformEl.textContent = info.platform || '';
       nomineePopup.classList.remove('hidden');
     };
@@ -729,10 +714,22 @@
     closePhotoViewer.addEventListener('click', () => {
       photoViewer.classList.add('hidden');
     });
-    // also allow clicking backdrop to close
     photoViewer.addEventListener('click', (e) => {
       if (e.target === photoViewer) photoViewer.classList.add('hidden');
     });
+
+    // preload candidate images for faster modal/photo load
+    const preloadCandidateImages = () => {
+      try {
+        const urls = Object.values(allCandidateInfo).map(c => c.photo).filter(src => src && src.startsWith('http'));
+        urls.forEach(src => {
+          const img = new Image();
+          img.src = src;
+        });
+      } catch (e) {
+        console.warn('preloadCandidateImages err', e);
+      }
+    };
 
     // validation util
     const validateStudentNumber = (val) => {
@@ -755,28 +752,20 @@
         // pre-load candidates
         await loadCandidatesFromCSV();
 
-        // IMPORTANT: onAuthStateChanged is still registered but will only allow transition
-        // when the sign-in was initiated by clicking the login button (manualSignInTriggered).
         onAuthStateChanged(auth, async (user) => {
           if (user) {
-            // If user arrives without manual trigger, sign them out to prevent auto-login
             if (!manualSignInTriggered) {
-              try {
-                await signOut(auth);
-              } catch(e){ console.warn('auto signout failed', e); }
+              try { await signOut(auth); } catch(e){ console.warn('auto signout failed', e); }
               return;
             }
-            // If manual sign-in triggered, allow UI to proceed
             userId = user.uid;
             userNameEl.textContent = user.displayName || '';
             userEmailEl.textContent = user.email || '';
             userPhotoEl.src = user.photoURL || 'https://placehold.co/32x32/f1f1f1/1F2933?text=U';
             userIdDisplay.textContent = user.uid;
-
-            // Reset manual trigger after handling
             manualSignInTriggered = false;
 
-            // UI switch: hide top signup, show header + voting
+            // UI switch
             topBlock.style.display = 'none';
             header.classList.remove('hidden');
             votingWrapper.classList.remove('hidden');
@@ -786,7 +775,6 @@
             await checkIfVotedAndSetup(user.uid);
           } else {
             userId = null;
-            // show login/signup area, hide voting/header
             header.classList.add('hidden');
             votingWrapper.classList.add('hidden');
             topBlock.style.display = 'flex';
@@ -798,7 +786,6 @@
 
         // attach UI handlers
         googleLoginBtn.addEventListener('click', handleGoogleLogin);
-        // disable login button until user accepts guidelines
         googleLoginBtn.disabled = true;
 
         document.getElementById('logout-btn').addEventListener('click', handleLogout);
@@ -807,19 +794,15 @@
         confirmVoteBtn.addEventListener('click', handleVote);
         changeVoteBtn.addEventListener('click', ()=>verifierPopup.classList.add('hidden'));
 
-        // guidelines modal
         guidelinesUnderstand.addEventListener('click', ()=> { closeGuidelinesModal(); });
-
-        // voting ended close
-        votingEndedClose.addEventListener('click', () => { votingEndedModal.classList.add('hidden'); });
 
         // basic anti-screenshot/anti-copy deterrents
         installCopyDeterrents();
 
-        // periodic check for voting deadline (every 60s)
-        setInterval(checkVotingDeadline, 60000);
+        // periodic check for voting deadline
+        setInterval(fetchVotingPeriod, 60000);
         // initial check
-        checkVotingDeadline();
+        fetchVotingPeriod();
 
       } catch (err) {
         console.error('initApp err', err);
@@ -827,39 +810,30 @@
       }
     };
 
-    // Guidelines modal show/hide (shows every page load)
+    // Guidelines modal
     const showGuidelinesModal = () => {
       guidelinesModal.classList.remove('hidden');
       guidelinesModal.classList.add('flex');
-      // prevent interaction with page below
       document.body.style.overflow = 'hidden';
-      // ensure login is disabled until user acknowledges
       googleLoginBtn.disabled = true;
     };
     const closeGuidelinesModal = () => {
       guidelinesModal.classList.add('hidden');
       guidelinesModal.classList.remove('flex');
       document.body.style.overflow = '';
-      // enable login button
       googleLoginBtn.disabled = false;
     };
 
     // login
     const handleGoogleLogin = async () => {
-      // ensure user acknowledged guidelines
       if (guidelinesModal && !guidelinesModal.classList.contains('hidden')) {
         showCentralMessage('Please read and accept the guidelines first.', 'error');
         return;
       }
-
-      // if voting has ended, prevent login
       if (isVotingEnded()) {
         showVotingEndedModal(); return;
       }
-
-      // set manual trigger so onAuthStateChanged allows UI flow
       manualSignInTriggered = true;
-
       const provider = new GoogleAuthProvider();
       googleLoginBtn.disabled = true;
       const original = googleLoginBtn.innerHTML;
@@ -872,7 +846,6 @@
           await signOut(auth);
           return;
         }
-        // successful sign-in will be handled by onAuthStateChanged (manualSignInTriggered true)
       } catch (err) {
         console.error('google login err', err);
         manualSignInTriggered = false;
@@ -883,23 +856,21 @@
       }
     };
 
-    // logout handler (explicit): sign out and go back to sign-up
+    // logout
     const handleLogout = async () => {
       try {
         if (auth) await signOut(auth);
-      } catch (err) {
-        console.warn('logout err', err);
-      } finally {
+      } catch (err) { console.warn('logout err', err); }
+      finally {
         header.classList.add('hidden');
         votingWrapper.classList.add('hidden');
         topBlock.style.display = 'flex';
-        // clear any local state
         hasUserVoted = false;
         userId = null;
       }
     };
 
-    // prefill existing voter info and auto skip if already provided
+    // prefill voter info
     const prefillVoterInfoIfExists = async (uid) => {
       try {
         const ref = doc(db, VOTER_INFO_COLLECTION, uid);
@@ -911,7 +882,7 @@
           if (data.studentNumber && data.course) {
             voterInfoSection.style.display = 'none';
             votingForm.classList.remove('opacity-50'); votingForm.classList.remove('pointer-events-none');
-            showCentralMessage('Welcome back! Your voter information is already saved.', 'success');
+            showCentralMessage('Welcome back! your voter info is already saved.', 'success');
           }
         }
       } catch (err) {
@@ -919,7 +890,7 @@
       }
     };
 
-    // proceed: validate & save voter info with voted:0 and voterId
+    // proceed: validate & save voter info
     const handleProceedToBallot = async () => {
       if (!auth || !auth.currentUser) { showCentralMessage('Not authenticated.', 'error'); return; }
       const uid = auth.currentUser.uid;
@@ -1030,7 +1001,7 @@
       }
     };
 
-    // handleVote: on success, sign out and bring back to sign-up (no auto-login)
+    // handleVote
     const handleVote = async () => {
       if (!userId) { showCentralMessage('Not authenticated.', 'error'); return; }
       showLoading(true);
@@ -1094,10 +1065,8 @@
       }
     };
 
-    // send to google form with exact entry ids (includes voter info)
     const sendToGoogleForm = async (voteStruct, uid) => {
       try {
-        // retrieve voter info
         let studentNumber = '';
         let degreeProgram = '';
         try {
@@ -1111,7 +1080,6 @@
         } catch(err) { console.warn('sendToGoogleForm: voter info read failed', err); }
 
         const formData = new FormData();
-        // exact mapping
         formData.append(FORM_ENTRY_IDS['Voter ID'], uid);
         formData.append(FORM_ENTRY_IDS['Student Number'], studentNumber);
         formData.append(FORM_ENTRY_IDS['Degree Program'], degreeProgram);
@@ -1176,18 +1144,11 @@
       } catch(err){ console.error('checkIfVoted err', err); }
     };
 
-    // Anti-copy & anti-screenshot deterrents (standard)
+    // Anti-copy & anti-screenshot deterrents
     function installCopyDeterrents(){
-      // disable right-click
       document.addEventListener('contextmenu', (e)=>{ e.preventDefault(); showCentralMessage('Right-click is disabled on this site.', 'error'); }, {passive:false});
-
-      // disable certain keys
       document.addEventListener('keydown', (e)=>{
-        if (e.key === 'PrintScreen') {
-          e.preventDefault();
-          showCentralMessage('Screenshot is discouraged.', 'error');
-          return false;
-        }
+        if (e.key === 'PrintScreen') { e.preventDefault(); showCentralMessage('Screenshot is discouraged.', 'error'); return false; }
         if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 's' || e.key.toLowerCase() === 'p' || (e.shiftKey && e.key.toLowerCase() === 's'))) {
           e.preventDefault(); showCentralMessage('This action is disabled for security reasons.', 'error');
         }
@@ -1195,13 +1156,9 @@
           e.preventDefault(); showCentralMessage('Opening developer tools is restricted.', 'error');
         }
       }, {passive:false});
-
-      // disable select/copy
       document.addEventListener('copy', (e)=>{ e.preventDefault(); showCentralMessage('Copying is disabled.', 'error'); });
       document.addEventListener('cut', (e)=>{ e.preventDefault(); showCentralMessage('Cutting is disabled.', 'error'); });
       document.addEventListener('selectstart', (e)=>{ /* accessibility allowed */ });
-
-      // visibility change
       document.addEventListener('visibilitychange', ()=> {
         if (document.visibilityState === 'hidden') {
           console.log('Page hidden — possible screen capture or tab switch.');
@@ -1215,7 +1172,6 @@
         const startRaw = readCellFromRows(rows,'G8');
         const endRaw = readCellFromRows(rows,'H8');
 
-        // Try robust parsing: accept ISO, or common formats. Fall back to Date.parse.
         if (startRaw) {
           const ds = tryParseDate(startRaw);
           if (ds) votingStart = ds;
@@ -1231,14 +1187,11 @@
 
     const tryParseDate = (s) => {
       if (!s) return null;
-      // common patterns: ISO, "MM/DD/YYYY", "YYYY-MM-DD HH:MM", etc.
       const iso = new Date(s);
       if (!isNaN(iso)) return iso;
-      // try replace slashes to dashes and parse
       const normalized = s.replace(/\//g,'-');
       const try2 = new Date(normalized);
       if (!isNaN(try2)) return try2;
-      // try Date.parse
       const t = Date.parse(s);
       if (!isNaN(t)) return new Date(t);
       return null;
@@ -1246,39 +1199,112 @@
 
     const isVotingEnded = () => {
       if (!votingDeadline) return false;
-      const now = new Date();
-      return now > votingDeadline;
+      return new Date() > votingDeadline;
     };
 
     const showVotingEndedModal = () => {
-      // show modal
-      votingEndedModal.classList.remove('hidden');
-      votingEndedModal.classList.add('flex');
+      // ensure body is not globally disabled before inserting modal
+      document.documentElement.classList.remove('voting-ended-disable');
 
-      // disable login & interactions site-wide
-      googleLoginBtn.disabled = true;
-      // disable all interactive elements
-      document.querySelectorAll('button, input, select, textarea, [tabindex]').forEach(el => {
-        try { el.disabled = true; } catch(e) {}
+      let modal = document.getElementById("voting-ended-modal");
+      if (!modal) {
+        const modalHTML = `
+          <div id="voting-ended-modal" class="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-[99999]">
+            <div class="bg-white max-w-lg w-full rounded-xl shadow-2xl border-t-8 border-custom-sub text-center p-8 animate-fadeIn">
+              <h2 class="text-2xl font-extrabold text-custom-sub mb-4">THE VOTING PERIOD HAS CONCLUDED.</h2>
+              <p class="text-gray-700 mb-6">Wait for the official vote results to be posted in the <strong>CAFS FC Facebook Page</strong>.</p>
+              <button id="close-ended-btn" class="mt-2 px-5 py-2 rounded-lg bg-custom-main text-custom-sub font-bold hover:bg-custom-main-dark transition">Close</button>
+            </div>
+          </div>
+        `;
+        document.body.insertAdjacentHTML("beforeend", modalHTML);
+        modal = document.getElementById("voting-ended-modal");
+        document.getElementById("close-ended-btn").addEventListener("click", () => {
+          try { modal.remove(); } catch(e){}
+        });
+      } else {
+        modal.classList.remove('hidden');
+      }
+
+      // Disable everything but ensure modal stays interactive
+      document.querySelectorAll("button, input, select, textarea").forEach((el) => {
+        try { el.disabled = true; } catch(e){}
       });
-      // add visual class
       document.documentElement.classList.add('voting-ended-disable');
+
+      // ensure modal is clickable (override)
+      modal.style.pointerEvents = 'auto';
+      modal.style.opacity = '1';
+      modal.style.zIndex = '99999';
     };
 
-    const checkVotingDeadline = () => {
-      if (isVotingEnded()) {
-        showVotingEndedModal();
+    const showVotingNotYetStartedModal = () => {
+      document.documentElement.classList.remove('voting-ended-disable');
+      let modal = document.getElementById("voting-notyet-modal");
+      if (!modal) {
+        const modalHTML = `
+          <div id="voting-notyet-modal" class="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-[99999]">
+            <div class="bg-white max-w-lg w-full rounded-xl shadow-2xl border-t-8 border-custom-main text-center p-8 animate-fadeIn">
+              <h2 class="text-2xl font-extrabold text-custom-sub mb-4">THE VOTING PERIOD HAS NOT YET STARTED</h2>
+              <p class="text-gray-700 mb-6">Please come back once the official voting period begins. Check the <strong>CAFS Freshman Council Facebook Page</strong> for the schedule.</p>
+              <button id="close-notyet-btn" class="mt-2 px-5 py-2 rounded-lg bg-custom-main text-custom-sub font-bold hover:bg-custom-main-dark transition">Close</button>
+            </div>
+          </div>
+        `;
+        document.body.insertAdjacentHTML("beforeend", modalHTML);
+        modal = document.getElementById("voting-notyet-modal");
+        document.getElementById("close-notyet-btn").addEventListener("click", () => {
+          try { modal.remove(); } catch(e){}
+        });
       } else {
-        // if not ended, ensure normal state (in case reopened)
-        googleLoginBtn.disabled = false;
-        document.documentElement.classList.remove('voting-ended-disable');
+        modal.classList.remove('hidden');
+      }
+
+      document.querySelectorAll("button, input, select, textarea").forEach((el) => {
+        try { el.disabled = true; } catch(e){}
+      });
+      document.documentElement.classList.add('voting-ended-disable');
+
+      modal.style.pointerEvents = 'auto';
+      modal.style.opacity = '1';
+      modal.style.zIndex = '99999';
+    };
+
+    // fetch voting period directly (reads G8:H8)
+    const fetchVotingPeriod = async () => {
+      try {
+        const resp = await fetch(CSV_URL);
+        if (!resp.ok) throw new Error('CSV fetch failed ' + resp.status);
+        const txt = await resp.text();
+        const parsed = Papa.parse(txt, { skipEmptyLines:false });
+        const rows = parsed.data;
+
+        updateVotingPeriodFromRows(rows);
+        // Check immediately after update
+        if (votingStart && new Date() < votingStart) {
+          showVotingNotYetStartedModal();
+          return;
+        }
+        if (isVotingEnded()) {
+          showVotingEndedModal();
+        } else {
+          // if not ended, re-enable UI if previously disabled
+          document.documentElement.classList.remove('voting-ended-disable');
+          document.querySelectorAll("button, input, select, textarea").forEach((el) => {
+            try { el.disabled = false; } catch(e){}
+          });
+        }
+      } catch (err) {
+        console.error('fetchVotingPeriod err', err);
       }
     };
 
-    // ====== boot ======
+    // initial candidate load
+    loadCandidatesFromCSV();
+
+    // install app
     initApp();
 
   </script>
 </body>
 </html>
-
