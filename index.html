@@ -47,20 +47,14 @@
     #central-message-container { position: fixed; top: 12px; left:50%; transform:translateX(-50%); z-index:120; width:calc(100% - 32px); max-width:720px; display:none; }
     #message-display { border-radius:10px; padding:12px 16px; text-align:center; font-weight:700; box-shadow:0 8px 20px rgba(0,0,0,0.08); }
 
-    /* top layout: center vertically on wide screens */
+    /* top layout */
     main.page-wrap { min-height: calc(100vh - 48px); display:flex; align-items:center; justify-content:center; padding:20px 0; }
     .top-inner { width:100%; max-width:1180px; display:flex; align-items:center; justify-content:center; gap:20px; padding:0 16px; box-sizing:border-box; }
 
-    /* when wide: left sign-up and right turnout, centered vertically */
     .left-panel { flex: 1 1 520px; max-width:620px; display:flex; align-items:center; justify-content:center; }
     .right-panel { width:420px; flex:0 0 420px; }
 
-    @media(max-width:1024px){
-      .right-panel { width:360px; flex: 0 0 360px; }
-    }
-
     @media(max-width:880px){
-      /* stack panels on narrow screens */
       .top-inner { flex-direction:column; align-items:stretch; }
       .left-panel, .right-panel { width:100%; max-width:100%; flex:none; }
       .right-panel { margin-top: 12px; }
@@ -95,29 +89,19 @@
     header .container-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px}
     header img{display:block;max-width:100%;height:auto}
 
-    /* MOBILE ADJUSTMENTS */
+    /* photo viewer */
+    #photo-viewer { display:none; }
+    #voting-ended-modal { display:none; }
+
+    /* disable interactions when voting ended */
+    .voting-ended-disable * { pointer-events: none !important; user-select: none !important; opacity: 0.6; }
+
     @media(max-width:640px){
       .vote-item{flex-direction:row; gap:8px; padding:.45rem; min-height:3.8rem}
       .selection-indicator{height:1rem;width:1rem;border-width:2px}
       .candidate-name-link{font-size:0.98rem}
       .vote-column, .abstain-column { min-width:64px; padding:.35rem .5rem }
     }
-    /* VERY NARROW: stack controls to avoid overflow */
-    @media(max-width:420px){
-      .vote-item{flex-direction:column; align-items:stretch; gap:8px; padding:.5rem}
-      .candidate-name-container{padding-left:.5rem;padding-right:.5rem}
-      .vote-column,.abstain-column{flex-direction:row; justify-content:space-between; gap:8px; width:100%; min-width:0; padding:.6rem}
-      .selection-text{margin:0; font-size:.8rem}
-    }
-
-    /* text overflow helpers: single-line ellipsis on very small screens but keep full in title */
-    .one-line-ellipsis { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    @media(min-width:640px){
-      .one-line-ellipsis{ white-space:normal; overflow:visible; text-overflow:unset; }
-    }
-
-    /* small helpers */
-    .badge { font-weight:700; font-size:0.85rem; padding:.25rem .5rem; border-radius:9999px; display:inline-flex; align-items:center; gap:.4rem }
   </style>
 </head>
 <body>
@@ -140,12 +124,12 @@
           <strong>BROWSER RECOMMENDATION</strong>
           <p class="mt-1">For optimal performance and full access to all features, we recommend using <strong>Google Chrome</strong> when accessing this website.</p>
         </div>
-        
+
         <div>
           <strong>WHO IS ALLOWED TO VOTE?</strong>
           <p class="mt-1">Eligible voters include freshmen, shiftees, and transferees of the College of Agriculture and Food Science who are officially enrolled for the First Semester of A.Y. 2025–2026.</p>
         </div>
-        
+
         <div>
           <strong>DATA PRIVACY AND CONFIDENTIALITY</strong>
           <p class="mt-1">This system collects the information necessary to process votes and maintain election records. All collected information will be treated confidentially and handled in accordance with applicable data protection guidelines.</p>
@@ -175,11 +159,21 @@
           <strong>ASSISTANCE AND SUPPORT</strong>
           <p class="mt-1">For concerns or inquiries about the voting process, contact the Election Committee or an outgoing Freshman Council member prior to the close of voting.</p>
         </div>
-        
+
       </div>
       <div class="p-4 flex justify-end gap-3 border-t">
         <button id="guidelines-understand" class="px-4 py-2 rounded-lg bg-custom-main text-custom-sub font-bold">I understand</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Voting Ended Modal (CAFS-themed) -->
+  <div id="voting-ended-modal" class="fixed inset-0 z-70 hidden items-center justify-center p-4">
+    <div class="absolute inset-0 modal-backdrop"></div>
+    <div class="relative w-full max-w-2xl bg-white rounded-xl overflow-hidden shadow-2xl border-t-8 border-custom-sub p-8 text-center">
+      <h2 class="text-2xl font-extrabold text-custom-sub mb-4">THE VOTING PERIOD HAS CONCLUDED.</h2>
+      <p class="text-gray-700 mb-6">Wait for the official vote results to be posted in the <strong>CAFS FC Facebook Page</strong>.</p>
+      <button id="voting-ended-close" class="px-5 py-2 rounded-lg bg-custom-main text-custom-sub font-bold">OK</button>
     </div>
   </div>
 
@@ -327,6 +321,11 @@
 
           <!-- Ballot -->
           <form id="voting-form" class="w-full mt-6 opacity-50 pointer-events-none">
+            <!-- INSTRUCTIONS: formal -->
+            <div class="bg-yellow-50 border-l-4 border-custom-main p-4 rounded-md mb-4 text-sm text-gray-700">
+              <strong>INSTRUCTIONS:</strong> Please select either “Vote” or “Abstain” for each candidate. Click a candidate’s name to view their basic information. For fuller details regarding candidates’ platforms and plans of action, please consult the official <a href="https://www.facebook.com/CAFSFC" target="_blank" class="text-custom-sub font-semibold underline hover:text-custom-main-dark">CAFS Freshman Council Facebook Page</a>.
+            </div>
+
             <div id="ballot-container" class="space-y-4">
               <p class="text-center text-gray-500">Loading official candidate data...</p>
             </div>
@@ -348,16 +347,24 @@
 
       <div class="p-6 pt-12 bg-custom-light-gold max-h-[80vh] overflow-y-auto">
         <div class="flex items-start gap-4">
-          <img id="nominee-photo" class="w-24 h-24 sm:w-36 sm:h-36 object-cover rounded-md border-4 border-custom-main" src="https://placehold.co/128x128/f1f1f1/1F2933?text=ID" alt="Nominee Photo">
+          <img id="nominee-photo" class="w-24 h-24 sm:w-36 sm:h-36 object-cover rounded-md border-4 border-custom-main cursor-pointer" src="https://placehold.co/128x128/f1f1f1/1F2933?text=ID" alt="Nominee Photo">
           <div>
             <p class="text-xs font-semibold text-gray-500 uppercase -mb-1">NOMINATED POSITION</p>
             <h3 id="nominee-position" class="font-extrabold mb-1 leading-tight"></h3>
             <div id="nominee-name" class="font-bold text-custom-text"></div>
             <div id="nominee-course" class="font-medium text-gray-600 mt-1"></div>
+            <div id="nominee-platform" class="mt-3 text-sm text-gray-700"></div>
           </div>
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Photo viewer -->
+  <div id="photo-viewer" class="hidden fixed inset-0 z-[999] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/80"></div>
+    <button id="close-photo-viewer" class="absolute top-4 right-6 z-50 text-white text-3xl font-bold hover:text-gray-300">&times;</button>
+    <img id="photo-viewer-img" src="" alt="Candidate Photo" class="relative max-h-[90vh] max-w-[90vw] rounded-lg shadow-2xl border-4 border-custom-main">
   </div>
 
   <!-- Verifier popup -->
@@ -441,6 +448,11 @@
     const nomineeNameEl = document.getElementById('nominee-name');
     const nomineePositionEl = document.getElementById('nominee-position');
     const nomineeCourseEl = document.getElementById('nominee-course');
+    const nomineePlatformEl = document.getElementById('nominee-platform');
+
+    const photoViewer = document.getElementById('photo-viewer');
+    const photoViewerImg = document.getElementById('photo-viewer-img');
+    const closePhotoViewer = document.getElementById('close-photo-viewer');
 
     const verifierPopup = document.getElementById('verifier-popup');
     const voteSummaryEl = document.getElementById('vote-summary-table-container');
@@ -456,6 +468,9 @@
     const foodPercentEl = document.getElementById('food-percent');
     const foodBar = document.getElementById('food-bar');
 
+    const votingEndedModal = document.getElementById('voting-ended-modal');
+    const votingEndedClose = document.getElementById('voting-ended-close');
+
     // ====== state ======
     let auth, db, userId = null;
     let candidatesData = {};
@@ -467,8 +482,12 @@
     const AUTH_LOGS_COLLECTION = `artifacts/${appId}/public/data/auth_logs`;
     const VOTER_INFO_COLLECTION = `artifacts/${appId}/public/data/voters`;
 
-    // manual sign-in guard: only proceed when user initiated login via button
+    // manual sign-in guard
     let manualSignInTriggered = false;
+
+    // voting period
+    let votingDeadline = null;
+    let votingStart = null;
 
     // ====== helpers ======
     const showCentralMessage = (text, type='info') => {
@@ -515,6 +534,9 @@
         const parsed = Papa.parse(txt, { skipEmptyLines:false });
         const rows = parsed.data;
 
+        // also update voting period each fetch
+        updateVotingPeriodFromRows(rows);
+
         const expected = {
           total: parseNumber(readCellFromRows(rows,'G6')) || NaN,
           agri: parseNumber(readCellFromRows(rows,'G3')) || NaN,
@@ -547,6 +569,7 @@
         biotechBar.style.width = `${Math.min(100,biotechPct)}%`;
         foodPercentEl.textContent = `${foodPct}%`;
         foodBar.style.width = `${Math.min(100,foodPct)}%`;
+
       } catch (err) {
         console.error('turnout fetch err', err);
         showCentralMessage('Unable to load turnout data.', 'error');
@@ -571,6 +594,10 @@
         const txt = await res.text();
         const parsed = Papa.parse(txt, { skipEmptyLines:true });
         const rows = parsed.data;
+
+        // update voting period from this CSV as well
+        updateVotingPeriodFromRows(rows);
+
         const grouped = {};
         const allInfo = {};
         for (let i = 1; i < rows.length; i++){
@@ -612,12 +639,12 @@
         const instruction = isMulti ? 'For each candidate select Vote or Abstain.' : 'Select exactly one (Vote or Abstain).';
         html += `<div class="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200"><h3 class="text-xl md:text-2xl font-extrabold text-custom-sub mb-2">${pos}</h3><p class="text-xs text-gray-500 mb-2">${instruction}</p><div class="space-y-3">`;
         list.forEach(info=>{
-          // Candidate name displayed bold, course italic, no extra spacing
           const safeCourse = info.course ? `<span class="candidate-course" title="${info.course}">${info.course}</span>` : '';
           html += `
             <div class="vote-item" data-name="${info.name}" data-position="${pos}" data-multiselect="${isMulti}">
               <div class="candidate-name-container candidate-compact">
                 <span class="candidate-name-link one-line-ellipsis" data-candidate-name="${info.name}" title="${info.name}">${info.name}</span>
+                ${safeCourse}
               </div>
 
               <div class="vote-column" tabindex="0" data-action="vote" data-name="${info.name}" data-position="${pos}" role="radio" aria-checked="false">
@@ -688,10 +715,24 @@
       nomineeNameEl.textContent = info.name;
       nomineePositionEl.textContent = (info.position || '').toUpperCase();
       nomineeCourseEl.textContent = info.course || '';
+      nomineePlatformEl.textContent = info.platform || '';
       nomineePopup.classList.remove('hidden');
     };
     const closeNomineeCard = ()=> nomineePopup.classList.add('hidden');
     closeNomineeBtn.addEventListener('click', closeNomineeCard);
+
+    // photo viewer: clicking nominee photo opens fullscreen viewer
+    nomineePhotoEl.addEventListener('click', () => {
+      photoViewerImg.src = nomineePhotoEl.src;
+      photoViewer.classList.remove('hidden');
+    });
+    closePhotoViewer.addEventListener('click', () => {
+      photoViewer.classList.add('hidden');
+    });
+    // also allow clicking backdrop to close
+    photoViewer.addEventListener('click', (e) => {
+      if (e.target === photoViewer) photoViewer.classList.add('hidden');
+    });
 
     // validation util
     const validateStudentNumber = (val) => {
@@ -769,8 +810,16 @@
         // guidelines modal
         guidelinesUnderstand.addEventListener('click', ()=> { closeGuidelinesModal(); });
 
+        // voting ended close
+        votingEndedClose.addEventListener('click', () => { votingEndedModal.classList.add('hidden'); });
+
         // basic anti-screenshot/anti-copy deterrents
         installCopyDeterrents();
+
+        // periodic check for voting deadline (every 60s)
+        setInterval(checkVotingDeadline, 60000);
+        // initial check
+        checkVotingDeadline();
 
       } catch (err) {
         console.error('initApp err', err);
@@ -801,6 +850,11 @@
       if (guidelinesModal && !guidelinesModal.classList.contains('hidden')) {
         showCentralMessage('Please read and accept the guidelines first.', 'error');
         return;
+      }
+
+      // if voting has ended, prevent login
+      if (isVotingEnded()) {
+        showVotingEndedModal(); return;
       }
 
       // set manual trigger so onAuthStateChanged allows UI flow
@@ -1129,17 +1183,14 @@
 
       // disable certain keys
       document.addEventListener('keydown', (e)=>{
-        // PrintScreen (some browsers may not report this; still handle)
         if (e.key === 'PrintScreen') {
           e.preventDefault();
           showCentralMessage('Screenshot is discouraged.', 'error');
           return false;
         }
-        // disable common shortcuts: Ctrl+S, Ctrl+P, Ctrl+Shift+S, Ctrl+Shift+I / F12
         if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 's' || e.key.toLowerCase() === 'p' || (e.shiftKey && e.key.toLowerCase() === 's'))) {
           e.preventDefault(); showCentralMessage('This action is disabled for security reasons.', 'error');
         }
-        // devtools shortcuts
         if ((e.ctrlKey && e.shiftKey && (e.key.toLowerCase() === 'i' || e.key.toLowerCase() === 'j')) || e.key === 'F12') {
           e.preventDefault(); showCentralMessage('Opening developer tools is restricted.', 'error');
         }
@@ -1148,10 +1199,9 @@
       // disable select/copy
       document.addEventListener('copy', (e)=>{ e.preventDefault(); showCentralMessage('Copying is disabled.', 'error'); });
       document.addEventListener('cut', (e)=>{ e.preventDefault(); showCentralMessage('Cutting is disabled.', 'error'); });
-      // allow selectionstart for accessibility but don't permit copying
-      document.addEventListener('selectstart', (e)=>{ /* no full block to keep accessibility */ });
+      document.addEventListener('selectstart', (e)=>{ /* accessibility allowed */ });
 
-      // detect visibility change (e.g. user switches apps)
+      // visibility change
       document.addEventListener('visibilitychange', ()=> {
         if (document.visibilityState === 'hidden') {
           console.log('Page hidden — possible screen capture or tab switch.');
@@ -1159,7 +1209,73 @@
       });
     }
 
-    // boot
+    // ====== Voting Period Control (reads G8:H8 from CSV) ======
+    const updateVotingPeriodFromRows = (rows) => {
+      try {
+        const startRaw = readCellFromRows(rows,'G8');
+        const endRaw = readCellFromRows(rows,'H8');
+
+        // Try robust parsing: accept ISO, or common formats. Fall back to Date.parse.
+        if (startRaw) {
+          const ds = tryParseDate(startRaw);
+          if (ds) votingStart = ds;
+        }
+        if (endRaw) {
+          const de = tryParseDate(endRaw);
+          if (de) votingDeadline = de;
+        }
+      } catch(err) {
+        console.warn('updateVotingPeriodFromRows err', err);
+      }
+    };
+
+    const tryParseDate = (s) => {
+      if (!s) return null;
+      // common patterns: ISO, "MM/DD/YYYY", "YYYY-MM-DD HH:MM", etc.
+      const iso = new Date(s);
+      if (!isNaN(iso)) return iso;
+      // try replace slashes to dashes and parse
+      const normalized = s.replace(/\//g,'-');
+      const try2 = new Date(normalized);
+      if (!isNaN(try2)) return try2;
+      // try Date.parse
+      const t = Date.parse(s);
+      if (!isNaN(t)) return new Date(t);
+      return null;
+    };
+
+    const isVotingEnded = () => {
+      if (!votingDeadline) return false;
+      const now = new Date();
+      return now > votingDeadline;
+    };
+
+    const showVotingEndedModal = () => {
+      // show modal
+      votingEndedModal.classList.remove('hidden');
+      votingEndedModal.classList.add('flex');
+
+      // disable login & interactions site-wide
+      googleLoginBtn.disabled = true;
+      // disable all interactive elements
+      document.querySelectorAll('button, input, select, textarea, [tabindex]').forEach(el => {
+        try { el.disabled = true; } catch(e) {}
+      });
+      // add visual class
+      document.documentElement.classList.add('voting-ended-disable');
+    };
+
+    const checkVotingDeadline = () => {
+      if (isVotingEnded()) {
+        showVotingEndedModal();
+      } else {
+        // if not ended, ensure normal state (in case reopened)
+        googleLoginBtn.disabled = false;
+        document.documentElement.classList.remove('voting-ended-disable');
+      }
+    };
+
+    // ====== boot ======
     initApp();
 
   </script>
