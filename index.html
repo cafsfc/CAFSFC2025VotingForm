@@ -1,1154 +1,504 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>13th CAFS FC Election Site</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>13th CAFS FC Election Site</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'custom-main': '#c39f09', // Primary Accent: Warm Gold
-                        'custom-main-dark': '#a08107',
-                        'custom-sub': '#1e5629', // Deep Forest Green
-                        'custom-text': '#1F2933',
-                        'custom-light-gold': '#fcf8eb'
-                    }
-                }
-            }
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'custom-main': '#c39f09',
+            'custom-main-dark': '#a08107',
+            'custom-sub': '#1e5629',
+            'custom-text': '#1F2933',
+            'custom-light-gold': '#fcf8eb'
+          },
+          keyframes: {
+            fadeIn: { '0%': { opacity: '0', transform: 'scale(.98)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
+            fadeOut: { '0%': { opacity: '1', transform: 'scale(1)' }, '100%': { opacity: '0', transform: 'scale(.98)' } }
+          },
+          animation: {
+            fadeIn: 'fadeIn 0.6s ease-out forwards',
+            fadeOut: 'fadeOut 0.6s ease-out forwards'
+          }
         }
-    </script>
+      }
+    }
+  </script>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .vote-item {
-            cursor: default;
-            transition: all 0.2s ease-in-out;
-            border: 1px solid #E5E7EB;
-            position: relative;
-            background-color: white;
-            padding: 0.5rem 0;
-            border-radius: 0.5rem;
-            display: grid;
-            grid-template-columns: 3fr 1fr 1fr;
-            align-items: stretch;
-            min-height: 5rem;
-        }
-        .highlight-error {
-            border-color: #ef4444 !important;
-            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.5);
-            border-width: 2px !important;
-        }
-        .vote-column, .abstain-column {
-            cursor: pointer;
-            padding: 0.5rem 0.25rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            transition: background-color 0.15s;
-            outline: none;
-        }
-        .vote-column:active, .abstain-column:active { background-color: #f0f0f0; }
-        .vote-column:focus, .abstain-column:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(30, 86, 41, 0.4);
-            border-radius: 0.5rem;
-            position: relative;
-            z-index: 10;
-        }
-        .vote-column:hover, .abstain-column:hover { background-color: #f5f5f5; }
-        .selection-indicator {
-            flex-shrink: 0;
-            margin-top: 0.25rem;
-            height: 1.5rem;
-            width: 1.5rem;
-            border: 3px solid #ccc;
-            background-color: transparent;
-            border-radius: 50%;
-            transition: all 0.2s;
-        }
-        .selection-text { font-size: 0.875rem; font-weight: 600; line-height:1.2; text-align:center; }
-        .vote-column.selected { background-color: transparent; }
-        .vote-column.selected .selection-indicator { border-color: #c39f09; background-color: #c39f09; }
-        .vote-column.selected .selection-text { color: #1F2933; }
-        .abstain-column.selected { background-color: transparent; }
-        .abstain-column.selected .selection-indicator { border-color: #475569; background-color: #64748B; }
-        .abstain-column.selected .selection-text { color: #334155; }
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #f8fafc; margin:0; }
+    /* Center everything vertically when voting content is active */
+    .center-viewport { min-height: calc(100vh - 4rem); display:flex; align-items:center; justify-content:center; }
+    /* Prevent turnout overflow on small screens */
+    .turnout-item { white-space: normal; word-break: break-word; }
+    .progress-bar-bg { background: #e6edf0; border-radius: 9999px; height: 10px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; transition: width 0.7s ease; background: linear-gradient(90deg,#c39f09,#a08107); }
+    /* Larger logos */
+    .logo-header { height: 64px; } /* header logo */
+    .logo-cafs { width: 220px; height: 220px; } /* sign in */
+    .logo-13th { width: 160px; height: 160px; } /* voting area */
+    @media (max-width:640px) {
+      .logo-cafs { width:160px; height:160px; }
+      .logo-header { height:48px; }
+      .logo-13th { width:120px; height:120px; }
+    }
+    /* Accessibility / small tweaks */
+    .vote-item { cursor: default; transition: all 0.2s ease-in-out; border: 1px solid #E5E7EB; position: relative; background-color: white; padding: 0.5rem 0; border-radius: 0.5rem; display: grid; grid-template-columns: 3fr 1fr 1fr; align-items: stretch; min-height: 4.5rem; }
+    .vote-column, .abstain-column { cursor:pointer; padding:0.5rem 0.25rem; display:flex; flex-direction:column; align-items:center; justify-content:center; outline:none; }
+    .selection-indicator { height:1.4rem; width:1.4rem; border-radius:9999px; border:3px solid #ccc; background:transparent; transition:all .15s; }
+    .vote-column.selected .selection-indicator { background:#c39f09; border-color:#c39f09; }
+    .abstain-column.selected .selection-indicator { background:#64748B; border-color:#475569; }
+    .selection-text { font-size:0.875rem; font-weight:600; }
+    .candidate-name-container { min-width:0; padding-left:1rem; padding-right:0.5rem; display:flex; align-items:center; }
+    .candidate-name-link { text-decoration:underline; cursor:pointer; color:#1e5629; font-weight:600; }
+    .highlight-error { border-color:#ef4444 !important; box-shadow:0 0 0 2px rgba(239,68,68,0.35); border-width:2px !important; }
+    .btn-primary-submit { background-color:#1e5629; color:white; font-weight:700; }
+    .btn-primary-submit:hover { background-color:#0d3413; }
 
-        .candidate-name-container { min-width: 0; padding-left: 1rem; padding-right: 0.5rem; height: 100%; display:flex; align-items:center; }
-        .btn-primary-submit { background-color: #1e5629; color: white; font-weight: 700; transition: background-color 0.2s; }
-        .btn-primary-submit:hover { background-color: #0d3413; }
-        .candidate-name-link { text-decoration: underline; cursor: pointer; color: #1e5629; font-weight: 600; transition: color 0.15s; }
-        .candidate-name-link:hover { color: #c39f09; }
+    /* responsive small-screen adjustments */
+    @media(max-width:639px) {
+      .vote-item { grid-template-columns: 2fr 1fr 1fr; min-height:4rem; padding:0.25rem 0; }
+      .selection-text { font-size:0.65rem; font-weight:700; line-height:1; }
+      .selection-indicator { height:1.1rem; width:1.1rem; border-width:2px; }
+    }
 
-        /* Nominee Card */
-        #nominee-card { padding: 1.5rem; padding-top: 3.5rem; position: relative; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
-        #nominee-card .top-bar { position:absolute; top:0; left:0; width:100%; height:2.5rem; background-color:#1e5629; border-top-left-radius:0.75rem; border-top-right-radius:0.75rem; z-index:0; }
-        #nominee-photo { border-width: 4px; border-color: #c39f09; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-radius: 0.375rem; object-fit:cover; }
-        #nominee-position { font-size: 2rem; line-height:1.1; margin-bottom: 0.25rem; color:#1e5629; font-weight:800; word-break:break-word; }
-        #nominee-name { font-size: 1.5rem; font-weight:700; color: #1F2933; line-height:1.2; word-break:break-word; }
-
-        #nominee-course { font-size:0.95rem; color:#6B7280; margin-top:0.25rem; }
-        #nominee-card .platform-details { display:none; } /* removed platform details */
-
-        #central-message-container { position: fixed; top:1rem; left:50%; transform:translateX(-50%); z-index:60; width:90%; max-width:600px; transition: opacity 0.3s, transform 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-
-        /* Layout: main login + turnout side-by-side on desktop, stacked on mobile */
-        .main-wrapper { width:100%; max-width:1100px; margin: 0 auto; display:flex; flex-direction: column; gap:1.5rem; }
-        @media(min-width: 640px) {
-            .main-row { display:flex; gap:1.5rem; align-items:flex-start; }
-            .login-col { width: 50%; }
-            .turnout-col { width: 50%; }
-        }
-
-        @media(max-width: 639px) {
-            .vote-item { grid-template-columns: 2fr 1fr 1fr; padding: 0.25rem 0; min-height: 4rem; }
-            .candidate-name-container { padding-left: 0.5rem; align-items:flex-start; }
-            .selection-text { font-size:0.65rem; font-weight:700; line-height:1; margin-bottom:0; }
-            .selection-indicator { margin-top:0.1rem !important; height:1.25rem; width:1.25rem; }
-        }
-
-        /* CAFS-themed warning modal */
-        #warning-modal-backdrop { background: rgba(0,0,0,0.6); }
-        .warning-card { border-top: 8px solid #1e5629; background: white; border-radius: 0.75rem; box-shadow: 0 12px 20px rgba(0,0,0,0.12); }
-    </style>
+    /* helper classes for show/hide with fade */
+    .animate-fadeIn { animation: fadeIn 0.6s ease-out forwards; }
+    .animate-fadeOut { animation: fadeOut 0.6s ease-out forwards; }
+  </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col items-center">
+<body class="flex flex-col items-center">
 
-    <!-- Central message container -->
-    <div id="central-message-container" class="hidden">
-        <div id="message-display" class="px-4 py-3 rounded-lg text-sm sm:text-base text-center font-medium shadow-lg"></div>
+  <!-- Central message -->
+  <div id="central-message-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 hidden">
+    <div id="message-display" class="px-4 py-3 rounded-lg text-sm sm:text-base text-center font-medium shadow-lg"></div>
+  </div>
+
+  <!-- CAFS themed warning (session only) -->
+  <div id="warning-popup" class="fixed inset-0 hidden z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/50"></div>
+    <div class="relative bg-white rounded-xl shadow-2xl w-11/12 max-w-md">
+      <div class="bg-custom-sub text-white px-4 py-3 rounded-t-xl font-bold text-center">⚠️ Notice</div>
+      <div class="p-5 text-custom-text text-center font-medium">Hello this is a warning.</div>
+      <div class="p-4 text-center">
+        <button id="close-warning-btn" class="px-4 py-2 rounded-lg font-bold bg-custom-main text-custom-sub hover:bg-custom-main-dark transition">OK</button>
+      </div>
     </div>
+  </div>
 
-    <!-- CAFS-themed Warning popup (once per session) -->
-    <div id="warning-popup" class="hidden fixed inset-0 z-50 flex items-center justify-center" aria-hidden="true">
-        <div id="warning-modal-backdrop" class="absolute inset-0 bg-black opacity-50"></div>
-        <div class="relative z-10 w-11/12 max-w-md warning-card">
-            <div class="bg-custom-sub text-white px-4 py-3 rounded-t-md font-bold text-center">⚠️ Notice</div>
-            <div class="p-5 text-custom-text text-center font-medium">Hello this is a warning.</div>
-            <div class="p-4 text-center">
-                <button id="close-warning-btn" class="px-4 py-2 rounded-lg font-bold bg-custom-main text-custom-sub hover:bg-custom-main-dark transition">OK</button>
-            </div>
-        </div>
+  <!-- Header (keeps visible after login) -->
+  <header id="header" class="hidden w-full max-w-5xl mt-6 bg-white rounded-xl shadow-md px-5 py-3 flex items-center justify-between border-t-8 border-custom-sub">
+    <img src="Header.png" alt="Header Logo" class="logo-header object-contain" />
+    <div class="flex items-center space-x-3">
+      <div class="text-right hidden sm:block">
+        <div id="user-name" class="font-semibold text-custom-text"></div>
+        <div id="user-email" class="text-xs text-gray-500"></div>
+      </div>
+      <img id="user-photo" class="w-10 h-10 rounded-full border border-gray-300" alt="User photo" onerror="this.src='https://placehold.co/32x32/f1f1f1/1F2933?text=U'">
+      <button id="logout-btn" class="px-3 py-2 rounded-md bg-custom-main text-custom-sub font-semibold hover:bg-custom-main-dark transition">Logout</button>
     </div>
+  </header>
 
-    <!-- Header (hidden until logged in) -->
-    <header id="header" class="hidden bg-white shadow-md p-3 sm:p-4 flex justify-between items-center w-full max-w-5xl z-10 border-b-4 border-custom-sub">
-        <div class="flex items-center space-x-4">
-            <img src="Header.png" class="h-12 sm:h-16 w-auto object-contain" alt="Header Logo">
+  <!-- MAIN AREA (Login + Turnout as top block) -->
+  <main id="top-block" class="w-full max-w-5xl mt-8 px-4">
+    <div id="prelogin-row" class="flex flex-col sm:flex-row items-start sm:items-stretch gap-6">
+
+      <!-- SIGN-IN CARD -->
+      <article id="login-card" class="bg-white w-full sm:w-1/2 rounded-xl shadow-2xl p-6 border-t-8 border-custom-sub flex flex-col items-center justify-center">
+        <img id="cafs-logo-signin" src="cafsfc.png" alt="CAFS FC Logo" class="logo-cafs object-contain mb-4" />
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-custom-sub text-center">13th CAFS FC Election</h1>
+        <p id="auth-warning-message" class="mt-3 hidden text-red-600 text-sm font-semibold bg-red-50 p-2 rounded-md"></p>
+
+        <button id="google-login-btn" class="mt-6 px-6 py-3 w-full sm:w-auto btn-primary-submit rounded-lg shadow-lg font-semibold flex items-center justify-center">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-3 bg-white p-0.5 rounded" alt="google"> Sign-in with UP MAIL
+        </button>
+
+        <p class="mt-4 text-xs sm:text-sm text-red-700 font-semibold bg-red-50 p-3 rounded-lg border border-red-200 text-center">
+          Authentication Required: You must sign in with your <strong>UP Mail (@up.edu.ph)</strong> account.
+        </p>
+
+        <p id="error-message" class="mt-4 text-red-500 text-sm hidden">Sign-in failed. Please try again.</p>
+      </article>
+
+      <!-- TURNOUT DASHBOARD -->
+      <aside id="turnout-dashboard" class="bg-gray-100 w-full sm:w-1/2 rounded-xl shadow-lg p-5 flex flex-col gap-4">
+        <h2 class="text-lg sm:text-xl font-bold text-custom-sub text-center">🗳️ VOTER TURNOUT</h2>
+
+        <div class="turnout-item">
+          <div class="flex justify-between items-baseline mb-1">
+            <span class="text-sm font-medium text-gray-700">Total Turnout</span>
+            <span id="total-turnout-text" class="text-base font-extrabold text-custom-sub">--%</span>
+          </div>
+          <div class="progress-bar-bg w-full">
+            <div id="total-turnout-bar" class="progress-bar-fill" style="width:0%"></div>
+          </div>
         </div>
 
-        <div class="flex items-center space-x-3">
-            <div id="user-profile" class="relative flex items-center space-x-2">
-                <div class="text-xs text-gray-500 hidden md:block text-right">
-                    <span id="user-name" class="font-medium text-custom-text block text-sm"></span>
-                    <span id="user-email" class="font-mono text-xs block -mt-1"></span>
-                </div>
-                <img id="user-photo" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full shadow-sm cursor-pointer border border-gray-300" alt="User photo" onerror="this.onerror=null; this.src='https://placehold.co/32x32/f1f1f1/1F2933?text=U';">
-                <button id="logout-btn" class="ml-2 p-1.5 bg-custom-main text-custom-sub rounded-lg shadow-md hover:bg-custom-main-dark transition-colors focus:outline-none" title="Log Out">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-                    </svg>
-                </button>
-            </div>
+        <div class="turnout-item">
+          <div class="flex justify-between items-baseline mb-1">
+            <span class="text-sm font-medium text-gray-700">BS Agriculture</span>
+            <span id="agri-percent" class="text-sm font-semibold text-custom-sub">--%</span>
+          </div>
+          <div class="progress-bar-bg w-full">
+            <div id="agri-bar" class="progress-bar-fill" style="width:0%"></div>
+          </div>
         </div>
-    </header>
 
-    <main class="flex-grow w-full flex justify-center py-8 px-4">
-        <div class="main-wrapper">
-
-            <!-- Top row: Sign-in card (left on desktop) + Turnout (right on desktop) -->
-            <div class="main-row">
-                <!-- Sign-in / Login card -->
-                <div class="login-col bg-white rounded-xl shadow-2xl p-6 md:p-10 border-t-8 border-custom-sub">
-                    <div class="text-center">
-                        <img id="cafs-logo-signin" src="cafsfc.png" class="w-48 h-48 sm:w-56 sm:h-56 mx-auto object-contain -mb-2 sm:-mb-4" alt="CAFS FC Logo for Sign-in">
-                        <h1 class="text-2xl sm:text-3xl font-extrabold text-custom-sub">13th CAFS FC Election</h1>
-                        <p id="auth-warning-message" class="mt-4 text-red-600 text-sm font-semibold bg-red-100 p-3 rounded-lg border border-red-300 hidden"></p>
-
-                        <button id="google-login-btn" class="mt-6 sm:mt-8 px-6 py-3 btn-primary-submit rounded-lg shadow-lg text-base font-semibold focus:outline-none focus:ring-4 focus:ring-custom-main/50 flex items-center justify-center mx-auto transition-colors w-full">
-                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-3 bg-white p-0.5 rounded" alt="Google icon">
-                            Sign-in with UP MAIL
-                        </button>
-
-                        <p class="mt-4 text-xs sm:text-sm text-red-700 font-semibold bg-red-50 p-3 rounded-lg border border-red-200">
-                            Authentication Required: You must sign in with your <strong>UP Mail (@up.edu.ph)</strong> account.
-                        </p>
-
-                        <p id="error-message" class="mt-4 text-red-500 text-sm hidden">Sign-in failed. Please try again.</p>
-                    </div>
-                </div>
-
-                <!-- Turnout Dashboard -->
-                <div id="turnout-dashboard" class="turnout-col bg-gray-100 rounded-xl shadow-lg p-4">
-                    <h2 class="text-lg sm:text-xl font-bold text-custom-sub text-center mb-4">🗳️ VOTER TURNOUT</h2>
-
-                    <div class="mb-4">
-                        <div class="flex justify-between items-end mb-1">
-                            <span class="text-sm font-semibold text-gray-700">Total Turnout: <span id="total-turnout-count" class="font-bold">...</span></span>
-                            <span id="total-turnout-text" class="text-base font-extrabold text-custom-sub">0%</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-3 shadow-inner">
-                            <div id="total-turnout-bar" class="h-3 rounded-full bg-custom-main transition-all duration-700 ease-out" style="width: 0%"></div>
-                        </div>
-                    </div>
-
-                    <div id="course-turnout-container" class="space-y-3 pt-3 border-t border-gray-300">
-                        <!-- per-course bars -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Voting content: hidden until login -->
-            <div id="voting-content" class="hidden w-full max-w-4xl mt-8 mx-auto">
-                <img src="13th.png" class="w-32 h-32 sm:w-40 sm:h-40 mx-auto object-contain mb-6 relative z-10" alt="13th CAFS FC Logo">
-
-                <div id="user-traceability" class="mx-auto p-3 mb-6 sm:mb-8 text-center bg-custom-light-gold rounded-lg shadow-md border border-custom-main/50 w-full max-w-xl">
-                    <span class="font-bold text-custom-sub text-sm sm:text-base">VOTER ID:</span>
-                    <code id="user-id-display" class="font-mono text-custom-text text-sm sm:text-base font-semibold ml-2">...</code>
-                </div>
-
-                <!-- Voter Info Section -->
-                <div id="voter-info-section" class="bg-white rounded-xl shadow-md p-6 mb-6 border border-custom-main/30 mx-auto w-full max-w-xl">
-                    <h2 class="text-lg font-bold text-custom-sub mb-4">Voter Information</h2>
-                    <p class="text-sm text-gray-600 mb-4">Please confirm your student details to activate the ballot.</p>
-                    <label class="block mb-3">
-                        <span class="font-medium text-gray-700">Student Number</span>
-                        <input id="student-number" type="text" class="mt-1 block w-full border border-gray-300 rounded-lg p-3 focus:ring-custom-sub focus:border-custom-sub transition" placeholder="e.g., 2021-12345" required>
-                    </label>
-                    <label class="block mb-4">
-                        <span class="font-medium text-gray-700">Degree Program</span>
-                        <select id="degree-program" class="mt-1 block w-full border border-gray-300 rounded-lg p-3 focus:ring-custom-sub focus:border-custom-sub transition" required>
-                            <option value="">Select your course</option>
-                            <option value="BS Agriculture">Bachelor of Science in Agriculture</option>
-                            <option value="BS Agricultural Biotechnology">Bachelor of Science in Agricultural Biotechnology</option>
-                            <option value="BS Food Science and Technology">Bachelor of Science in Food Science and Technology</option>
-                        </select>
-                    </label>
-                    <button id="proceed-to-ballot" class="w-full py-2 bg-custom-main text-custom-sub rounded-lg font-semibold hover:bg-custom-main-dark transition shadow">Proceed to Ballot</button>
-                </div>
-
-                <form id="voting-form" class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 md:p-10 border-t-8 border-custom-main opacity-50 pointer-events-none">
-                    <div id="ballot-container" class="space-y-8 sm:space-y-10">
-                        <p class="text-center text-gray-500">Loading official candidate data...</p>
-                    </div>
-
-                    <button id="submit-vote-btn" type="submit" class="mt-8 sm:mt-10 w-full py-3 btn-primary-submit rounded-lg shadow-xl hover:bg-custom-sub/90 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-sub/50 text-base sm:text-lg">
-                        Review and Submit Vote
-                    </button>
-                </form>
-            </div>
-
+        <div class="turnout-item">
+          <div class="flex justify-between items-baseline mb-1">
+            <span class="text-sm font-medium text-gray-700">BS Agricultural Biotechnology</span>
+            <span id="biotech-percent" class="text-sm font-semibold text-custom-sub">--%</span>
+          </div>
+          <div class="progress-bar-bg w-full">
+            <div id="biotech-bar" class="progress-bar-fill" style="width:0%"></div>
+          </div>
         </div>
-    </main>
 
-    <!-- Verification popup -->
-    <div id="verifier-popup" class="hidden fixed inset-0 bg-gray-800 bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md border-t-8 border-custom-sub flex flex-col max-h-[90vh]">
-            <div class="p-6 pb-0 flex-shrink-0">
-                <h2 class="text-xl sm:text-2xl font-bold text-custom-sub mb-2 text-center">Final Vote Verification</h2>
-                <p class="text-xs sm:text-sm text-gray-600 mb-4 text-center">Please review your selections before final submission. This action cannot be undone.</p>
-            </div>
-
-            <div id="vote-summary-table-container" class="text-custom-text px-6 overflow-y-auto flex-grow min-h-0 mb-4"></div>
-
-            <div class="flex justify-between space-x-4 p-6 pt-0 flex-shrink-0">
-                <button id="change-vote-btn" class="w-1/2 py-2 text-sm sm:text-base border border-slate-300 rounded-lg text-custom-text font-medium hover:bg-slate-100 transition-colors">
-                    Edit Ballot
-                </button>
-                <button id="confirm-vote-btn" class="w-1/2 py-2 text-sm sm:text-base bg-custom-main text-custom-sub rounded-lg font-bold hover:bg-custom-main-dark transition">
-                    Confirm & Submit
-                </button>
-            </div>
+        <div class="turnout-item">
+          <div class="flex justify-between items-baseline mb-1">
+            <span class="text-sm font-medium text-gray-700">BS Food Science & Tech</span>
+            <span id="food-percent" class="text-sm font-semibold text-custom-sub">--%</span>
+          </div>
+          <div class="progress-bar-bg w-full">
+            <div id="food-bar" class="progress-bar-fill" style="width:0%"></div>
+          </div>
         </div>
+
+      </aside>
     </div>
+  </main>
 
-    <!-- Nominee card (platform details removed) -->
-    <div id="nominee-popup" class="hidden fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div id="nominee-card" class="w-full max-w-lg mx-auto rounded-xl relative overflow-hidden bg-white">
-            <div class="top-bar"></div>
+  <!-- VOTING AREA (centered, hidden until after login) -->
+  <section id="voting-wrapper" class="hidden w-full max-w-4xl mt-8 px-4">
+    <div class="center-viewport">
+      <div id="voting-canvas" class="w-full bg-white rounded-xl shadow-2xl p-6 md:p-10 border-t-8 border-custom-main animate-fadeIn">
+        <div class="flex flex-col items-center gap-4">
+          <img src="13th.png" class="logo-13th object-contain" alt="13th logo"/>
+          <div id="user-traceability" class="mx-auto p-3 text-center bg-custom-light-gold rounded-lg border border-custom-main/30 w-full">
+            <span class="font-bold text-custom-sub text-sm sm:text-base">VOTER ID:</span>
+            <code id="user-id-display" class="font-mono text-custom-text text-sm sm:text-base font-semibold ml-2">...</code>
+          </div>
 
-            <div class="close-button-container">
-                <button id="close-nominee-btn" class="text-gray-200 hover:text-white transition-colors p-1" aria-label="Close">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+          <!-- Voter Info -->
+          <div id="voter-info-section" class="w-full max-w-xl">
+            <h2 class="text-lg font-bold text-custom-sub mb-4">Voter Information</h2>
+            <div class="space-y-3">
+              <input id="student-number" type="text" placeholder="Student Number e.g., 2021-12345" class="w-full border rounded-lg p-3" />
+              <select id="degree-program" class="w-full border rounded-lg p-3">
+                <option value="">Select your course</option>
+                <option value="BS Agriculture">Bachelor of Science in Agriculture</option>
+                <option value="BS Agricultural Biotechnology">Bachelor of Science in Agricultural Biotechnology</option>
+                <option value="BS Food Science and Technology">Bachelor of Science in Food Science and Technology</option>
+              </select>
+              <button id="proceed-to-ballot" class="w-full py-3 bg-custom-main text-custom-sub font-bold rounded-lg hover:bg-custom-main-dark transition">Proceed to Ballot</button>
             </div>
+          </div>
 
-            <div class="bg-custom-light-gold p-4 pt-8 sm:p-6 sm:pt-10 relative z-10">
-                <div class="flex items-center space-x-6">
-                    <div class="flex-shrink-0">
-                        <img id="nominee-photo" class="w-24 h-24 sm:w-36 sm:h-36 object-cover rounded-md shadow-lg border-4 border-custom-main" alt="Nominee Photo" src="https://placehold.co/128x128/f1f1f1/1F2933?text=ID">
-                    </div>
-
-                    <div class="flex-grow info-section">
-                        <p class="text-xs font-semibold text-gray-500 uppercase -mb-1">NOMINATED POSITION</p>
-
-                        <h3 id="nominee-position" class="font-extrabold mb-1 leading-tight"></h3>
-
-                        <div id="nominee-name" class="font-bold text-custom-text"></div>
-
-                        <div id="nominee-course" class="font-medium text-gray-600 mt-0.5"></div>
-                    </div>
-                </div>
+          <!-- Ballot (kept collapsed until proceed) -->
+          <form id="voting-form" class="w-full mt-6 opacity-50 pointer-events-none">
+            <div id="ballot-container" class="space-y-4">
+              <p class="text-center text-gray-500">Loading candidate data...</p>
             </div>
+            <button id="submit-vote-btn" type="submit" class="mt-6 w-full py-3 btn-primary-submit rounded-lg">Review and Submit Vote</button>
+          </form>
         </div>
+      </div>
     </div>
+  </section>
+  <!-- Candidate Modal (no platform details) -->
+  <div id="candidate-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/50"></div>
+    <div class="relative bg-white rounded-xl shadow-2xl w-11/12 max-w-lg p-6">
+      <button id="close-modal" class="absolute top-3 right-3 text-gray-500 hover:text-black font-bold">✕</button>
+      <div class="flex flex-col items-center gap-3">
+        <img id="modal-photo" class="w-32 h-32 rounded-full border-4 border-custom-main object-cover" alt="Candidate Photo">
+        <h3 id="modal-name" class="text-xl font-bold text-custom-sub"></h3>
+        <p id="modal-position" class="text-sm text-gray-600"></p>
+      </div>
+    </div>
+  </div>
 
-    <!-- Papaparse (CSV) -->
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
+  <!-- Review / Confirmation Modal -->
+  <div id="review-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/60"></div>
+    <div class="relative bg-white rounded-xl shadow-2xl w-11/12 max-w-2xl p-6 overflow-y-auto max-h-[80vh]">
+      <h2 class="text-xl font-bold text-custom-sub mb-3 text-center">Review Your Vote</h2>
+      <div id="review-content" class="space-y-3 text-sm"></div>
+      <div class="mt-5 flex justify-center gap-3">
+        <button id="cancel-review" class="px-5 py-2 rounded-lg bg-gray-300 text-gray-800 font-semibold hover:bg-gray-400">Cancel</button>
+        <button id="confirm-submit" class="px-5 py-2 rounded-lg bg-custom-main text-custom-sub font-bold hover:bg-custom-main-dark">Confirm Submit</button>
+      </div>
+    </div>
+  </div>
 
-    <!-- Firebase imports -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, setLogLevel, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+  <!-- JS Section -->
+  <script type="module">
+    /* ========= Session Warning ========= */
+    const warningPopup = document.getElementById('warning-popup');
+    const closeWarningBtn = document.getElementById('close-warning-btn');
+    if (!sessionStorage.getItem('warningShown')) {
+      warningPopup.classList.remove('hidden');
+    }
+    closeWarningBtn.addEventListener('click', () => {
+      warningPopup.classList.add('hidden');
+      sessionStorage.setItem('warningShown', 'true');
+    });
 
-        // Enable debug logging
-        setLogLevel('Debug');
-
-        // --- GLOBAL VARIABLES (from original file, reused) ---
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-             // NOTE: kept from uploaded file
-             apiKey: "AIzaSyBdj6ePKM_3YEQTQlaZk9kKrNoMgqsjcjA",
-             authDomain: "votingmachine-c8e34.firebaseapp.com",
-             projectId: "votingmachine-c8e34",
-             storageBucket: "votingmachine-c8e34.appspot.com",
-             appId: "1:175934636307:web:717f4a5ba28789f13f5ae6"
+    /* ========= Responsive Turnout Fetch ========= */
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTnZExJ9injJGTsk1uFOUT45te0_gXPu0BGvAhgpWwNRIKxwgV3bXW-gygrr4omsBY9luXXxpPe1lE6/pub?output=csv";
+    async function loadTurnout() {
+      try {
+        const res = await fetch(csvUrl);
+        const text = await res.text();
+        const rows = text.split(/\\r?\\n/).map(r => r.split(','));
+        // G and H columns => index 6 and 7 (0-based)
+        const exp = {
+          total: parseFloat(rows[5][6]),
+          food: parseFloat(rows[4][6]),
+          biotech: parseFloat(rows[3][6]),
+          agri: parseFloat(rows[2][6])
         };
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        // Mock turnout (kept from uploaded file)
-        const totalVoters = 1000;
-        const votersPerCourse = {
-            "BS Agriculture": 500,
-            "BS Agricultural Biotechnology": 300,
-            "BS Food Science and Technology": 200,
+        const act = {
+          total: parseFloat(rows[5][7]),
+          food: parseFloat(rows[4][7]),
+          biotech: parseFloat(rows[3][7]),
+          agri: parseFloat(rows[2][7])
         };
-        const votes = {
-            "BS Agriculture": 220,
-            "BS Agricultural Biotechnology": 100,
-            "BS Food Science and Technology": 80,
-        };
-
-        // UI Selectors
-        const cafsLogoSigninEl = document.getElementById('cafs-logo-signin');
-        const loggedOutStateEl = null; // not used (we use login card directly)
-        const googleLoginBtn = document.getElementById('google-login-btn');
-        const logoutBtn = document.getElementById('logout-btn');
-        const userNameEl = document.getElementById('user-name');
-        const userEmailEl = document.getElementById('user-email');
-        const userPhotoEl = document.getElementById('user-photo');
-        const errorMessageEl = document.getElementById('error-message');
-        const authWarningMessageEl = document.getElementById('auth-warning-message');
-        const headerEl = document.getElementById('header');
-        const votingContentEl = document.getElementById('voting-content');
-        const votingForm = document.getElementById('voting-form');
-
-        const centralMessageContainer = document.getElementById('central-message-container');
-        const messageDisplayEl = document.getElementById('message-display');
-
-        const verifierPopup = document.getElementById('verifier-popup');
-        const voteSummaryEl = document.getElementById('vote-summary-table-container');
-        const confirmVoteBtn = document.getElementById('confirm-vote-btn');
-        const changeVoteBtn = document.getElementById('change-vote-btn');
-        const submitVoteBtn = document.getElementById('submit-vote-btn');
-        const ballotContainer = document.getElementById('ballot-container');
-        const userIdDisplay = document.getElementById('user-id-display');
-
-        const nomineePopup = document.getElementById('nominee-popup');
-        const closeNomineeBtn = document.getElementById('close-nominee-btn');
-        const nomineePhotoEl = document.getElementById('nominee-photo');
-        const nomineeNameEl = document.getElementById('nominee-name');
-        const nomineePositionEl = document.getElementById('nominee-position');
-        const nomineeCourseEl = document.getElementById('nominee-course');
-        const nomineePlatformEl = document.getElementById('nominee-platform'); // unused (platform removed)
-
-        // Voter info elements
-        const voterInfoSection = document.getElementById('voter-info-section');
-        const proceedToBallotBtn = document.getElementById("proceed-to-ballot");
-        const studentNumberInput = document.getElementById("student-number");
-        const degreeProgramInput = document.getElementById("degree-program");
-
-        // State variables
-        let auth, db, userId;
-        let voteDataToSubmit = {};
-        let candidatesData = {};
-        let allCandidateInfo = {};
-        let hasUserVoted = false;
-        const REQUIRED_DOMAIN = '@up.edu.ph';
-
-        const VOTES_COLLECTION = `artifacts/${appId}/public/data/votes`;
-        const AUTH_LOGS_COLLECTION = `artifacts/${appId}/public/data/auth_logs`;
-
-        // CSV and Google Form URL (reused from original file)
-        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTnZExJ9injJGTsk1uFOUT45te0_gXPu0BGvAhgpWwNRIKxwgV3bXW-gygrr4omsBY9luXXxpPe1lE6/pub?gid=1092490256&single=true&output=csv';
-        const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSf9S0ksmz3OSCfcLHgaux1vGXfrDPR1Nl3Aa-Fe7soKM0Uvgg/formResponse';
-        const FORM_ENTRY_IDS = {
-            'voterId': 'entry.1533979100',
-            'Chairperson': 'entry.759707648',
-            'Vice Chairperson': 'entry.192266479',
-            'College Representative to the UFC': 'entry.809194796',
-            'UFC Nominee': 'entry.1055485089',
-            'Councilor': 'entry.692317949'
-        };
-
-        // Helper: central message display
-        const displayMessage = (text, type) => {
-            centralMessageContainer.classList.remove('hidden');
-            messageDisplayEl.innerHTML = text;
-            messageDisplayEl.className = 'px-4 py-3 rounded-lg text-sm sm:text-base text-center font-medium shadow-lg';
-            if (type === 'success') {
-                messageDisplayEl.classList.add('bg-green-100', 'text-green-700');
-            } else if (type === 'error') {
-                messageDisplayEl.classList.add('bg-red-200', 'text-red-800');
-            } else {
-                messageDisplayEl.classList.add('bg-slate-100', 'text-slate-700');
-            }
-            setTimeout(() => centralMessageContainer.classList.add('hidden'), 5000);
-        };
-
-        // Form state
-        const setFormState = (state) => {
-            const voteItems = ballotContainer.querySelectorAll('.vote-item');
-            if (state === 'disabled') {
-                voteItems.forEach(item => { item.style.pointerEvents = 'none'; item.classList.add('opacity-70'); });
-                submitVoteBtn.disabled = true;
-                submitVoteBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
-                submitVoteBtn.classList.remove('btn-primary-submit', 'hover:bg-custom-sub/90');
-            } else {
-                voteItems.forEach(item => { item.style.pointerEvents = 'auto'; item.classList.remove('opacity-70'); });
-                submitVoteBtn.disabled = false;
-                submitVoteBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
-                submitVoteBtn.classList.add('btn-primary-submit', 'hover:bg-custom-sub/90');
-            }
-        };
-
-        const showLoading = (isLoading) => {
-            if (isLoading) {
-                confirmVoteBtn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-3 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing Secure Submission...';
-                confirmVoteBtn.disabled = true;
-                confirmVoteBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                confirmVoteBtn.textContent = 'Confirm & Submit';
-                confirmVoteBtn.disabled = false;
-                confirmVoteBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-        };
-
-        const closeVerifier = () => { verifierPopup.classList.add('hidden'); };
-
-        const openNomineeCard = (info) => {
-            nomineePhotoEl.src = info.photo || 'https://placehold.co/128x128/f1f1f1/1F2933?text=ID';
-            // Format name
-            const nameParts = info.name.split(',');
-            let displayName = info.name;
-            if (nameParts.length >= 2) {
-                const surname = nameParts[0].trim();
-                const givenNames = nameParts.slice(1).join(',').trim();
-                displayName = `${surname}, ${givenNames}`;
-            }
-            nomineeNameEl.textContent = displayName;
-
-            let displayPosition = (info.position || '').toUpperCase();
-            if (displayPosition === 'COLLEGE REPRESENTATIVE TO THE UFC') displayPosition = 'COLREP TO THE UFC';
-            nomineePositionEl.textContent = displayPosition;
-
-            nomineeCourseEl.textContent = info.course || '';
-            nomineePopup.classList.remove('hidden');
-        };
-
-        const closeNomineeCard = () => { nomineePopup.classList.add('hidden'); };
-
-        // Ballot rendering
-        const positionOrder = [
-            'Chairperson',
-            'Vice Chairperson',
-            'UFC Nominee',
-            'College Representative to the UFC',
-            'Councilor'
-        ];
-
-        const updateAriaChecked = (element, isChecked) => {
-            element.setAttribute('aria-checked', isChecked ? 'true' : 'false');
-        };
-
-        const renderBallot = (candidates) => {
-            let ballotHTML = '';
-
-            for (const position of positionOrder) {
-                const candidateList = candidates[position];
-
-                if (!candidateList || candidateList.length === 0) {
-                    ballotHTML += `<div class="p-4 bg-gray-100 rounded-lg"><p class="text-center text-red-500 font-medium my-2">No candidates found for ${position}.</p></div>`;
-                    continue;
-                }
-
-                const isMultiSelect = (position === 'Councilor');
-
-                const instructionText = isMultiSelect
-                    ? 'For each candidate, explicitly select VOTE or ABSTAIN.'
-                    : 'Select exactly one option (VOTE or ABSTAIN for any candidate) for this position.';
-
-                ballotHTML += `
-                    <div class="mb-6 sm:mb-8 p-4 sm:p-6 bg-gray-50 rounded-xl shadow-inner border border-gray-200">
-                        <h3 class="text-xl sm:text-2xl font-bold text-custom-sub border-b-2 border-custom-main pb-2 mb-3 sm:mb-4">${position}</h3>
-                        <p class="text-xs sm:text-sm text-gray-500 mt-1 mb-3">${instructionText}</p>
-                        <div class="space-y-3 pt-3 sm:pt-4">
-                `;
-
-                candidateList.forEach(info => {
-                    ballotHTML += `
-                        <div class="vote-item transition-all" 
-                             data-name="${info.name}" data-position="${position}" data-multiselect="${isMultiSelect}">
-                            <div class="candidate-name-container">
-                                <span class="candidate-name-link text-sm sm:text-base text-wrap" data-candidate-name="${info.name}">
-                                    ${info.name}
-                                </span>
-                            </div>
-
-                            <div class="vote-column" tabindex="0" data-action="vote" data-name="${info.name}" data-position="${position}" role="radio" aria-checked="false">
-                                <span class="selection-text">VOTE</span>
-                                <div class="selection-indicator"></div>
-                            </div>
-
-                            <div class="abstain-column" tabindex="0" data-action="abstain" data-name="${info.name}" data-position="${position}" role="radio" aria-checked="false">
-                                <span class="selection-text">ABSTAIN</span>
-                                <div class="selection-indicator"></div>
-                            </div>
-                        </div>
-                    `;
-                });
-
-                ballotHTML += `
-                        </div>
-                    </div>
-                `;
-            }
-            if (ballotHTML.trim() === '') {
-                ballotContainer.innerHTML = `
-                    <p class="text-center text-red-500 font-medium">
-                        The official candidate list could not be loaded or is empty. Please notify the election committee.
-                    </p>
-                `;
-            } else {
-                ballotContainer.innerHTML = ballotHTML;
-                attachButtonListeners();
-            }
-        };
-
-        const attachButtonListeners = () => {
-            // Click and keyboard selection behaviors
-            ballotContainer.addEventListener('click', (event) => {
-                if (hasUserVoted) return;
-
-                const clickedColumn = event.target.closest('.vote-column, .abstain-column');
-                const clickedNameLink = event.target.closest('.candidate-name-link');
-
-                if (clickedNameLink) {
-                    event.stopPropagation();
-                    const candidateName = clickedNameLink.dataset.candidateName;
-                    const info = allCandidateInfo[candidateName];
-                    if (info) openNomineeCard(info);
-                    return;
-                }
-
-                if (!clickedColumn) return;
-
-                const position = clickedColumn.dataset.position;
-                const action = clickedColumn.dataset.action;
-                const isMultiSelect = clickedColumn.closest('.vote-item').dataset.multiselect === 'true';
-
-                if (isMultiSelect) {
-                    const currentRow = clickedColumn.closest('.vote-item');
-                    const oppositeColumn = currentRow.querySelector(`[data-action="${action === 'vote' ? 'abstain' : 'vote'}"]`);
-
-                    if (clickedColumn.classList.contains('selected')) {
-                        // For multi-select (Councilor), we require explicit choice; do nothing on re-click
-                        return;
-                    } else {
-                        clickedColumn.classList.add('selected');
-                        updateAriaChecked(clickedColumn, true);
-                        oppositeColumn.classList.remove('selected');
-                        updateAriaChecked(oppositeColumn, false);
-                    }
-                    currentRow.classList.remove('highlight-error');
-                } else {
-                    const allColumnsInPosition = ballotContainer.querySelectorAll(`[data-position="${position}"]`);
-                    const wasSelected = clickedColumn.classList.contains('selected');
-
-                    allColumnsInPosition.forEach(col => {
-                        col.classList.remove('selected');
-                        updateAriaChecked(col, false);
-                    });
-
-                    if (!wasSelected) {
-                        clickedColumn.classList.add('selected');
-                        updateAriaChecked(clickedColumn, true);
-                        const allItemsInPosition = ballotContainer.querySelectorAll(`.vote-item[data-position="${position}"]`);
-                        allItemsInPosition.forEach(item => item.classList.remove('highlight-error'));
-                    }
-                }
-            });
-
-            ballotContainer.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                    const focusedColumn = document.activeElement;
-                    if (focusedColumn.classList.contains('vote-column') || focusedColumn.classList.contains('abstain-column')) {
-                        event.preventDefault();
-                        focusedColumn.click();
-                    }
-                }
-            });
-
-            closeNomineeBtn.addEventListener('click', closeNomineeCard);
-        };
-
-        // Log auth event
-        const logAuthEvent = async (uid, email) => {
-            try {
-                const logDocRef = doc(db, AUTH_LOGS_COLLECTION, uid);
-                const logDoc = await getDoc(logDocRef);
-
-                let loginCount = 1;
-                if (logDoc.exists()) loginCount = (logDoc.data().loginCount || 0) + 1;
-
-                await setDoc(logDocRef, {
-                    lastLogin: new Date(),
-                    voterEmail: email,
-                    loginCount: loginCount,
-                    voterName: auth.currentUser?.displayName || 'Unknown User'
-                });
-            } catch (error) {
-                console.error("Error logging authentication event:", error);
-            }
-        };
-
-        // FINAL VERIFIER OPEN (validation + prepare summary)
-        const openVoteVerifier = async (event) => {
-            event.preventDefault();
-
-            if (hasUserVoted) {
-                const message = "You cannot vote twice. Your first votes have been saved in the database.";
-                displayMessage(message, 'error');
-                setFormState('disabled');
-                return;
-            }
-
-            document.querySelectorAll('.vote-item').forEach(item => item.classList.remove('highlight-error'));
-
-            const votedCandidatesByPosition = {};
-            let explicitAbstainByPosition = {};
-
-            const activeVoteColumns = ballotContainer.querySelectorAll('.vote-column.selected');
-            const activeAbstainColumns = ballotContainer.querySelectorAll('.abstain-column.selected');
-
-            activeVoteColumns.forEach(item => {
-                const position = item.dataset.position;
-                const name = item.dataset.name;
-                if (!votedCandidatesByPosition[position]) votedCandidatesByPosition[position] = [];
-                votedCandidatesByPosition[position].push(name);
-            });
-
-            activeAbstainColumns.forEach(item => {
-                const position = item.dataset.position;
-                const name = item.dataset.name;
-                if (!explicitAbstainByPosition[position]) explicitAbstainByPosition[position] = [];
-                explicitAbstainByPosition[position].push(name);
-            });
-
-            let validationError = false;
-            const customValidationMessage = 'Some fields have been left blank. Kindly indicate your choice for each nominee in every position by selecting either “Vote” or “Abstain.”';
-
-            voteDataToSubmit = {};
-
-            for (const position of positionOrder) {
-                const isCouncilor = position === 'Councilor';
-                const allCandidates = candidatesData[position] || [];
-                const voted = votedCandidatesByPosition[position] || [];
-                const abstained = explicitAbstainByPosition[position] || [];
-
-                if (!isCouncilor) {
-                    if (voted.length + abstained.length !== 1) {
-                        validationError = true;
-                        const rowsToHighlight = ballotContainer.querySelectorAll(`.vote-item[data-position="${position}"]`);
-                        rowsToHighlight.forEach(row => row.classList.add('highlight-error'));
-                    }
-                }
-
-                if (isCouncilor) {
-                    const explicitSelections = voted.length + abstained.length;
-                    if (explicitSelections !== allCandidates.length) {
-                        validationError = true;
-                        allCandidates.forEach(candidate => {
-                            const name = candidate.name;
-                            const isSelected = voted.includes(name) || abstained.includes(name);
-                            if (!isSelected) {
-                                const rowToHighlight = ballotContainer.querySelector(`.vote-item[data-position="${position}"][data-name="${name}"]`);
-                                if (rowToHighlight) rowToHighlight.classList.add('highlight-error');
-                            }
-                        });
-                    }
-                }
-
-                if (!validationError) {
-                    voteDataToSubmit[position] = [];
-                    allCandidates.forEach(candidate => {
-                        const name = candidate.name;
-                        if (voted.includes(name)) voteDataToSubmit[position].push({ name, status: 'VOTED' });
-                        else if (abstained.includes(name)) voteDataToSubmit[position].push({ name, status: 'ABSTAINED' });
-                    });
-                }
-            }
-
-            if (validationError) {
-                displayMessage(customValidationMessage, 'error');
-                return;
-            }
-
-            centralMessageContainer.classList.add('hidden');
-
-            // Build summary
-            let summaryHTML = `
-                <table class="vote-summary-table w-full text-sm sm:text-base border-collapse">
-                    <tbody class="divide-y divide-gray-100">
-            `;
-            for (let i = 0; i < positionOrder.length; i++) {
-                const position = positionOrder[i];
-                const allCandidates = candidatesData[position] || [];
-                const finalSelections = voteDataToSubmit[position] || [];
-
-                summaryHTML += `
-                    <tr class="position-group-separator">
-                        <td colspan="2" class="p-0 border-t-4 border-gray-200"></td>
-                    </tr>
-
-                    <tr class="bg-green-100 text-custom-sub">
-                        <td colspan="2" class="py-2 px-3 font-extrabold text-sm sm:text-base tracking-wider border-b border-custom-sub/50">
-                            ${position.toUpperCase()}
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td class="py-2 px-3 font-bold text-gray-500 w-2/3 text-xs sm:text-sm">Name</td>
-                        <td class="py-2 text-center font-bold text-gray-500 w-1/3 text-xs sm:text-sm">Status</td>
-                    </tr>
-                `;
-
-                allCandidates.forEach(candidate => {
-                    const selection = finalSelections.find(s => s.name === candidate.name);
-                    let statusText = '—';
-                    let statusClass = 'text-gray-400';
-                    if (selection) {
-                        statusText = selection.status;
-                        if (selection.status === 'VOTED') statusClass = 'text-custom-main';
-                        else if (selection.status === 'ABSTAINED') statusClass = 'text-custom-abstain-text';
-                    }
-                    summaryHTML += `
-                        <tr class="transition-colors bg-white">
-                            <td class="px-3 py-2 text-gray-800 font-medium w-2/3">
-                                ${candidate.name}
-                            </td>
-                            <td class="px-3 py-2 text-center w-1/3">
-                                <span class="${statusClass} font-bold text-xs sm:text-sm">${statusText}</span>
-                            </td>
-                        </tr>
-                    `;
-                });
-            }
-
-            summaryHTML += `
-                    </tbody>
-                </table>
-            `;
-
-            voteSummaryEl.innerHTML = summaryHTML;
-            verifierPopup.classList.remove('hidden');
-        };
-
-        // Transactional vote submit
-        const handleVote = async () => {
-            if (!userId) {
-                console.error("User not authenticated.");
-                displayMessage("An error occurred. Please try logging in again.", 'error');
-                closeVerifier();
-                return;
-            }
-
-            showLoading(true);
-
-            try {
-                const voteRef = doc(db, VOTES_COLLECTION, userId);
-                const studentNumber = studentNumberInput.value.trim();
-                const degreeProgram = degreeProgramInput.value.trim();
-
-                await runTransaction(db, async (transaction) => {
-                    const voteDoc = await transaction.get(voteRef);
-
-                    if (voteDoc.exists()) {
-                        throw new Error("You have already voted. Voting twice is strictly prohibited.");
-                    }
-
-                    transaction.set(voteRef, {
-                        timestamp: new Date(),
-                        voterId: userId,
-                        studentNumber: studentNumber,
-                        degreeProgram: degreeProgram,
-                        selections: voteDataToSubmit
-                    });
-                });
-
-                hasUserVoted = true;
-                sendToGoogleForm(voteDataToSubmit, userId);
-
-                closeVerifier();
-                displayMessage(`Your official ballot has been securely submitted! Thank you for participating.`, 'success');
-                setFormState('disabled');
-
-            } catch (error) {
-                console.error("Error submitting vote:", error);
-                closeVerifier();
-                if (error.message === "You have already voted. Voting twice is strictly prohibited.") {
-                    hasUserVoted = true;
-                    setFormState('disabled');
-                    displayMessage(error.message, 'error');
-                } else {
-                    displayMessage("Critical Error: Failed to submit vote to the secure ledger. Please retry.", 'error');
-                }
-            } finally {
-                showLoading(false);
-            }
-        };
-
-        const sendToGoogleForm = async (voteDataStructured, userId) => {
-            try {
-                const formData = new FormData();
-                formData.append(FORM_ENTRY_IDS['voterId'], userId);
-
-                // Append student details (mock entry ids used as in original)
-                formData.append('entry.1234567890', studentNumberInput.value.trim());
-                formData.append('entry.0987654321', degreeProgramInput.value.trim());
-
-                for (const position in voteDataStructured) {
-                    const finalSelections = [];
-                    const entryId = FORM_ENTRY_IDS[position];
-                    if (!entryId) continue;
-
-                    const submissionRecords = voteDataStructured[position];
-                    submissionRecords.forEach(record => {
-                        const name = record.name;
-                        const surname = name.split(',')[0].trim().toUpperCase();
-                        let statusCode;
-                        if (record.status === 'VOTED') statusCode = '_1';
-                        else if (record.status === 'ABSTAINED') statusCode = '_0';
-                        else return;
-                        finalSelections.push(`${surname}${statusCode}`);
-                    });
-
-                    if (Array.isArray(finalSelections) && finalSelections.length > 0) {
-                        finalSelections.forEach(record => formData.append(entryId, record));
-                    }
-                }
-
-                const maxRetries = 3;
-                let delay = 1000;
-                for (let i = 0; i < maxRetries; i++) {
-                    try {
-                        await fetch(GOOGLE_FORM_URL, {
-                            method: 'POST',
-                            mode: 'no-cors',
-                            body: formData
-                        });
-                        return;
-                    } catch (e) {
-                        console.warn(`Attempt ${i+1} to send to Google Form failed. Retrying...`, e);
-                        if (i === maxRetries - 1) throw e;
-                        await new Promise(r => setTimeout(r, delay));
-                        delay *= 2;
-                    }
-                }
-            } catch (error) {
-                console.error("Final Error: Failed to submit data to Google Form after retries:", error);
-            }
-        };
-
-        // CSV fetch and parse
-        const fetchCandidates = async () => {
-            try {
-                const response = await fetch(CSV_URL);
-                if (!response.ok) {
-                    console.error('Failed to fetch CSV, using empty data.');
-                    return {};
-                }
-                const csvText = await response.text();
-                const result = Papa.parse(csvText, { header: false, skipEmptyLines: true });
-                if (result.errors.length > 0) {
-                    console.error('CSV Parsing Errors:', result.errors);
-                    throw new Error('CSV parsing errors.');
-                }
-
-                const rows = result.data.slice(1);
-                const groupedCandidates = {};
-                const allInfo = {};
-
-                rows.forEach(row => {
-                    const name = (row[0] || "").trim();
-                    const position = (row[1] || "").trim();
-                    const photo = (row[2] || "").trim();
-                    const courseAndPlatform = (row[3] || "").trim();
-
-                    if (name && position) {
-                        const parts = courseAndPlatform.split(' | ');
-                        const course = parts[0] || '';
-                        const platform = parts.slice(1).join(' | ') || '';
-
-                        const candidateInfo = { name: name, position: position, photo: photo, course: course, platform: platform };
-                        allCandidateInfo[name] = candidateInfo;
-                        allInfo[name] = candidateInfo;
-
-                        if (!groupedCandidates[position]) groupedCandidates[position] = [];
-                        groupedCandidates[position].push(candidateInfo);
-                    }
-                });
-
-                window.allCandidateInfo = allInfo;
-                return groupedCandidates;
-            } catch (error) {
-                console.error("Error fetching or parsing candidates:", error);
-                displayMessage("Critical: Failed to load candidate data. System integrity check failed.", 'error');
-                return {};
-            }
-        };
-
-        const checkIfVoted = async (uid) => {
-            try {
-                const voteRef = doc(db, VOTES_COLLECTION, uid);
-                const voteDoc = await getDoc(voteRef);
-
-                hasUserVoted = voteDoc.exists();
-
-                if (hasUserVoted) {
-                    displayMessage('You have already submitted your official ballot. Your vote is secured.', 'success');
-                    setFormState('disabled');
-                    voterInfoSection.classList.add('hidden');
-                    votingForm.classList.remove("opacity-50", "pointer-events-none");
-                    return true;
-                } else {
-                    voterInfoSection.classList.remove('hidden');
-                    votingForm.classList.add("opacity-50", "pointer-events-none");
-                    displayMessage('Please complete your voter information to proceed to the ballot.', 'info');
-                    setFormState('enabled');
-                    return false;
-                }
-            } catch (error) {
-                console.error("Error checking vote status from Firestore:", error);
-                displayMessage("Error checking vote status. System integrity check failed.", 'error');
-                setFormState('enabled');
-                return false;
-            }
-        };
-
-        // Turnout dashboard rendering (mock data)
-        const renderTurnoutDashboard = () => {
-            const totalVotes = Object.values(votes).reduce((a, b) => a + b, 0);
-            const turnoutPercent = ((totalVotes / totalVoters) * 100).toFixed(1);
-
-            document.getElementById("total-turnout-count").textContent = `${totalVotes} out of ${totalVoters} voters`;
-            document.getElementById("total-turnout-bar").style.width = `${turnoutPercent}%`;
-            document.getElementById("total-turnout-text").textContent = `${turnoutPercent}%`;
-
-            const courseContainer = document.getElementById("course-turnout-container");
-            let courseHTML = '';
-
-            for (const course in votersPerCourse) {
-                const totalCourseVoters = votersPerCourse[course];
-                const courseVotes = votes[course] || 0;
-                const coursePercent = ((courseVotes / totalCourseVoters) * 100).toFixed(1);
-
-                courseHTML += `
-                    <div>
-                        <div class="flex justify-between items-end mb-1">
-                            <span class="text-xs font-medium text-gray-600">${course}</span>
-                            <span class="text-sm font-bold text-custom-main-dark">${courseVotes} / ${totalCourseVoters} (${coursePercent}%)</span>
-                        </div>
-                        <div class="w-full bg-gray-300 rounded-full h-2 shadow-sm">
-                            <div class="h-2 rounded-full bg-custom-main transition-all duration-700 ease-out" style="width: ${coursePercent}%;"></div>
-                        </div>
-                    </div>
-                `;
-            }
-            courseContainer.innerHTML = courseHTML;
-        };
-
-        // Voter info proceed handler
-        const handleProceedToBallot = () => {
-            const sn = studentNumberInput.value.trim();
-            const course = degreeProgramInput.value.trim();
-
-            if (sn.length > 0 && course.length > 0) {
-                votingForm.classList.remove("opacity-50", "pointer-events-none");
-                voterInfoSection.classList.add("hidden");
-                displayMessage("Voter information confirmed. You may now cast your vote.", 'success');
-                // enable ballot choices visually
-                setFormState('enabled');
-            } else {
-                displayMessage("Please provide both your Student Number and select your Degree Program before proceeding.", 'error');
-                if (!sn) studentNumberInput.classList.add('border-red-500', 'ring-red-500'); else studentNumberInput.classList.remove('border-red-500', 'ring-red-500');
-                if (!course) degreeProgramInput.classList.add('border-red-500', 'ring-red-500'); else degreeProgramInput.classList.remove('border-red-500', 'ring-red-500');
-            }
-        };
-
-        studentNumberInput.addEventListener('input', () => studentNumberInput.classList.remove('border-red-500', 'ring-red-500'));
-        degreeProgramInput.addEventListener('change', () => degreeProgramInput.classList.remove('border-red-500', 'ring-red-500'));
-
-        // Authentication & UI flow
-        const handleGoogleLogin = async () => {
-            const provider = new GoogleAuthProvider();
-            authWarningMessageEl.classList.add('hidden');
-
-            googleLoginBtn.disabled = true;
-            const originalButtonContent = googleLoginBtn.innerHTML;
-            googleLoginBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Authenticating...';
-
-            try {
-                const result = await signInWithPopup(auth, provider);
-                const user = result.user;
-
-                if (user.email && !user.email.endsWith(REQUIRED_DOMAIN)) {
-                    displayMessage("Access Denied: Please use a valid UP Mail Account.", 'error');
-                    await signOut(auth);
-                    authWarningMessageEl.classList.add('hidden');
-                    return;
-                }
-                errorMessageEl.classList.add('hidden');
-
-            } catch (error) {
-                console.error("Google Sign-In Error:", error);
-                let errorMessage = "Sign-in failed. Please try again.";
-                if (error.code === 'auth/popup-closed-by-user') errorMessage = "Sign-in cancelled by user. Please click the button to sign in.";
-                else if (error.code === 'auth/cancelled-popup-request') errorMessage = "Popup blocked or closed. Try again after closing existing popups.";
-                errorMessageEl.textContent = errorMessage;
-                errorMessageEl.classList.remove('hidden');
-            } finally {
-                googleLoginBtn.disabled = false;
-                googleLoginBtn.innerHTML = originalButtonContent;
-                if (!auth.currentUser || (auth.currentUser.email && !auth.currentUser.email.endsWith(REQUIRED_DOMAIN))) {
-                    googleLoginBtn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-3 bg-white p-0.5 rounded" alt="Google icon"> Sign-in with UP MAIL';
-                }
-            }
-        };
-
-        const handleLogout = async () => {
-            try {
-                await signOut(auth);
-            } catch (error) {
-                console.error("Logout Error:", error);
-                errorMessageEl.textContent = "Logout failed. Please try again.";
-                errorMessageEl.classList.remove('hidden');
-            }
-        };
-
-        const attachGlobalListeners = () => {
-            googleLoginBtn.addEventListener('click', handleGoogleLogin);
-            logoutBtn.addEventListener('click', handleLogout);
-            votingForm.addEventListener('submit', openVoteVerifier);
-            confirmVoteBtn.addEventListener('click', handleVote);
-            changeVoteBtn.addEventListener('click', closeVerifier);
-            proceedToBallotBtn.addEventListener('click', handleProceedToBallot);
-        };
-
-        const setupAuthStateListener = () => {
-            onAuthStateChanged(auth, async (user) => {
-                errorMessageEl.classList.add('hidden');
-                authWarningMessageEl.classList.add('hidden');
-                centralMessageContainer.classList.add('hidden');
-
-                if (user) {
-                    if (user.email && !user.email.endsWith(REQUIRED_DOMAIN)) {
-                        displayMessage(`Access Denied: Please use a valid UP Mail Account.`, 'error');
-                        authWarningMessageEl.classList.add('hidden');
-                        if (auth.currentUser) await signOut(auth);
-                        return;
-                    }
-
-                    cafsLogoSigninEl.classList.add('hidden');
-                    document.getElementById('turnout-dashboard').classList.add('hidden'); // optional hide
-
-                    await logAuthEvent(user.uid, user.email);
-
-                    userId = user.uid;
-                    headerEl.classList.remove('hidden');
-
-                    userNameEl.textContent = user.displayName;
-                    userEmailEl.textContent = user.email;
-                    userPhotoEl.src = user.photoURL || 'https://placehold.co/32x32/f1f1f1/1F2933?text=U';
-                    userIdDisplay.textContent = user.uid;
-
-                    // Show voting content and show voter info first (flow)
-                    votingContentEl.classList.remove('hidden');
-                    // ensure voter info visible unless already voted
-                    await checkIfVoted(user.uid);
-
-                } else {
-                    userId = null;
-                    hasUserVoted = false;
-                    headerEl.classList.add('hidden');
-                    votingContentEl.classList.add('hidden');
-                    cafsLogoSigninEl.classList.remove('hidden');
-                    document.getElementById('turnout-dashboard').classList.remove('hidden');
-                }
-            });
-        };
-
-        const initializeFirebase = async () => {
-            try {
-                renderTurnoutDashboard();
-
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                if (initialAuthToken) {
-                    console.log("Signing in with initial custom token...");
-                    await signInWithCustomToken(auth, initialAuthToken);
-                }
-
-                candidatesData = await fetchCandidates();
-                renderBallot(candidatesData);
-
-                setupAuthStateListener();
-                attachGlobalListeners();
-            } catch (error) {
-                console.error("Error initializing Firebase:", error);
-                errorMessageEl.textContent = `Critical System Error: ${error.message}`;
-                errorMessageEl.classList.remove('hidden');
-            }
-        };
-
-        // Show warning popup once per session
-        window.addEventListener('load', () => {
-            if (!sessionStorage.getItem('warningShown')) {
-                document.getElementById('warning-popup').classList.remove('hidden');
-            }
-        });
-        document.getElementById('close-warning-btn').addEventListener('click', () => {
-            document.getElementById('warning-popup').classList.add('hidden');
-            sessionStorage.setItem('warningShown', 'true');
+        const pct = (a,b)=> b?Math.min(100,Math.round((a/b)*100)) : 0;
+        const totalPct=pct(act.total,exp.total);
+        const agriPct=pct(act.agri,exp.agri);
+        const bioPct=pct(act.biotech,exp.biotech);
+        const foodPct=pct(act.food,exp.food);
+        document.getElementById('total-turnout-text').textContent = totalPct + '%';
+        document.getElementById('agri-percent').textContent = agriPct + '%';
+        document.getElementById('biotech-percent').textContent = bioPct + '%';
+        document.getElementById('food-percent').textContent = foodPct + '%';
+        document.getElementById('total-turnout-bar').style.width = totalPct + '%';
+        document.getElementById('agri-bar').style.width = agriPct + '%';
+        document.getElementById('biotech-bar').style.width = bioPct + '%';
+        document.getElementById('food-bar').style.width = foodPct + '%';
+      } catch(e){ console.error('Turnout load error', e); }
+    }
+    loadTurnout();
+
+    /* ========= Login Transition ========= */
+    const loginCard=document.getElementById('login-card');
+    const topBlock=document.getElementById('top-block');
+    const votingWrapper=document.getElementById('voting-wrapper');
+    const header=document.getElementById('header');
+    const googleLoginBtn=document.getElementById('google-login-btn');
+
+    googleLoginBtn.addEventListener('click',()=>{
+      // Simulate Firebase login success; integrate your real auth below
+      loginCard.classList.add('animate-fadeOut');
+      setTimeout(()=>{
+        topBlock.classList.add('hidden');
+        header.classList.remove('hidden');
+        votingWrapper.classList.remove('hidden');
+        votingWrapper.classList.add('animate-fadeIn');
+      },600);
+    });
+
+    /* ========= Candidate Modal Logic ========= */
+    const modal=document.getElementById('candidate-modal');
+    const closeModalBtn=document.getElementById('close-modal');
+    closeModalBtn.addEventListener('click',()=>modal.classList.add('hidden'));
+    function openCandidateModal(name,position,photo){
+      document.getElementById('modal-name').textContent=name;
+      document.getElementById('modal-position').textContent=position;
+      document.getElementById('modal-photo').src=photo;
+      modal.classList.remove('hidden');
+    }
+
+    /* ========= Voter Info to Ballot Transition ========= */
+    const proceedBtn=document.getElementById('proceed-to-ballot');
+    const voterInfo=document.getElementById('voter-info-section');
+    const ballotForm=document.getElementById('voting-form');
+    proceedBtn.addEventListener('click',()=>{
+      const sn=document.getElementById('student-number').value.trim();
+      const course=document.getElementById('degree-program').value;
+      if(!sn||!course){
+        voterInfo.classList.add('animate-pulse');
+        setTimeout(()=>voterInfo.classList.remove('animate-pulse'),1000);
+        return;
+      }
+      voterInfo.classList.add('hidden');
+      ballotForm.classList.remove('opacity-50','pointer-events-none');
+      ballotForm.classList.add('animate-fadeIn');
+    });
+    /* ========= Firebase Integration ========= */
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+    import { getFirestore, collection, getDocs, addDoc, doc, setDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDORLpt-SkOwhEK0VRCxOifUkgNYlhR8mo",
+      authDomain: "cafs-fc-election.firebaseapp.com",
+      projectId: "cafs-fc-election",
+      storageBucket: "cafs-fc-election.appspot.com",
+      messagingSenderId: "44234562463",
+      appId: "1:44234562463:web:1d532bdb65a40750160cfa",
+      measurementId: "G-FFSHZ6CCKP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+    const db = getFirestore(app);
+
+    // login (override simulation)
+    googleLoginBtn.addEventListener('click', async () => {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        if (!user.email.endsWith('@up.edu.ph')) {
+          document.getElementById('auth-warning-message').classList.remove('hidden');
+          document.getElementById('auth-warning-message').textContent = 'Please use your UP Mail (@up.edu.ph).';
+          await signOut(auth);
+          return;
+        }
+        document.getElementById('user-name').textContent = user.displayName || '';
+        document.getElementById('user-email').textContent = user.email;
+        document.getElementById('user-photo').src = user.photoURL || 'https://placehold.co/32x32';
+        loginCard.classList.add('animate-fadeOut');
+        setTimeout(() => {
+          topBlock.classList.add('hidden');
+          header.classList.remove('hidden');
+          votingWrapper.classList.remove('hidden');
+          votingWrapper.classList.add('animate-fadeIn');
+        }, 600);
+      } catch (err) {
+        console.error(err);
+        document.getElementById('error-message').classList.remove('hidden');
+      }
+    });
+
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await signOut(auth);
+      location.reload();
+    });
+
+    /* ========= Candidate Data ========= */
+    async function loadCandidates() {
+      const ballotContainer = document.getElementById('ballot-container');
+      ballotContainer.innerHTML = '<p class="text-center text-gray-500">Loading candidate data...</p>';
+      try {
+        const snapshot = await getDocs(collection(db, "candidates"));
+        if (snapshot.empty) {
+          ballotContainer.innerHTML = '<p class="text-center text-gray-500">No candidates found.</p>';
+          return;
+        }
+        ballotContainer.innerHTML = '';
+        const positions = {};
+        snapshot.forEach(docu => {
+          const c = docu.data();
+          if (!positions[c.position]) positions[c.position] = [];
+          positions[c.position].push(c);
         });
 
-        // initialize app
-        initializeFirebase();
+        Object.keys(positions).forEach(position => {
+          const group = positions[position];
+          const posDiv = document.createElement('div');
+          posDiv.innerHTML = `<h3 class="text-xl font-bold text-custom-sub mb-2">${position}</h3>`;
+          group.forEach(candidate => {
+            const row = document.createElement('div');
+            row.className = 'vote-item';
+            row.innerHTML = `
+              <div class="candidate-name-container">
+                <span class="candidate-name-link" onclick="openCandidateModal('${candidate.name}','${candidate.position}','${candidate.photo}')">${candidate.name}</span>
+              </div>
+              <div class="vote-column" data-position="${position}" data-name="${candidate.name}">
+                <div class="selection-indicator"></div>
+                <span class="selection-text">Vote</span>
+              </div>
+              <div class="abstain-column" data-position="${position}">
+                <div class="selection-indicator"></div>
+                <span class="selection-text">Abstain</span>
+              </div>
+            `;
+            posDiv.appendChild(row);
+          });
+          ballotContainer.appendChild(posDiv);
+        });
 
-    </script>
+        ballotContainer.addEventListener('click', e => {
+          const target = e.target.closest('.vote-column, .abstain-column');
+          if (!target) return;
+          const row = target.closest('.vote-item');
+          row.querySelectorAll('.vote-column, .abstain-column').forEach(el => el.classList.remove('selected'));
+          target.classList.add('selected');
+        });
+      } catch (err) {
+        ballotContainer.innerHTML = '<p class="text-center text-red-500">Error loading candidates.</p>';
+        console.error(err);
+      }
+    }
+    loadCandidates();
+
+    /* ========= Review and Submit ========= */
+    const reviewModal = document.getElementById('review-modal');
+    const reviewContent = document.getElementById('review-content');
+    const cancelReview = document.getElementById('cancel-review');
+    const confirmSubmit = document.getElementById('confirm-submit');
+    const voteForm = document.getElementById('voting-form');
+
+    voteForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const votes = {};
+      document.querySelectorAll('.vote-item').forEach(item => {
+        const position = item.closest('div').querySelector('h3').textContent;
+        const selectedVote = item.querySelector('.vote-column.selected');
+        const abstainVote = item.querySelector('.abstain-column.selected');
+        votes[position] = selectedVote ? selectedVote.dataset.name : (abstainVote ? 'Abstain' : '');
+      });
+
+      let html = '';
+      Object.entries(votes).forEach(([pos, choice]) => {
+        html += `<div><strong>${pos}:</strong> ${choice || '<span class=\"text-gray-400\">No selection</span>'}</div>`;
+      });
+      reviewContent.innerHTML = html;
+      reviewModal.classList.remove('hidden');
+    });
+
+    cancelReview.addEventListener('click',()=>reviewModal.classList.add('hidden'));
+
+    confirmSubmit.addEventListener('click', async ()=>{
+      reviewModal.classList.add('hidden');
+      const votes={};
+      document.querySelectorAll('.vote-item').forEach(item=>{
+        const position=item.closest('div').querySelector('h3').textContent;
+        const selectedVote=item.querySelector('.vote-column.selected');
+        const abstainVote=item.querySelector('.abstain-column.selected');
+        votes[position]=selectedVote?selectedVote.dataset.name:(abstainVote?'Abstain':'');
+      });
+      try{
+        const user = auth.currentUser;
+        const sn=document.getElementById('student-number').value.trim();
+        const course=document.getElementById('degree-program').value;
+        await addDoc(collection(db,'votes'),{
+          uid:user.uid,
+          email:user.email,
+          name:user.displayName,
+          studentNumber:sn,
+          course:course,
+          votes:votes,
+          timestamp:Timestamp.now()
+        });
+        alert('✅ Your vote has been successfully recorded.');
+        location.reload();
+      }catch(e){
+        console.error('Vote submission error',e);
+        alert('❌ There was an error submitting your vote. Please try again.');
+      }
+    });
+  </script>
 </body>
 </html>
