@@ -75,7 +75,7 @@
     .vote-item { cursor:default; transition:all .18s; border:1px solid #E5E7EB; background:#fff; padding:.6rem; border-radius:12px; display:flex; gap:10px; align-items:center; min-height:4.6rem; }
     .vote-column,.abstain-column{cursor:pointer;padding:.45rem .6rem;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px; min-width:84px; border: none; background: transparent; }
     .vote-column button, .abstain-column button { all: unset; cursor: pointer; display:flex; align-items:center; gap:8px; justify-content:center; width:100%; padding:.4rem .5rem; border-radius:8px; }
-    .selection-indicator{height:1.4rem;width:1.4rem;border-radius:9999px;border:3px solid #cbd5e1;background:transparent;transition:all .12s; display:inline-block; vertical-align:middle}
+    .selection-indicator{height:1.4rem;width:1.4rem;border-radius:9999px;border:3px solid #cbd5e1;background:transparent;transition:all .12s; display:inline-block; vertical-align:middle}A
     .vote-column.selected .selection-indicator{background:#c39f09;border-color:#c39f09;}
     .abstain-column.selected .selection-indicator{background:#64748B;border-color:#475569;}
     .candidate-name-container{min-width:0;padding-left:0.5rem;padding-right:.5rem;display:flex;flex-direction:column;align-items:flex-start;flex:1}
@@ -843,6 +843,18 @@ const DEV_MODE = true;
         document.getElementById('logout-btn').addEventListener('click', handleLogout);
         proceedToBallotBtn.addEventListener('click', handleProceedToBallot);
         votingForm.addEventListener('submit', openVoteVerifier);
+
+setInterval(() => {
+  const sn = studentNumberInput.value.trim();
+  const course = degreeProgramInput.value.trim();
+  const valid = validateStudentNumber(sn) && course !== '';
+  if (!valid && voterInfoSection.style.display !== 'none') {
+    votingForm.classList.add('hidden');
+    votingForm.classList.add('pointer-events-none');
+    votingForm.classList.add('opacity-50');
+  }
+}, 1000);
+
         confirmVoteBtn.addEventListener('click', handleVote);
         changeVoteBtn.addEventListener('click', ()=>verifierPopup.classList.add('hidden'));
 
@@ -1383,3 +1395,4 @@ showCentralMessage('Welcome back! Your voter info is already saved.', 'success')
   </script>
 </body>
 </html>
+
