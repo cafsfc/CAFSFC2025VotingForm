@@ -802,7 +802,7 @@ const DEV_MODE = true;
         db = getFirestore(app);
 
         // pre-load candidates
-        await ensureBallotLoaded();
+        await loadCandidatesFromCSV();
 
         onAuthStateChanged(auth, async (user) => {
           if (user) {
@@ -843,18 +843,6 @@ const DEV_MODE = true;
         document.getElementById('logout-btn').addEventListener('click', handleLogout);
         proceedToBallotBtn.addEventListener('click', handleProceedToBallot);
         votingForm.addEventListener('submit', openVoteVerifier);
-
-setInterval(() => {
-  const sn = studentNumberInput.value.trim();
-  const course = degreeProgramInput.value.trim();
-  const valid = validateStudentNumber(sn) && course !== '';
-  if (!valid && voterInfoSection.style.display !== 'none') {
-    votingForm.classList.add('hidden');
-    votingForm.classList.add('pointer-events-none');
-    votingForm.classList.add('opacity-50');
-  }
-}, 1000);
-
         confirmVoteBtn.addEventListener('click', handleVote);
         changeVoteBtn.addEventListener('click', ()=>verifierPopup.classList.add('hidden'));
 
@@ -945,10 +933,8 @@ setInterval(() => {
           if (data.course) degreeProgramInput.value = data.course;
           if (data.studentNumber && data.course) {
             voterInfoSection.style.display = 'none';
-            votingForm.classList.remove('opacity-50');
-votingForm.classList.remove('pointer-events-none');
-votingForm.classList.remove('hidden'); // 👈 also show ballot if voter info already saved
-showCentralMessage('Welcome back! Your voter info is already saved.', 'success');
+            votingForm.classList.remove('opacity-50'); votingForm.classList.remove('pointer-events-none');
+            showCentralMessage('Welcome back! Your voter info is already saved.', 'success');
 
       // ✅ Force-enable all vote buttons if voter info exists
       document.querySelectorAll('.vote-item, .vote-column, .abstain-column').forEach(el => {
