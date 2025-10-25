@@ -412,7 +412,7 @@
 // ===========================
 // Set to true while testing locally to keep buttons active.
 // Set to false before deploying to production.
-const DEV_MODE = true;
+const DEV_MODE = false;
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, runTransaction, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -924,39 +924,56 @@ const DEV_MODE = true;
 
     // prefill voter info
     const prefillVoterInfoIfExists = async (uid) => {
-      try {
-        const ref = doc(db, VOTER_INFO_COLLECTION, uid);
-        const snap = await getDoc(ref);
-        if (snap.exists()) {
-          const data = snap.data();
-          if (data.studentNumber) studentNumberInput.value = data.studentNumber;
-          if (data.course) degreeProgramInput.value = data.course;
-          if (data.studentNumber && data.course) {
-            voterInfoSection.style.display = 'none';
-            votingForm.classList.remove('opacity-50'); votingForm.classList.remove('pointer-events-none');
-            showCentralMessage('Welcome back! your voter info is already saved.', 'success');
+  try {
+    const ref = doc(db, VOTER_INFO_COLLECTION, uid);
+    const snap = await getDoc(ref);
 
-      // ✅ Force-enable all vote buttons if voter info exists
-      document.querySelectorAll('.vote-item, .vote-column, .abstain-column').forEach(el => {
-        el.style.pointerEvents = 'auto';
-      });
-          }
-        }
-      } catch (err) {
-        console.error('prefill err', err);
+    if (snap.exists()) {
+      const data = snap.data();
+      const hasStudentNum = !!data.studentNumber;
+      const hasCourse = !!data.course;
+
+      if (hasStudentNum) studentNumberInput.value = data.studentNumber;
+      if (hasCourse) degreeProgramInput.value = data.course;
+
+      if (hasStudentNum && hasCourse) {
+        voterInfoSection.style.display = 'none';
+        votingForm.classList.remove('opacity-50');
+        votingForm.classList.remove('pointer-events-none');
+        showCentralMessage('Welcome back! Your voter info is already saved.', 'success');
+      } else {
+        voterInfoSection.style.display = 'block';
+        votingForm.classList.add('opacity-50');
+        votingForm.classList.add('pointer-events-none');
+        showCentralMessage('Please complete your voter info before voting.', 'error');
       }
-    };
+    } else {
+      voterInfoSection.style.display = 'block';
+      votingForm.classList.add('opacity-50');
+      votingForm.classList.add('pointer-events-none');
+    }
+  } catch (err) {
+    console.error('prefill err', err);
+    showCentralMessage('Error loading voter info. Please re-enter your details.', 'error');
+  }
+};
 
     // proceed: validate & save voter info
     const handleProceedToBallot = async () => {
-      if (!auth || !auth.currentUser) { showCentralMessage('Not authenticated.', 'error'); return; }
+      if (!auth || !auth.currentUser) {
+        showCentralMessage('Not authenticated.', 'error');
+        return;
+      }
+
       const uid = auth.currentUser.uid;
       const sn = studentNumberInput.value.trim();
       const course = degreeProgramInput.value.trim();
 
+      // Validate both fields strictly
       if (!validateStudentNumber(sn)) {
         studentNumberError.classList.remove('hidden');
         studentNumberInput.classList.add('input-error');
+        showCentralMessage('Please enter a valid student number (20xx-xxxxx).', 'error');
         return;
       }
       if (!course) {
@@ -965,6 +982,7 @@ const DEV_MODE = true;
       }
 
       try {
+        // Save voter info in Firestore
         const docRef = doc(db, VOTER_INFO_COLLECTION, uid);
         await setDoc(docRef, {
           voterId: uid,
@@ -974,8 +992,11 @@ const DEV_MODE = true;
           updatedAt: new Date()
         }, { merge: true });
 
+        // Enable ballot only after successful save
         voterInfoSection.style.display = 'none';
-        votingForm.classList.remove('opacity-50'); votingForm.classList.remove('pointer-events-none');
+        votingForm.classList.remove('opacity-50');
+        votingForm.classList.remove('pointer-events-none');
+
         showCentralMessage('Voter information saved. You may now cast your vote.', 'success');
       } catch (err) {
         console.error('proceed save err', err);
@@ -1060,9 +1081,40 @@ const DEV_MODE = true;
 
     // handleVote
     const handleVote = async () => {
-      if (!userId) { showCentralMessage('Not authenticated.', 'error'); return; }
+      if (!userId) {
+        showCentralMessage('Not authenticated.', 'error');
+        return;
+      }
+
       showLoading(true);
+
       try {
+        // Always re-fetch voter info before voting
+        const voterRef = doc(db, VOTER_INFO_COLLECTION, userId);
+        const voterSnap = await getDoc(voterRef);
+
+        let studentNumber = '';
+        let degreeProgram = '';
+
+        if (voterSnap.exists()) {
+          const d = voterSnap.data();
+          studentNumber = d.studentNumber || '';
+          degreeProgram = d.course || '';
+        }
+
+        // If missing info, block submission
+        if (!validateStudentNumber(studentNumber) || !degreeProgram) {
+          showCentralMessage('Your voter information is incomplete. Please fill it in again.', 'error');
+          verifierPopup.classList.add('hidden');
+          votingForm.classList.add('opacity-50');
+          votingForm.classList.add('pointer-events-none');
+          voterInfoSection.style.display = 'block';
+          showLoading(false);
+          return;
+        }
+
+        // original submit logic continues below...
+try {
         // retrieve voter info
         let studentNumber = '';
         let degreeProgram = '';
@@ -1120,7 +1172,7 @@ const DEV_MODE = true;
       } finally {
         showLoading(false);
       }
-    };
+    };;
 
     const sendToGoogleForm = async (voteStruct, uid) => {
       try {
@@ -1381,4 +1433,3 @@ const DEV_MODE = true;
   </script>
 </body>
 </html>
-
