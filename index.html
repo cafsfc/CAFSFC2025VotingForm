@@ -802,7 +802,7 @@ const DEV_MODE = true;
         db = getFirestore(app);
 
         // pre-load candidates
-        await loadCandidatesFromCSV();
+        await ensureBallotLoaded();
 
         onAuthStateChanged(auth, async (user) => {
           if (user) {
