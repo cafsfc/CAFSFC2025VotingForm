@@ -151,7 +151,17 @@
     
     /* small helpers */
     .badge { font-weight:700; font-size:0.85rem; padding:.25rem .5rem; border-radius:9999px; display:inline-flex; align-items:center; gap:.4rem }
-  </style>
+    /* ✅ Hard override to ensure VOTE/ABSTAIN always clickable */
+  #voting-form .vote-item,
+  #voting-form .vote-column,
+  #voting-form .abstain-column,
+  #voting-form .vote-item *,
+  #voting-form .vote-column *,
+  #voting-form .abstain-column * {
+    pointer-events: auto !important;
+    user-select: auto !important;
+  }
+</style>
 </head>
 <body>
 
@@ -925,6 +935,11 @@ const DEV_MODE = true;
             voterInfoSection.style.display = 'none';
             votingForm.classList.remove('opacity-50'); votingForm.classList.remove('pointer-events-none');
             showCentralMessage('Welcome back! your voter info is already saved.', 'success');
+
+      // ✅ Force-enable all vote buttons if voter info exists
+      document.querySelectorAll('.vote-item, .vote-column, .abstain-column').forEach(el => {
+        el.style.pointerEvents = 'auto';
+      });
           }
         }
       } catch (err) {
