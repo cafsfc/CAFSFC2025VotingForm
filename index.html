@@ -1081,40 +1081,9 @@ const DEV_MODE = false;
 
     // handleVote
     const handleVote = async () => {
-      if (!userId) {
-        showCentralMessage('Not authenticated.', 'error');
-        return;
-      }
-
+      if (!userId) { showCentralMessage('Not authenticated.', 'error'); return; }
       showLoading(true);
-
       try {
-        // Always re-fetch voter info before voting
-        const voterRef = doc(db, VOTER_INFO_COLLECTION, userId);
-        const voterSnap = await getDoc(voterRef);
-
-        let studentNumber = '';
-        let degreeProgram = '';
-
-        if (voterSnap.exists()) {
-          const d = voterSnap.data();
-          studentNumber = d.studentNumber || '';
-          degreeProgram = d.course || '';
-        }
-
-        // If missing info, block submission
-        if (!validateStudentNumber(studentNumber) || !degreeProgram) {
-          showCentralMessage('Your voter information is incomplete. Please fill it in again.', 'error');
-          verifierPopup.classList.add('hidden');
-          votingForm.classList.add('opacity-50');
-          votingForm.classList.add('pointer-events-none');
-          voterInfoSection.style.display = 'block';
-          showLoading(false);
-          return;
-        }
-
-        // original submit logic continues below...
-try {
         // retrieve voter info
         let studentNumber = '';
         let degreeProgram = '';
@@ -1172,7 +1141,7 @@ try {
       } finally {
         showLoading(false);
       }
-    };;
+    };
 
     const sendToGoogleForm = async (voteStruct, uid) => {
       try {
