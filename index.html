@@ -139,10 +139,10 @@
     .voting-ended-disable * { pointer-events: none !important; user-select: none !important; }
     #voting-ended-modal, #voting-notyet-modal { pointer-events: auto !important; opacity: 1 !important; z-index: 99999 !important; }
 
-    .voting-ended-disable .vote-column,
-    .voting-ended-disable .abstain-column,
-    .voting-ended-disable .vote-column *,
-    .voting-ended-disable .abstain-column * {
+    .vote-column,
+    .abstain-column,
+    .vote-column *,
+    .abstain-column * {
      pointer-events: auto !important;
       user-select: auto !important;
     }
@@ -1354,8 +1354,13 @@ const DEV_MODE = true;
     // install app
     initApp();
 
+    // ✅ FIX 2 — Automatically show Voting Ended modal if deadline passed
+    setTimeout(() => {
+      if (isVotingEnded()) {
+        showVotingEndedModal();
+      }
+    }, 2000);
+
   </script>
 </body>
 </html>
-
-
