@@ -659,7 +659,7 @@ const DEV_MODE = true;
           html += `<div class="p-4 bg-gray-100 rounded-lg"><p class="text-center text-red-500">No candidates for ${pos}</p></div>`;
           continue;
         }
-        const isMulti = pos === 'Councilor';
+        const isMulti = true; // ✅ Treat all positions like Councilor (independent per candidate)
         // per-request: remove per-position instruction lines
         html += `<div class="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200"><h3 class="text-xl md:text-2xl font-extrabold text-custom-sub mb-2">${pos}</h3><div class="space-y-3">`;
         list.forEach(info=>{
