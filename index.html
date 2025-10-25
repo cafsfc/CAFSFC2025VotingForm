@@ -340,7 +340,7 @@
           </div>
 
           <!-- Ballot -->
-          <form id="voting-form"  class="w-full mt-6 hidden opacity-50 pointer-events-none">
+          <form id="voting-form" class="w-full mt-6 opacity-50 pointer-events-none">
             <!-- Minimal instruction (click name for details) - selection-specific texts removed per request -->
             <div class="bg-yellow-50 border-l-4 border-custom-main p-4 rounded-md mb-4 text-sm text-gray-700">
               <strong>INSTRUCTION:</strong> Please choose whether to vote for or abstain from voting for a candidate. To help you make an informed decision, you may click on a candidate’s name to view their basic information. For more comprehensive details about each candidate’s platforms and plans of action, you may also visit the CAFS Freshman Council Page. We encourage you to exercise your right to vote responsibly. <a href="https://www.facebook.com/uplbcafsfc" target="_blank" class="text-custom-sub font-semibold underline hover:text-custom-main-dark">CAFS Freshman Council Facebook Page</a>.
@@ -843,18 +843,6 @@ const DEV_MODE = true;
         document.getElementById('logout-btn').addEventListener('click', handleLogout);
         proceedToBallotBtn.addEventListener('click', handleProceedToBallot);
         votingForm.addEventListener('submit', openVoteVerifier);
-
-setInterval(() => {
-  const sn = studentNumberInput.value.trim();
-  const course = degreeProgramInput.value.trim();
-  const valid = validateStudentNumber(sn) && course !== '';
-  if (!valid && voterInfoSection.style.display !== 'none') {
-    votingForm.classList.add('hidden');
-    votingForm.classList.add('pointer-events-none');
-    votingForm.classList.add('opacity-50');
-  }
-}, 1000);
-
         confirmVoteBtn.addEventListener('click', handleVote);
         changeVoteBtn.addEventListener('click', ()=>verifierPopup.classList.add('hidden'));
 
