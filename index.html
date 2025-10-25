@@ -395,6 +395,12 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
 
   <script type="module">
+    // ===========================
+// 🔧 DEVELOPMENT SWITCH
+// ===========================
+// Set to true while testing locally to keep buttons active.
+// Set to false before deploying to production.
+const DEV_MODE = true;
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, runTransaction, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -1169,11 +1175,21 @@
           votingForm.classList.remove('opacity-50'); votingForm.classList.remove('pointer-events-none');
           setFormState('disabled');
         } else {
-          if (voterInfoSection.style.display !== 'none') {
-            votingForm.classList.add('opacity-50'); votingForm.classList.add('pointer-events-none');
-          } else {
-            votingForm.classList.remove('opacity-50'); votingForm.classList.remove('pointer-events-none');
-          }
+         if (DEV_MODE) {
+  // 👇 Force the form active for testing (Vote/Abstain always clickable)
+  votingForm.classList.remove('opacity-50');
+  votingForm.classList.remove('pointer-events-none');
+  console.log("🧩 DEV_MODE: Ballot is always active for testing.");
+} else {
+  // 🔒 Normal behavior — only unlock after voter info confirmed
+  if (voterInfoSection.style.display !== 'none') {
+    votingForm.classList.add('opacity-50'); 
+    votingForm.classList.add('pointer-events-none');
+  } else {
+    votingForm.classList.remove('opacity-50'); 
+    votingForm.classList.remove('pointer-events-none');
+  }
+}
         }
       } catch(err){ console.error('checkIfVoted err', err); }
     };
@@ -1341,4 +1357,5 @@
   </script>
 </body>
 </html>
+
 
