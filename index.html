@@ -139,6 +139,14 @@
     .voting-ended-disable * { pointer-events: none !important; user-select: none !important; }
     #voting-ended-modal, #voting-notyet-modal { pointer-events: auto !important; opacity: 1 !important; z-index: 99999 !important; }
 
+    .voting-ended-disable .vote-column,
+    .voting-ended-disable .abstain-column,
+    .voting-ended-disable .vote-column *,
+    .voting-ended-disable .abstain-column * {
+     pointer-events: auto !important;
+      user-select: auto !important;
+    }
+    
     /* small helpers */
     .badge { font-weight:700; font-size:0.85rem; padding:.25rem .5rem; border-radius:9999px; display:inline-flex; align-items:center; gap:.4rem }
   </style>
@@ -1333,3 +1341,4 @@
   </script>
 </body>
 </html>
+
