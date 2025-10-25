@@ -73,8 +73,9 @@
 
     /* ballot / candidate */
     .vote-item { cursor:default; transition:all .18s; border:1px solid #E5E7EB; background:#fff; padding:.6rem; border-radius:12px; display:flex; gap:10px; align-items:center; min-height:4.6rem; }
-    .vote-column,.abstain-column{cursor:pointer;padding:.45rem .6rem;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px; min-width:84px}
-    .selection-indicator{height:1.4rem;width:1.4rem;border-radius:9999px;border:3px solid #cbd5e1;background:transparent;transition:all .12s;}
+    .vote-column,.abstain-column{cursor:pointer;padding:.45rem .6rem;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px; min-width:84px; border: none; background: transparent; }
+    .vote-column button, .abstain-column button { all: unset; cursor: pointer; display:flex; align-items:center; gap:8px; justify-content:center; width:100%; padding:.4rem .5rem; border-radius:8px; }
+    .selection-indicator{height:1.4rem;width:1.4rem;border-radius:9999px;border:3px solid #cbd5e1;background:transparent;transition:all .12s; display:inline-block; vertical-align:middle}
     .vote-column.selected .selection-indicator{background:#c39f09;border-color:#c39f09;}
     .abstain-column.selected .selection-indicator{background:#64748B;border-color:#475569;}
     .candidate-name-container{min-width:0;padding-left:0.5rem;padding-right:.5rem;display:flex;flex-direction:column;align-items:flex-start;flex:1}
@@ -100,7 +101,7 @@
       .vote-item {
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.25rem;
+        gap: 0.5rem;
         padding: .6rem;
       }
       .candidate-name-container {
@@ -112,13 +113,18 @@
         width: 48%;
         padding: .5rem 0;
       }
-      .vote-item .vote-column, .vote-item .abstain-column {
+      .vote-column, .abstain-column {
         display: inline-flex;
         justify-content: center;
       }
       .vote-item .vote-column + .abstain-column {
         margin-left: 2%;
       }
+      /* Make the name full width above the buttons */
+      .vote-item .candidate-name-container { order: 0; padding-bottom: 0.25rem; }
+      .vote-item .vote-controls { display:flex; gap:6px; width:100%; justify-content: space-between; order: 1; }
+      .vote-column, .abstain-column { min-width: 48%; width: 48%; }
+      .selection-text { margin: 0; font-size:0.95rem; font-weight:600; }
     }
 
     /* VERY NARROW: stack controls to avoid overflow */
@@ -315,8 +321,9 @@
 
           <!-- Ballot -->
           <form id="voting-form" class="w-full mt-6 opacity-50 pointer-events-none">
+            <!-- Minimal instruction (click name for details) - selection-specific texts removed per request -->
             <div class="bg-yellow-50 border-l-4 border-custom-main p-4 rounded-md mb-4 text-sm text-gray-700">
-              <strong>INSTRUCTIONS:</strong> Please select either “Vote” or “Abstain” for each candidate. Click a candidate’s name to view their basic information. For fuller details regarding candidates’ platforms and plans of action, please consult the official <a href="https://www.facebook.com/CAFSFC" target="_blank" class="text-custom-sub font-semibold underline hover:text-custom-main-dark">CAFS Freshman Council Facebook Page</a>.
+              <strong>NOTE:</strong> Click a candidate’s name to view their basic information. For fuller details regarding candidates’ platforms and plans of action, please consult the official <a href="https://www.facebook.com/uplbcafsfc" target="_blank" class="text-custom-sub font-semibold underline hover:text-custom-main-dark">CAFS Freshman Council Facebook Page</a>.
             </div>
 
             <div id="ballot-container" class="space-y-4">
@@ -345,6 +352,7 @@
             <p class="text-xs font-semibold text-gray-500 uppercase -mb-1">NOMINATED POSITION</p>
             <h3 id="nominee-position" class="font-extrabold mb-1 leading-tight"></h3>
             <div id="nominee-name" class="font-bold text-custom-text"></div>
+            <div id="nominee-course" class="candidate-course"></div>
             <div id="nominee-platform" class="mt-3 text-sm text-gray-700"></div>
           </div>
         </div>
@@ -443,6 +451,7 @@
     const nomineeNameEl = document.getElementById('nominee-name');
     const nomineePositionEl = document.getElementById('nominee-position');
     const nomineePlatformEl = document.getElementById('nominee-platform');
+    const nomineeCourseEl = document.getElementById('nominee-course');
 
     const photoViewer = document.getElementById('photo-viewer');
     const photoViewerImg = document.getElementById('photo-viewer-img');
@@ -594,10 +603,11 @@
           const photo = (row[2]||'').trim();
           const coursePlatform = (row[3]||'').trim();
           if (!name || !position) continue;
-          // previously split course|platform; we will not display course in ballot
+          // attempt to split course and platform (course first part)
           const parts = coursePlatform.split(' | ');
+          const course = parts[0] ? parts[0].trim() : '';
           const platform = parts.slice(1).join(' | ') || '';
-          const info = { name, position, photo, platform };
+          const info = { name, position, photo, platform, course };
           allInfo[name] = info;
           if (!grouped[position]) grouped[position]=[];
           grouped[position].push(info);
@@ -614,7 +624,7 @@
 
     const updateAriaChecked = (el,isChecked) => el.setAttribute('aria-checked', isChecked ? 'true':'false');
 
-    // Render ballot (course removed)
+    // Render ballot (course removed from list, will show in popup)
     const renderBallot = (candidates) => {
       let html = '';
       for (const pos of positionOrder) {
@@ -624,22 +634,29 @@
           continue;
         }
         const isMulti = pos === 'Councilor';
-        const instruction = isMulti ? 'For each candidate select Vote or Abstain.' : 'Select exactly one (Vote or Abstain).';
-        html += `<div class="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200"><h3 class="text-xl md:text-2xl font-extrabold text-custom-sub mb-2">${pos}</h3><p class="text-xs text-gray-500 mb-2">${instruction}</p><div class="space-y-3">`;
+        // per-request: remove per-position instruction lines
+        html += `<div class="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200"><h3 class="text-xl md:text-2xl font-extrabold text-custom-sub mb-2">${pos}</h3><div class="space-y-3">`;
         list.forEach(info=>{
+          // vote controls are now buttons to ensure clickability
           html += `
-            <div class="vote-item" data-name="${info.name}" data-position="${pos}" data-multiselect="${isMulti}">
+            <div class="vote-item" data-name="${escapeHtml(info.name)}" data-position="${escapeHtml(pos)}" data-multiselect="${isMulti}">
               <div class="candidate-name-container candidate-compact">
-                <span class="candidate-name-link one-line-ellipsis" data-candidate-name="${info.name}" title="${info.name}">${info.name}</span>
+                <span class="candidate-name-link one-line-ellipsis" data-candidate-name="${escapeHtml(info.name)}" title="${escapeHtml(info.name)}">${escapeHtml(info.name)}</span>
               </div>
 
-              <div class="vote-column" tabindex="0" data-action="vote" data-name="${info.name}" data-position="${pos}" role="radio" aria-checked="false">
-                <span class="selection-text">VOTE</span>
-                <div class="selection-indicator" aria-hidden="true"></div>
-              </div>
-              <div class="abstain-column" tabindex="0" data-action="abstain" data-name="${info.name}" data-position="${pos}" role="radio" aria-checked="false">
-                <span class="selection-text">ABSTAIN</span>
-                <div class="selection-indicator" aria-hidden="true"></div>
+              <div class="vote-controls flex gap-2 items-center">
+                <div class="vote-column" tabindex="0" data-action="vote" data-name="${escapeHtml(info.name)}" data-position="${escapeHtml(pos)}" role="radio" aria-checked="false">
+                  <button type="button" aria-label="Vote ${escapeHtml(info.name)}">
+                    <span class="selection-text">VOTE</span>
+                    <span class="selection-indicator" aria-hidden="true"></span>
+                  </button>
+                </div>
+                <div class="abstain-column" tabindex="0" data-action="abstain" data-name="${escapeHtml(info.name)}" data-position="${escapeHtml(pos)}" role="radio" aria-checked="false">
+                  <button type="button" aria-label="Abstain ${escapeHtml(info.name)}">
+                    <span class="selection-text">ABSTAIN</span>
+                    <span class="selection-indicator" aria-hidden="true"></span>
+                  </button>
+                </div>
               </div>
             </div>
           `;
@@ -650,7 +667,14 @@
       attachBallotListeners();
     };
 
+    // helper to escape HTML in names etc.
+    function escapeHtml(str) {
+      if (!str && str !== 0) return '';
+      return String(str).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]; });
+    }
+
     const attachBallotListeners = () => {
+      // use event delegation for clicks
       ballotContainer.addEventListener('click', (ev) => {
         if (!ev) return;
         if (hasUserVoted) return;
@@ -661,24 +685,25 @@
           if (info) openNomineeCard(info);
           return;
         }
-        const col = ev.target.closest('.vote-column, .abstain-column');
-        if (!col) return;
-        const pos = col.dataset.position;
-        const action = col.dataset.action;
-        const isMulti = col.closest('.vote-item').dataset.multiselect === 'true';
+        const control = ev.target.closest('.vote-column, .abstain-column');
+        if (!control) return;
+        // handle click on vote/abstain
+        const pos = control.dataset.position;
+        const action = control.dataset.action;
+        const isMulti = control.closest('.vote-item').dataset.multiselect === 'true';
         if (isMulti) {
-          const row = col.closest('.vote-item');
+          const row = control.closest('.vote-item');
           const opposite = row.querySelector(`[data-action="${action==='vote'?'abstain':'vote'}"]`);
-          if (col.classList.contains('selected')) return;
-          col.classList.add('selected'); updateAriaChecked(col,true);
-          opposite.classList.remove('selected'); updateAriaChecked(opposite,false);
+          if (control.classList.contains('selected')) return;
+          control.classList.add('selected'); updateAriaChecked(control,true);
+          if (opposite) { opposite.classList.remove('selected'); updateAriaChecked(opposite,false); }
           row.classList.remove('highlight-error');
         } else {
           const inPos = ballotContainer.querySelectorAll(`[data-position="${pos}"]`);
-          const was = col.classList.contains('selected');
+          const was = control.classList.contains('selected');
           inPos.forEach(c=>{ c.classList.remove('selected'); updateAriaChecked(c,false); });
           if (!was) {
-            col.classList.add('selected'); updateAriaChecked(col,true);
+            control.classList.add('selected'); updateAriaChecked(control,true);
             const items = ballotContainer.querySelectorAll(`.vote-item[data-position="${pos}"]`);
             items.forEach(it=>it.classList.remove('highlight-error'));
           }
@@ -701,6 +726,7 @@
       nomineeNameEl.textContent = info.name;
       nomineePositionEl.textContent = (info.position || '').toUpperCase();
       nomineePlatformEl.textContent = info.platform || '';
+      nomineeCourseEl.textContent = info.course || '';
       nomineePopup.classList.remove('hidden');
     };
     const closeNomineeCard = ()=> nomineePopup.classList.add('hidden');
@@ -1203,6 +1229,9 @@
     };
 
     const showVotingEndedModal = () => {
+      // Only create/show this modal when votingDeadline exists and current time is AFTER it.
+      if (!votingDeadline || new Date() <= votingDeadline) return;
+
       // ensure body is not globally disabled before inserting modal
       document.documentElement.classList.remove('voting-ended-disable');
 
@@ -1213,26 +1242,22 @@
             <div class="bg-white max-w-lg w-full rounded-xl shadow-2xl border-t-8 border-custom-sub text-center p-8 animate-fadeIn">
               <h2 class="text-2xl font-extrabold text-custom-sub mb-4">THE VOTING PERIOD HAS CONCLUDED.</h2>
               <p class="text-gray-700 mb-6">Wait for the official vote results to be posted in the <strong>CAFS FC Facebook Page</strong>.</p>
-              <button id="close-ended-btn" class="mt-2 px-5 py-2 rounded-lg bg-custom-main text-custom-sub font-bold hover:bg-custom-main-dark transition">Close</button>
             </div>
           </div>
         `;
         document.body.insertAdjacentHTML("beforeend", modalHTML);
         modal = document.getElementById("voting-ended-modal");
-        document.getElementById("close-ended-btn").addEventListener("click", () => {
-          try { modal.remove(); } catch(e){}
-        });
       } else {
         modal.classList.remove('hidden');
       }
 
-      // Disable everything but ensure modal stays interactive
+      // Disable everything and leave modal non-dismissible (no close button)
       document.querySelectorAll("button, input, select, textarea").forEach((el) => {
         try { el.disabled = true; } catch(e){}
       });
       document.documentElement.classList.add('voting-ended-disable');
 
-      // ensure modal is clickable (override)
+      // ensure modal is clickable and on top
       modal.style.pointerEvents = 'auto';
       modal.style.opacity = '1';
       modal.style.zIndex = '99999';
